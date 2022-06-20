@@ -44,21 +44,20 @@ const NicknamPage: React.FC = () => {
   };
   const checkNickName = (resNickName: string) => {
     // NOTE : 공백문자 제거
-    const nickNameWithTrim = nickName.trim();
+    const nickNameTrim = nickName.trim();
 
-    if (!nickNameWithTrim.length) {
-      console.log('닉네임을 입력해');
-      return false;
-    }
     //  NOTE : 정규식 적용
-    if (!regex.test(nickNameWithTrim)) {
-      if (nickNameWithTrim.length >= minNickName && nickNameWithTrim.length <= maxNickName)
+    if (!regex.test(nickName)) {
+      if (
+        nickName.includes(' ') ||
+        (nickNameTrim.length >= minNickName && nickNameTrim.length <= maxNickName)
+      )
         setCheckNickMsg('한글, 영어, 숫자로만 작성해주세요');
       else setCheckNickMsg(`최소 2자, 최대 8자로 작성해주세요`);
       return false;
     }
 
-    if (nickNameWithTrim === resNickName) {
+    if (nickNameTrim === resNickName) {
       setCheckNickMsg(`중복된 닉네임입니다.`);
       setIsEnabled(false);
       return false;
@@ -116,7 +115,9 @@ const NicknamPage: React.FC = () => {
               console.dir(profileImg);
               console.dir(nickName);
             } else {
-              setCheckNickMsg(`제대로 기입해주세요.`); // TODO 정확하지 않음
+              if (!checkNickName(nickName)) {
+                alert('닉네임 수정 필요');
+              }
             }
           }}
         />
@@ -161,7 +162,7 @@ const ProfileImgLabel = styled.label`
   background: ${props => props.theme.colors.gradient};
   width: 130px;
   height: 30px;
-  color: white;
+  color: ${props => props.theme.colors.white};
   border: none;
   border-radius: 10px;
   line-height: 28px;
@@ -203,11 +204,7 @@ const Nick = styled.div`
 const Nickguide = styled.span`
   width: 59px;
   height: 21px;
-
-  font-weight: 400;
   font-size: 18px;
-
-  color: #000000;
 `;
 
 const NickInput = styled.input`
