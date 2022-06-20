@@ -3,6 +3,7 @@ import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import axios from 'axios';
 
+// TODO : 최초 42api 토큰 요청시 성공하면 인트라 사진도 갖고오도록 할 예정?
 const DEFAULT_PROFILE =
   'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
 
@@ -41,41 +42,49 @@ const NicknamPage: React.FC = () => {
       if (e.nativeEvent.isComposing === false) onCheck();
     }
   };
-  // TODO: 전체 닉네임들을 다 탐색해야함(front or back)
-  const onCheck = () => {
-    // console.log('한글 중복 check용 log');
-    //  const result = await axios.get(`http://localhost:4000/profile/`);
-    // const userList = result.data;
-    const resNickName = 'mike2ox';
+  const checkNickName = (resNickName: string) => {
     // NOTE : 공백문자 제거
     const nickNameWithTrim = nickName.trim();
 
     if (!nickNameWithTrim.length) {
       console.log('닉네임을 입력해');
-      return;
+      return false;
     }
-    console.log(nickNameWithTrim.length);
     //  NOTE : 정규식 적용
     if (!regex.test(nickNameWithTrim)) {
       if (nickNameWithTrim.length >= minNickName && nickNameWithTrim.length <= maxNickName)
         setCheckNickMsg('한글, 영어, 숫자로만 작성해주세요');
       else setCheckNickMsg(`최소 2자, 최대 8자로 작성해주세요`);
-      return;
+      return false;
     }
 
-    if (nickNameWithTrim !== resNickName) {
-      setCheckNickMsg(`사용 가능한 닉네임입니다.`);
-      setIsEnabled(true);
-    } else {
+    if (nickNameWithTrim === resNickName) {
       setCheckNickMsg(`중복된 닉네임입니다.`);
       setIsEnabled(false);
+      return false;
+    }
+    return true;
+  };
+
+  // TODO: 전체 닉네임들을 다 탐색해야함(front or back)
+  const onCheck = () => {
+    // console.log('한글 중복 check용 log');
+    //  const result = await axios.get(`http://localhost:4000/profile/`);
+    // const userList = result.data;
+
+    const resNickName = 'mike2ox';
+    if (checkNickName(resNickName)) {
+      setCheckNickMsg(`사용 가능한 닉네임입니다.`);
+      setIsEnabled(true);
     }
   };
   return (
     <NickTemplate>
       <NickForm>
         <NickGuide>프로필을 작성해주세요</NickGuide>
-        <ProfileImgResult alt="profile" src={profileImg} />
+        <ProfileDivResult>
+          <ProfileImgResult alt="profile" src={profileImg} />
+        </ProfileDivResult>
         <ProfileImgLabel htmlFor="profile">프로필 업로드</ProfileImgLabel>
         <ProfileImgButton
           type="file"
@@ -92,6 +101,7 @@ const NicknamPage: React.FC = () => {
             onChange={onEditNick}
             onKeyDown={onKeyEnter}
             defaultValue={nickName}
+            required
           />
           <CheckDuplicate onClick={onCheck}>중복 체크</CheckDuplicate>
           <DupMsg>{checkNickMsg}</DupMsg>
@@ -106,7 +116,7 @@ const NicknamPage: React.FC = () => {
               console.dir(profileImg);
               console.dir(nickName);
             } else {
-              setCheckNickMsg(`중복된 닉네임입니다.`);
+              setCheckNickMsg(`제대로 기입해주세요.`); // TODO 정확하지 않음
             }
           }}
         />
@@ -114,20 +124,27 @@ const NicknamPage: React.FC = () => {
     </NickTemplate>
   );
 };
+
 const NickTemplate = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
 `;
+
 const NickForm = styled.div`
   display: block;
-  padding: 15px;
   width: 700px;
   height: 800px;
-  margin-top: 120px;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
   padding: 55px;
-  border: 2px solid #c6b0eb;
+  border: 2px solid ${props => props.theme.colors.main};
   border-radius: 20px;
-  justify-content: center;
+  text-align: center;
 `;
 
 const NickGuide = styled.h2`
@@ -137,18 +154,17 @@ const NickGuide = styled.h2`
   font-weight: 700;
   font-size: 24px;
 
-  color: #c6b0eb;
+  color: ${props => props.theme.colors.main};
 `;
 
 const ProfileImgLabel = styled.label`
-  background: ${props => props.theme.colors['gradient']};
+  background: ${props => props.theme.colors.gradient};
   width: 130px;
   height: 30px;
   color: white;
   border: none;
   border-radius: 10px;
-  padding-left: 1.2em;
-  line-height: 1.7em;
+  line-height: 28px;
   cursor: pointer;
   margin: 0 auto;
   transition: all 0.2s ease-in-out;
@@ -157,32 +173,31 @@ const ProfileImgLabel = styled.label`
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.25);
   }
 `;
-const ProfileImgResult = styled.img`
+
+const ProfileDivResult = styled.div`
   width: 300px;
   height: 300px;
-
+  border-radius: 50%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #bbb;
-  border-radius: 50%;
-  outline: none;
   margin: 50px auto;
 `;
 
+const ProfileImgResult = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 const ProfileImgButton = styled.input`
-  // -webkit-appearance: none;
-  // -moz-appearance: none;
   display: none;
 `;
 
 const Nick = styled.div`
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 16px;
   text-align: center;
   margin-top: 80px;
-  color: #ff6363;
 `;
 
 const Nickguide = styled.span`
@@ -196,11 +211,11 @@ const Nickguide = styled.span`
 `;
 
 const NickInput = styled.input`
-  outline: none;
+  display: inline;
   border-top: none;
   border-left: none;
   border-right: none;
-  border-bottom: 1.5px solid #000000;
+  border-bottom: 1.5px solid ${props => props.theme.colors.gradient};
   width: 256px;
   height: 30px;
   margin: 1%;
@@ -209,25 +224,22 @@ const NickInput = styled.input`
 const CheckDuplicate = styled.button`
   width: 113px;
   height: 32px;
-
-  background: #ffffff;
-  border: 1px solid #c6b0eb;
+  background: ${props => props.theme.colors.white};
+  border: 1px solid ${props => props.theme.colors.main};
   border-radius: 5px;
-
-  font-weight: 400;
   font-size: 18px;
 
   text-align: center;
 
-  color: #000000;
+  color: ${props => props.theme.colors.gradient};
 `;
 
-const DupMsg = styled.p`
+const DupMsg = styled.span`
   margin: 10px 0;
+  display: block;
   color: ${props => props.theme.colors.red};
-  font-style: normal;
   font-size: 14px;
-  height: 14px;
+  height: 40px;
 `;
 
 export default NicknamPage;
