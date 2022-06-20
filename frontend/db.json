@@ -13,7 +13,26 @@
       "postId": 1
     }
   ],
-  "profile": {
-    "name": "typicode"
-  }
+  "profile": [
+    {
+      "id": 1,
+      "user": "mosong",
+      "nickName": "mike2ox"
+    },
+    {
+      "id": 2,
+      "user": "junselee",
+      "nickName": "owl"
+    },
+    {
+      "id": 3,
+      "user": "sgang",
+      "nickName": "leader"
+    },
+    {
+      "id": 4,
+      "user": "dhyeon",
+      "nickName": "master"
+    }
+  ]
 }

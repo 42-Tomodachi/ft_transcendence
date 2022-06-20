@@ -7,25 +7,48 @@ const DEFAULT_PROFILE =
   'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
 
 const NicknamPage: React.FC = () => {
-  const [nickImage, setNickImage] = useState(DEFAULT_PROFILE);
-  const [nickName, setNcikName] = useState('');
+  const [nickImage, setNickImage] = useState<string>(DEFAULT_PROFILE);
+  const [nickName, setNickName] = useState<string>('');
+  const [dupNcikMsg, setDupNcikMsg] = useState<string>('');
+  const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const profileIamge = useRef<HTMLInputElement>(null);
 
-  const onEditNick = (e: any) => {
+  const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     // console.dir(e.target.value);
-    setNcikName(e.target.value);
+    setDupNcikMsg('');
+    setNickName(e.target.value);
   };
-  const onFindImage = (e: any) => {
-    if (e.target.files.length) {
+  const onFindImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.length) {
       const imgTarget = e.target.files[0];
       const fileReader = new FileReader();
 
       fileReader.readAsDataURL(imgTarget);
-      fileReader.onload = (event: any) => {
-        setNickImage(event.target.result);
-      };
+      fileReader.onload = () => setNickImage(fileReader.result as string);
     } else {
       setNickImage(DEFAULT_PROFILE);
+    }
+  };
+  const onKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key == 'Enter') onCheck();
+  };
+  // TODO: 전체 닉네임들을 다 탐색해야함(front or back)
+  const onCheck = () => {
+    // const result = await axios.get(`http://localhost:4000/profile/`);
+    // const userList = result.data;
+    const resNickName = 'mike2ox';
+
+    if (!nickName.length) {
+      console.log('닉네임을 입력해');
+      return;
+    }
+
+    if (nickName !== resNickName) {
+      setDupNcikMsg(`사용 가능한 닉네임입니다.`);
+      setIsEnabled(true);
+    } else {
+      setDupNcikMsg(`중복된 닉네임입니다.`);
+      setIsEnabled(false);
     }
   };
   return (
@@ -43,12 +66,15 @@ const NicknamPage: React.FC = () => {
           onChange={onFindImage}
         />
         <Nick>
-          <div>
-            <span className="guide">닉네임 :</span>
-            <input type="text" id="nickInput" onChange={onEditNick} value={nickName} />
-            <input type="button" id="checkDuplicate" value="중복 체크" />
-            <p>중복된 닉네임 입니다</p> {/* 중복 체크값에 따라 visibility:hidden <-> visible ?*/}
-          </div>
+          <Nickguide>닉네임 :</Nickguide>
+          <NickInput
+            type="text"
+            onChange={onEditNick}
+            onKeyDown={onKeyPress}
+            defaultValue={nickName}
+          />
+          <CheckDuplicate type="button" onClick={onCheck} defaultValue="중복 체크" />
+          <DupMsg>{dupNcikMsg}</DupMsg>
         </Nick>
         <Button
           width={130}
@@ -56,8 +82,12 @@ const NicknamPage: React.FC = () => {
           color="gradient"
           text="확인"
           onClick={() => {
-            console.dir(profileIamge);
-            console.dir(nickName);
+            if (isEnabled) {
+              console.dir(nickImage);
+              console.dir(nickName);
+            } else {
+              alert('닉네임이 일치하지 않습니다');
+            }
           }}
         />
       </NickForm>
@@ -97,6 +127,8 @@ const NickImage = styled.label`
   color: 'white';
   border: 'none';
   border-radius: 10px;
+  padding-left: 1.2em;
+  line-height: 1.7em;
   cursor: pointer;
   margin: 0 auto;
   transition: all 0.2s ease-in-out;
@@ -115,7 +147,7 @@ const NickImageResult = styled.img`
   background-color: #bbb;
   border-radius: 50%;
   outline: none;
-  margin: auto;
+  margin: 50px auto;
 `;
 
 const NickImageButton = styled.input`
@@ -125,49 +157,57 @@ const NickImageButton = styled.input`
 `;
 
 const Nick = styled.div`
-  .guide {
-    width: 59px;
-    height: 21px;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 16px;
+  text-align: center;
+  margin-top: 80px;
+  color: #ff6363;
+`;
 
-    font-weight: 400;
-    font-size: 18px;
+const Nickguide = styled.span`
+  width: 59px;
+  height: 21px;
 
-    color: #000000;
-  }
+  font-weight: 400;
+  font-size: 18px;
 
-  #nickInput {
-    outline: none;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    border-bottom: 1.5px solid #000000;
-    width: 256px;
-    height: 30px;
-    margin: 1%;
-  }
-  #checkDuplicate {
-    width: 113px;
-    height: 32px;
+  color: #000000;
+`;
 
-    background: #ffffff;
-    border: 1px solid #c6b0eb;
-    border-radius: 5px;
+const NickInput = styled.input`
+  outline: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1.5px solid #000000;
+  width: 256px;
+  height: 30px;
+  margin: 1%;
+`;
 
-    font-weight: 400;
-    font-size: 18px;
+const CheckDuplicate = styled.input`
+  width: 113px;
+  height: 32px;
 
-    text-align: center;
+  background: #ffffff;
+  border: 1px solid #c6b0eb;
+  border-radius: 5px;
 
-    color: #000000;
-  }
-  div {
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 16px;
-    text-align: center;
+  font-weight: 400;
+  font-size: 18px;
 
-    color: #ff6363;
-  }
+  text-align: center;
+
+  color: #000000;
+`;
+
+const DupMsg = styled.p`
+  margin: 10px 0;
+  color: ${props => props.theme.colors.red};
+  font-style: normal;
+  font-size: 14px;
+  height: 14px;
 `;
 
 export default NicknamPage;
