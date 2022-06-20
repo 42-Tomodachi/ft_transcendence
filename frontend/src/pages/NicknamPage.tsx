@@ -34,7 +34,7 @@ const NicknamPage: React.FC = () => {
   };
   // TODO: 전체 닉네임들을 다 탐색해야함(front or back)
   const onCheck = () => {
-    // const result = await axios.get(`http://localhost:4000/profile/`);
+    //  const result = await axios.get(`http://localhost:4000/profile/`);
     // const userList = result.data;
     const resNickName = 'mike2ox';
 
@@ -124,8 +124,8 @@ const NickImage = styled.label`
   background: ${props => props.theme.colors['gradient']};
   width: 130px;
   height: 30px;
-  color: 'white';
-  border: 'none';
+  color: white;
+  border: none;
   border-radius: 10px;
   padding-left: 1.2em;
   line-height: 1.7em;
