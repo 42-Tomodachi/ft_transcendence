@@ -32,11 +32,11 @@ interface ButtonContainerProps {
 
 const ButtonContainer = styled.button<ButtonContainerProps>`
   ${({ color, gradient, theme }) =>
-    gradient ? `background: ${theme.colors[color]}` : `background-color: ${theme.colors[color]}`}
+    gradient ? `background: ${theme.colors[color]};` : `background-color: ${theme.colors[color]};`}
   width: ${({ width }) => width}px;
   height: ${({ height }) => height}px;
   color: ${({ color }) => (color === 'white' ? 'black' : 'white')};
-  border: ${({ color, theme }) => (color === 'white' ? `${theme.colors.main}` : 'none')};
+  border: ${({ color, theme }) => (color === 'white' ? `1px solid ${theme.colors.main}` : 'none')};
   border-radius: 10px;
   cursor: pointer;
   margin: 0 auto;
