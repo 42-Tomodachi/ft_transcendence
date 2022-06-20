@@ -6,16 +6,21 @@ import axios from 'axios';
 const DEFAULT_PROFILE =
   'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
 
+const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]{2,8}$/;
+const minNickName = 2;
+const maxNickName = 8;
+
 const NicknamPage: React.FC = () => {
-  const [nickImage, setNickImage] = useState<string>(DEFAULT_PROFILE);
+  const [profileImg, setProfileImg] = useState<string>(DEFAULT_PROFILE);
   const [nickName, setNickName] = useState<string>('');
-  const [dupNcikMsg, setDupNcikMsg] = useState<string>('');
+  const [checkNickMsg, setCheckNickMsg] = useState<string>('');
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const profileIamge = useRef<HTMLInputElement>(null);
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     // console.dir(e.target.value);
-    setDupNcikMsg('');
+    setCheckNickMsg('');
+    setIsEnabled(false);
     setNickName(e.target.value);
   };
   const onFindImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,30 +29,45 @@ const NicknamPage: React.FC = () => {
       const fileReader = new FileReader();
 
       fileReader.readAsDataURL(imgTarget);
-      fileReader.onload = () => setNickImage(fileReader.result as string);
+      fileReader.onload = () => setProfileImg(fileReader.result as string);
     } else {
-      setNickImage(DEFAULT_PROFILE);
+      setProfileImg(DEFAULT_PROFILE);
     }
   };
-  const onKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key == 'Enter') onCheck();
+  const onKeyEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const key = e.key || e.keyCode;
+    if (key == 'Enter' || key === 13) {
+      // NOTE : 한글 중복 입력 제거
+      if (e.nativeEvent.isComposing === false) onCheck();
+    }
   };
   // TODO: 전체 닉네임들을 다 탐색해야함(front or back)
   const onCheck = () => {
+    // console.log('한글 중복 check용 log');
     //  const result = await axios.get(`http://localhost:4000/profile/`);
     // const userList = result.data;
     const resNickName = 'mike2ox';
+    // NOTE : 공백문자 제거
+    const nickNameWithTrim = nickName.trim();
 
-    if (!nickName.length) {
+    if (!nickNameWithTrim.length) {
       console.log('닉네임을 입력해');
       return;
     }
+    console.log(nickNameWithTrim.length);
+    //  NOTE : 정규식 적용
+    if (!regex.test(nickNameWithTrim)) {
+      if (nickNameWithTrim.length >= minNickName && nickNameWithTrim.length <= maxNickName)
+        setCheckNickMsg('한글, 영어, 숫자로만 작성해주세요');
+      else setCheckNickMsg(`최소 2자, 최대 8자로 작성해주세요`);
+      return;
+    }
 
-    if (nickName !== resNickName) {
-      setDupNcikMsg(`사용 가능한 닉네임입니다.`);
+    if (nickNameWithTrim !== resNickName) {
+      setCheckNickMsg(`사용 가능한 닉네임입니다.`);
       setIsEnabled(true);
     } else {
-      setDupNcikMsg(`중복된 닉네임입니다.`);
+      setCheckNickMsg(`중복된 닉네임입니다.`);
       setIsEnabled(false);
     }
   };
@@ -55,9 +75,9 @@ const NicknamPage: React.FC = () => {
     <NickTemplate>
       <NickForm>
         <NickGuide>프로필을 작성해주세요</NickGuide>
-        <NickImageResult alt="profile" src={nickImage} />
-        <NickImage htmlFor="profile">프로필 업로드</NickImage>
-        <NickImageButton
+        <ProfileImgResult alt="profile" src={profileImg} />
+        <ProfileImgLabel htmlFor="profile">프로필 업로드</ProfileImgLabel>
+        <ProfileImgButton
           type="file"
           accept="image/*"
           name="profile"
@@ -70,11 +90,11 @@ const NicknamPage: React.FC = () => {
           <NickInput
             type="text"
             onChange={onEditNick}
-            onKeyDown={onKeyPress}
+            onKeyDown={onKeyEnter}
             defaultValue={nickName}
           />
-          <CheckDuplicate type="button" onClick={onCheck} defaultValue="중복 체크" />
-          <DupMsg>{dupNcikMsg}</DupMsg>
+          <CheckDuplicate onClick={onCheck}>중복 체크</CheckDuplicate>
+          <DupMsg>{checkNickMsg}</DupMsg>
         </Nick>
         <Button
           width={130}
@@ -83,10 +103,10 @@ const NicknamPage: React.FC = () => {
           text="확인"
           onClick={() => {
             if (isEnabled) {
-              console.dir(nickImage);
+              console.dir(profileImg);
               console.dir(nickName);
             } else {
-              alert('닉네임이 일치하지 않습니다');
+              setCheckNickMsg(`중복된 닉네임입니다.`);
             }
           }}
         />
@@ -120,7 +140,7 @@ const NickGuide = styled.h2`
   color: #c6b0eb;
 `;
 
-const NickImage = styled.label`
+const ProfileImgLabel = styled.label`
   background: ${props => props.theme.colors['gradient']};
   width: 130px;
   height: 30px;
@@ -137,7 +157,7 @@ const NickImage = styled.label`
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.25);
   }
 `;
-const NickImageResult = styled.img`
+const ProfileImgResult = styled.img`
   width: 300px;
   height: 300px;
 
@@ -150,7 +170,7 @@ const NickImageResult = styled.img`
   margin: 50px auto;
 `;
 
-const NickImageButton = styled.input`
+const ProfileImgButton = styled.input`
   // -webkit-appearance: none;
   // -moz-appearance: none;
   display: none;
@@ -186,7 +206,7 @@ const NickInput = styled.input`
   margin: 1%;
 `;
 
-const CheckDuplicate = styled.input`
+const CheckDuplicate = styled.button`
   width: 113px;
   height: 32px;
 
