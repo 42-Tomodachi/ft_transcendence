@@ -225,7 +225,7 @@ const CheckDuplicate = styled.button`
   font-size: 18px;
 
   text-align: center;
-
+  cursor: pointer;
   color: ${props => props.theme.colors.gradient};
 `;
 
