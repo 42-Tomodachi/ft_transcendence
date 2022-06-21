@@ -19,7 +19,6 @@ const NicknamPage: React.FC = () => {
   const profileIamge = useRef<HTMLInputElement>(null);
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // console.dir(e.target.value);
     setCheckNickMsg('');
     setIsEnabled(false);
     setNickName(e.target.value);
@@ -31,8 +30,6 @@ const NicknamPage: React.FC = () => {
 
       fileReader.readAsDataURL(imgTarget);
       fileReader.onload = () => setProfileImg(fileReader.result as string);
-    } else {
-      setProfileImg(DEFAULT_PROFILE);
     }
   };
   const onKeyEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -216,6 +213,7 @@ const NickInput = styled.input`
   width: 256px;
   height: 30px;
   margin: 1%;
+  outline: none;
 `;
 
 const CheckDuplicate = styled.button`
