@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext } from 'react';
-import axios from 'axios';
+// import axios from 'axios';
 import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
