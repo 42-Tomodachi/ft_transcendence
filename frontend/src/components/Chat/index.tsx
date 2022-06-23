@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
-import RoomList from '../RoomList';
+import ChatList from '../RoomList';
 import { MAKE_CHAT_ROOM } from '../../utils/interface';
 import { AllContext } from '../../store';
 
@@ -30,7 +30,7 @@ const Chat: React.FC = () => {
         />
         <Button width={160} height={40} color="gradient" text="참여중인 채팅방 보기" />
       </EnteredRoomBtn>
-      <RoomList list={chatList} />
+      <ChatList list={chatList} />
     </>
   );
 };
@@ -43,7 +43,7 @@ const EnteredRoomBtn = styled.div`
   button {
     margin: 0;
     font-size: 14px;
-    font-weight: 500;
+    /* font-weight: 500; */
     &:last-of-type {
       margin-left: 10px;
     }

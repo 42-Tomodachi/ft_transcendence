@@ -9,7 +9,7 @@ import OauthPage from './pages/OauthPage';
 import NicknamePage from './pages/NicknamePage';
 import SecondAuthPage from './pages/SecondAuthPage';
 import HomePage from './pages/HomePage';
-import ChatRoom from './components/Chat/ChatRoom';
+import ChatPage from './pages/ChatPage';
 import UserList from './components/UserList/index';
 
 import ProfilePage from './components/UserProfile';
@@ -29,7 +29,7 @@ function App() {
             <Route path="/secondAuth" element={<SecondAuthPage />} />
             <Route path="/profilePage" element={<ProfilePage />} />
             <Route path="/game" element={<HomePage />} />
-            <Route path="/chat" element={<ChatRoom />} />
+            <Route path="/chat" element={<ChatPage />} />
             <Route path="/userlist" element={<UserList />} />
 
             {/* Tester */}
