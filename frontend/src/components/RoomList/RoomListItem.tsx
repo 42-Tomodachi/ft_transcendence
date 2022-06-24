@@ -2,12 +2,20 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { IRoomList } from '../../utils/interface';
 import Button from '../common/Button';
+import { useNavigate } from 'react-router-dom';
 
 interface RoomListItemProps {
   item: IRoomList;
 }
 
 const RoomListItem: React.FC<RoomListItemProps> = ({ item }) => {
+  const navigate = useNavigate();
+  const navigateRomeType = (isChat: any, roomNumber: number) => {
+    if (isChat !== undefined)
+      navigate(`/modalTester`); // TODO: navigate(`${roomNumber}`); // game room
+    else navigate(`/chat`); // TODO: change /chat/{roomNumber}
+  };
+
   return (
     <ListItem>
       <ListTitle>{item.title}</ListTitle>
@@ -15,7 +23,13 @@ const RoomListItem: React.FC<RoomListItemProps> = ({ item }) => {
         <PrivateStat>{item.isPublic ? `공개` : `비공개`}</PrivateStat>
         <CountStat>{item.playerCount + '명'}</CountStat>
         <EnterBtnWrap>
-          <Button width={50} height={30} color="gradient" text="입장" />
+          <Button
+            width={50}
+            height={30}
+            color="gradient"
+            text="입장"
+            onClick={() => navigateRomeType(item.isGameStart, item.id)}
+          />
         </EnterBtnWrap>
         {item.isGameStart !== undefined && (
           <GameStat isGameStart={item.isGameStart}>

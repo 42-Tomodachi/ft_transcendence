@@ -6,6 +6,7 @@ import UserProfile from '../components/UserProfile';
 import Game from '../components/Game';
 import { GAME, MenuType } from '../utils/interface';
 import Chat from '../components/Chat';
+import ModalSet from '../components/common/Modal/ModalSet';
 
 const GamePage: React.FC = () => {
   const [menu, setMenu] = useState<MenuType>(GAME);
@@ -32,6 +33,7 @@ const GamePage: React.FC = () => {
             <UserProfile />
           </HomeMenus>
         </HomeContents>
+        <ModalSet />
       </HomeContainer>
     </Background>
   );

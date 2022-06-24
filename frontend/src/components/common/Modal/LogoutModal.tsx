@@ -4,16 +4,21 @@ import Modal from '.';
 import Button from '../Button';
 import { AllContext } from '../../../store';
 import { LOGOUT } from '../../../utils/interface';
+import { useNavigate } from 'react-router-dom';
 
 const LogoutModal: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { setUser } = useContext(AllContext).userData;
+  const navigater = useNavigate();
 
   const handleLogout = () => {
     setUserStatus(LOGOUT);
     setUser(LOGOUT);
-    // 추후에 jwt 토큰 삭제 예정
+    setModal(null); // 모달 끄기
+    navigater('/'); // TODO: 초기화면으로 이동
+    // TODO: 로그아웃 후 초기화면에서 뒤로가기를 못하게 막아야함
+    // TODO: 추후에 jwt 토큰 삭제 예정
   };
 
   return (

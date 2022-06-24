@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
@@ -11,6 +12,7 @@ import MessageInput from '../components/Chat/MessageInput';
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[] | []>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getMessages = async () => {
@@ -20,12 +22,27 @@ const ChatPage: React.FC = () => {
     getMessages();
   }, []);
 
+  const openRoomSetting = () => {
+    // navigate('/'); // TODO: settingRoom in modalTester
+  };
+
+  const leaveChatRoom = () => {
+    // navigate(-1); // history 안에 있는 순서상 뒤로가기
+    navigate('/game');
+  };
+
+  const goMainPage = () => {
+    navigate('/game'); // FIXME: game이 맞는건지?
+  };
+
   return (
     <Background>
       <ChatRoomContainer>
-        <Header />
+        <Header onClickMenu={goMainPage} />
+
         <ChatRoomBody>
           <ChatArea>
+            {/* TODO: dhyeon -> 유저의 닉네임 */}
             <ChatTitle>dhyeon의 채팅방</ChatTitle>
             <MessageList messages={messages} />
             <MessageInput setMessages={setMessages} messages={messages} />
@@ -34,8 +51,20 @@ const ChatPage: React.FC = () => {
             <UserList />
             <UserProfile />
             <ChatRoomBtnWrap>
-              <Button color="white" width={140} height={50} text="방 설정" />
-              <Button color="white" width={140} height={50} text="방 나가기" />
+              <Button
+                color="white"
+                width={140}
+                height={50}
+                text="방 설정"
+                onClick={openRoomSetting}
+              />
+              <Button
+                color="white"
+                width={140}
+                height={50}
+                text="방 나가기"
+                onClick={leaveChatRoom}
+              />
             </ChatRoomBtnWrap>
           </ChatSideMenu>
         </ChatRoomBody>
