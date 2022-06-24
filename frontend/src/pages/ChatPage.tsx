@@ -82,7 +82,7 @@ const Background = styled.div`
 const ChatRoomContainer = styled.div`
   width: 1000px;
   margin: 0 auto;
-  padding: 20px 0;
+  padding-bottom: 20px;
 `;
 const ChatRoomBody = styled.div`
   display: flex;
