@@ -48,14 +48,16 @@ const Background = styled.div`
   width: 100%;
   height: 100vh;
   background-color: ${({ theme }) => theme.colors.main};
-  overflow: hidden;
+  overflow-y: auto;
 `;
 const ChatRoomContainer = styled.div`
   width: 1000px;
   margin: 0 auto;
+  padding: 20px 0;
 `;
 const ChatRoomBody = styled.div`
   display: flex;
+  min-height: 770px;
   height: calc(100vh - 160px);
 `;
 const ChatArea = styled.div`
