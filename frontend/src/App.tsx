@@ -29,7 +29,8 @@ function App() {
             <Route path="/secondAuth" element={<SecondAuthPage />} />
             <Route path="/profilePage" element={<ProfilePage />} />
             <Route path="/game" element={<HomePage />} />
-            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/chat" element={<HomePage menu="CHAT" />} />
+            <Route path="/chatroom" element={<ChatPage />} />
             <Route path="/userlist" element={<UserList />} />
 
             {/* Tester */}

@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
 import UserList from '../components/UserList';
 import UserProfile from '../components/UserProfile';
-import Button from '../components/common/Button';
 import MessageList from '../components/Chat/MessageList';
-import { IMessage } from '../utils/interface';
 import MessageInput from '../components/Chat/MessageInput';
+import { CHAT, IMessage } from '../utils/interface';
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[] | []>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const getMessages = async () => {
@@ -22,27 +19,15 @@ const ChatPage: React.FC = () => {
     getMessages();
   }, []);
 
-  const openRoomSetting = () => {
-    // navigate('/'); // TODO: settingRoom in modalTester
-  };
-
-  const leaveChatRoom = () => {
-    // navigate(-1); // history 안에 있는 순서상 뒤로가기
-    navigate('/game');
-  };
-
-  const goMainPage = () => {
-    navigate('/game'); // FIXME: game이 맞는건지?
-  };
-
   return (
     <Background>
       <ChatRoomContainer>
-        <Header onClickMenu={goMainPage} />
+        <Header type={CHAT} />
 
         <ChatRoomBody>
           <ChatArea>
             {/* TODO: dhyeon -> 유저의 닉네임 */}
+            {/* TODO: Figma 참고하여 Left Arrow 넣어 뒤로가기 버튼 추가 */}
             <ChatTitle>dhyeon의 채팅방</ChatTitle>
             <MessageList messages={messages} />
             <MessageInput setMessages={setMessages} messages={messages} />
@@ -50,22 +35,6 @@ const ChatPage: React.FC = () => {
           <ChatSideMenu>
             <UserList />
             <UserProfile />
-            <ChatRoomBtnWrap>
-              <Button
-                color="white"
-                width={140}
-                height={50}
-                text="방 설정"
-                onClick={openRoomSetting}
-              />
-              <Button
-                color="white"
-                width={140}
-                height={50}
-                text="방 나가기"
-                onClick={leaveChatRoom}
-              />
-            </ChatRoomBtnWrap>
           </ChatSideMenu>
         </ChatRoomBody>
       </ChatRoomContainer>
@@ -86,7 +55,7 @@ const ChatRoomContainer = styled.div`
 `;
 const ChatRoomBody = styled.div`
   display: flex;
-  min-height: 770px;
+  min-height: 700px;
   height: calc(100vh - 160px);
 `;
 const ChatArea = styled.div`
@@ -103,16 +72,5 @@ const ChatTitle = styled.h2`
 `;
 
 const ChatSideMenu = styled.div``;
-const ChatRoomBtnWrap = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-  & button {
-    &:first-of-type {
-      margin-right: 10px;
-    }
-  }
-`;
 
 export default ChatPage;

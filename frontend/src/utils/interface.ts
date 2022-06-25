@@ -56,6 +56,7 @@ export type HandleUserType = 'LOGIN' | 'LOGOUT';
 
 export const GAME = 'GAME' as const;
 export const CHAT = 'CHAT' as const;
+export const HOME = 'HOME' as const;
 
 export type MenuType = 'GAME' | 'CHAT';
 

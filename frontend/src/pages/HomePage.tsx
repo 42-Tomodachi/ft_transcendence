@@ -1,34 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
 import UserList from '../components/UserList';
 import UserProfile from '../components/UserProfile';
 import Game from '../components/Game';
-import { GAME, MenuType } from '../utils/interface';
+import { MenuType } from '../utils/interface';
 import Chat from '../components/Chat';
 import ModalSet from '../components/common/Modal/ModalSet';
 
-const GamePage: React.FC = () => {
-  const [menu, setMenu] = useState<MenuType>(GAME);
+interface HomePageProps {
+  menu?: MenuType;
+}
 
-  const onClickMenu = (menuType: MenuType) => {
-    setMenu(menuType);
-  };
-
+const HomePage: React.FC<HomePageProps> = ({ menu }) => {
   return (
     <>
       <Background>
         <HomeContainer>
-          <Header onClickMenu={onClickMenu} />
+          <Header type="HOME" />
           <HomeContents>
-            <MainArea>
-              {
-                {
-                  GAME: <Game />,
-                  CHAT: <Chat />,
-                }[menu]
-              }
-            </MainArea>
+            <MainArea>{menu && menu === 'CHAT' ? <Chat /> : <Game />}</MainArea>
             <HomeMenus>
               <UserList />
               <UserProfile />
@@ -73,4 +64,4 @@ const HomeMenus = styled.div`
   height: 100%;
 `;
 
-export default GamePage;
+export default HomePage;
