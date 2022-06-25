@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import UserList from '../components/UserList';
 import UserProfile from '../components/UserProfile';
 import Game from '../components/Game';
-import { MenuType } from '../utils/interface';
+import { HOME, MenuType } from '../utils/interface';
 import Chat from '../components/Chat';
 import ModalSet from '../components/common/Modal/ModalSet';
 
@@ -17,7 +17,7 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
     <>
       <Background>
         <HomeContainer>
-          <Header type="HOME" />
+          <Header type={HOME} />
           <HomeContents>
             <MainArea>{menu && menu === 'CHAT' ? <Chat /> : <Game />}</MainArea>
             <HomeMenus>
