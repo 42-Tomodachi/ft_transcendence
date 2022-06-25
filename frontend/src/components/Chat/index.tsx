@@ -3,7 +3,7 @@ import axios from 'axios';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import ChatList from '../RoomList';
-import { MAKE_CHAT_ROOM } from '../../utils/interface';
+import { CHAT, MAKE_CHAT_ROOM } from '../../utils/interface';
 import { AllContext } from '../../store';
 
 const Chat: React.FC = () => {
@@ -30,7 +30,7 @@ const Chat: React.FC = () => {
         />
         <Button width={160} height={40} color="gradient" text="참여중인 채팅방 보기" />
       </EnteredRoomBtn>
-      <ChatList list={chatList} />
+      <ChatList list={chatList} type={CHAT} />
     </>
   );
 };

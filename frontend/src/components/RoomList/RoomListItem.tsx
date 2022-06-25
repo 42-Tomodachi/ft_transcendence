@@ -1,19 +1,21 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { IRoomList } from '../../utils/interface';
+import { IRoomList, GAME, CHAT } from '../../utils/interface';
 import Button from '../common/Button';
 import { useNavigate } from 'react-router-dom';
 
 interface RoomListItemProps {
   item: IRoomList;
+  type: string;
 }
 
-const RoomListItem: React.FC<RoomListItemProps> = ({ item }) => {
+const RoomListItem: React.FC<RoomListItemProps> = ({ item, type }) => {
   const navigate = useNavigate();
-  const navigateRomeType = (isChat: any, roomNumber: number) => {
-    if (isChat !== undefined)
-      navigate(`/modalTester`); // TODO: navigate(`${roomNumber}`); // game room
-    else navigate(`/chat`); // TODO: change /chat/{roomNumber}
+  // TODO: string 타입말고 다른 타입?
+  const navigateRoomType = (type: string, roomNumber: number) => {
+    console.dir(type);
+    if (type === GAME) navigate(`/modalTester`); // TODO: navigate(`${roomNumber}`); // game room
+    else if (type === CHAT) navigate(`/chat`); // TODO: change /chat/{roomNumber}
   };
 
   return (
@@ -28,7 +30,7 @@ const RoomListItem: React.FC<RoomListItemProps> = ({ item }) => {
             height={30}
             color="gradient"
             text="입장"
-            onClick={() => navigateRomeType(item.isGameStart, item.id)}
+            onClick={() => navigateRoomType(type, item.id)}
           />
         </EnterBtnWrap>
         {item.isGameStart !== undefined && (

@@ -5,14 +5,15 @@ import { IRoomList } from '../../utils/interface';
 
 interface RoomListProps {
   list: IRoomList[] | [];
+  type: string;
 }
 
-const RoomList: React.FC<RoomListProps> = ({ list }) => {
+const RoomList: React.FC<RoomListProps> = ({ list, type }) => {
   return (
     <RoomListContainer>
       {list.length > 0 &&
         [...list, ...list, ...list, ...list, ...list].map((li, index) => {
-          return <GameListItem key={index} item={li} />;
+          return <GameListItem key={index} item={li} type={type} />;
         })}
     </RoomListContainer>
   );

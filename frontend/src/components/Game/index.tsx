@@ -4,7 +4,7 @@ import styled from '@emotion/styled';
 import Button from '../common/Button';
 import GameList from '../RoomList';
 import { AllContext } from '../../store';
-import { LOADING_LADDER_GAME, IRoomList, MAKE_GAME_ROOM } from '../../utils/interface';
+import { LOADING_LADDER_GAME, IRoomList, MAKE_GAME_ROOM, GAME } from '../../utils/interface';
 
 const Game: React.FC = () => {
   const [gameList, setGameList] = useState<IRoomList[] | []>([]);
@@ -36,7 +36,7 @@ const Game: React.FC = () => {
           onClick={() => setModal(LOADING_LADDER_GAME)}
         />
       </LadderGame>
-      <GameList list={gameList} />
+      <GameList list={gameList} type={GAME} />
     </>
   );
 };
