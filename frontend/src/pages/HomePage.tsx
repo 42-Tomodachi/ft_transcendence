@@ -16,26 +16,28 @@ const GamePage: React.FC = () => {
   };
 
   return (
-    <Background>
-      <HomeContainer>
-        <Header onClickMenu={onClickMenu} />
-        <HomeContents>
-          <MainArea>
-            {
+    <>
+      <Background>
+        <HomeContainer>
+          <Header onClickMenu={onClickMenu} />
+          <HomeContents>
+            <MainArea>
               {
-                GAME: <Game />,
-                CHAT: <Chat />,
-              }[menu]
-            }
-          </MainArea>
-          <HomeMenus>
-            <UserList />
-            <UserProfile />
-          </HomeMenus>
-        </HomeContents>
-        <ModalSet />
-      </HomeContainer>
-    </Background>
+                {
+                  GAME: <Game />,
+                  CHAT: <Chat />,
+                }[menu]
+              }
+            </MainArea>
+            <HomeMenus>
+              <UserList />
+              <UserProfile />
+            </HomeMenus>
+          </HomeContents>
+        </HomeContainer>
+      </Background>
+      <ModalSet />
+    </>
   );
 };
 
