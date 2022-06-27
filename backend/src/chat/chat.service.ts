@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ChatGateway } from './chat.gateway';
 import {
+  ChatContentDto,
   ChatRoomDataDto,
   ChatRoomDto,
   ChatRoomIdDto,
@@ -21,6 +23,7 @@ export class ChatService {
     private readonly chatParticipantRepo: Repository<ChatParticipant>,
     @InjectRepository(ChatRoom)
     private readonly chatRoomRepo: Repository<ChatRoom>,
+    private readonly ChatGateway: ChatGateway
   ) {}
 
   async getChatRoomById(id: number): Promise<ChatRoom> {
@@ -194,5 +197,22 @@ export class ChatService {
     } else {
       await this.chatParticipantRepo.delete({ chattingRoomId: roomId, userId });
     }
+  }
+
+  async submitChatContent(
+    roomId: number,
+    // ChatContentDto: ChatContentDto,
+  ): Promise<void> {
+    //채팅 DB에 저장
+    // const message = ChatContentDto.message;
+    // const chatContents = new ChatContents();
+
+    // chatContents.chattingRoomId = roomId;
+    // chatContents.userId = ;
+    // chatContents.content = message;
+
+    // this.chatContentsRepo.save();
+    //전체에 emit
+    this.ChatGateway.server.emit("addChat", { content: "hello", isNotice: 0 });
   }
 }

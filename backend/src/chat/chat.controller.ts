@@ -21,6 +21,7 @@ import {
   RoomPasswordDto,
   ChatRoomIdDto,
   UpdateChatRoomDto,
+  ChatContentDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -198,4 +199,15 @@ export class ChatController {
   // }
   // 인터페이스를 통해 게임 할 수 있도록 초대
   // 인터페이스를 통해 다른 유저의 프로필 보기
+
+  @ApiOperation({ summary: '채팅 등록' })
+  @Post(':roomId/users/:userId/messages')
+  async submitChatContent(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    // @Body() ChatContentDto: ChatContentDto,
+  ): Promise<void> {
+    // this.chatService.submitChatContent(roomId,ChatContentDto);
+    this.chatService.submitChatContent(roomId);
+  }
 }
