@@ -46,31 +46,26 @@ export class UsersService {
     });
   }
 
-  async getUserByEmail(email: string): Promise<User> {
+  // 유저가 있을 경우 유저 엔티티를 리턴하고 없을 경우 null을 리턴함
+  async getUserByEmail(email: string): Promise<User | null> {
     const ret = await this.userRepo.findOne({ where: { email } });
     return ret;
   }
 
-  async getUserById(id: number): Promise<User> {
-    const user = await this.userRepo.findOneOrFail({ where: { id } });
+  // 유저가 있을 경우 유저 엔티티를 리턴하고 없을 경우 null을 리턴함
+  async getUserById(id: number): Promise<User | null> {
+    const user = await this.userRepo.findOne({ where: { id } });
 
     return user;
   }
 
-  async getUserProfile(id: number): Promise<UserProfileDto> {
-    const user = await this.getUserById(id);
-    let userProfile: UserProfileDto;
+  async getUserProfile(userId: number): Promise<UserProfileDto> {
+    const user = await this.getUserById(userId);
+    if (!user) {
+      throw new BadRequestException('유저가 존재하지 않습니다.');
+    }
 
-    userProfile.id = user.id;
-    userProfile.nickname = user.nickname;
-    userProfile.avatar = user.avatar;
-    userProfile.email = user.email;
-    userProfile.ladderWinCount = user.ladderWinCount;
-    userProfile.ladderLoseCount = user.ladderLoseCount;
-    userProfile.winCount = user.winCount;
-    userProfile.loseCount = user.loseCount;
-
-    return userProfile;
+    return user.toUserProfileDto();
   }
 
   async findByNicknameAndUpdateImg(
@@ -93,7 +88,7 @@ export class UsersService {
 
   async isDuplicateNickname(nickname: string): Promise<boolean> {
     const found = await this.userRepo.findOne({ where: { nickname } });
-    console.log(found);
+
     if (found) {
       return true;
     }
@@ -143,6 +138,9 @@ export class UsersService {
 
   async getWinLoseCount(userId: number): Promise<WinLoseCountDto> {
     const user = await this.getUserById(userId);
+    if (!user) {
+      throw new BadRequestException('존재하지 않는 유저입니다.');
+    }
 
     return user.toWinLoseCount();
   }

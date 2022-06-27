@@ -20,14 +20,14 @@ export class User extends BaseEntity {
   id: number;
 
   @ApiProperty({ description: '닉네임' })
-  @Column({ unique: true, nullable: true, default: null })
+  @Column({ nullable: true, default: null })
   nickname: string | null;
 
   @ApiProperty({ description: '아바타' })
   @Column({ nullable: true, default: null })
   avatar: string | null;
 
-  @ApiProperty({ description: '이메일' })
+  @ApiProperty({ description: '42 이메일' })
   @Column({ unique: true })
   email: string;
 
@@ -90,6 +90,12 @@ export class User extends BaseEntity {
 
   // 친구, 레더레벨, 업적, 모든 경기 기록
 
+  getLadderLevel(): number {
+    return Math.floor(
+      (this.ladderWinCount * 3 + this.ladderLoseCount * 1) / 5 + 1,
+    );
+  }
+
   toUserProfileDto() {
     const userProfileDto = new UserProfileDto();
     userProfileDto.id = this.id;
@@ -100,6 +106,7 @@ export class User extends BaseEntity {
     userProfileDto.loseCount = this.loseCount;
     userProfileDto.ladderWinCount = this.ladderWinCount;
     userProfileDto.ladderLoseCount = this.ladderLoseCount;
+    userProfileDto.ladderLevel = this.getLadderLevel();
 
     return userProfileDto;
   }
@@ -111,6 +118,7 @@ export class User extends BaseEntity {
     winLoseCountDto.loseCount = this.loseCount;
     winLoseCountDto.ladderLoseCount = this.ladderLoseCount;
     winLoseCountDto.ladderWinCount = this.ladderWinCount;
+    winLoseCountDto.ladderLevel = this.getLadderLevel();
 
     return winLoseCountDto;
   }

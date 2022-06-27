@@ -52,11 +52,13 @@ export class ChatController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 만들기' })
-  @Post('')
+  @Post(':userId')
   async createChattingRoom(
+    @Param('userId') userId: number,
     @Body() createChattingRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
     const chattingRoom = await this.chatService.createChattingRoom(
+      userId,
       createChattingRoomDto,
     );
 
@@ -97,6 +99,15 @@ export class ChatController {
       ownerId,
       updateChatRoomDto,
     );
+  }
+
+  @ApiOperation({ summary: 'kankim✅ 채팅방 나가기' })
+  @Delete(':roomId/users/:userId')
+  async exitRoom(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<void> {
+    await this.chatService.exitRoom(roomId, userId);
   }
 
   // // 채팅방 유저 목록 가져오기

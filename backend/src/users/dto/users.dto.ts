@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  minLength,
+} from 'class-validator';
 
 export class UpdateUserDto {
   @ApiProperty({ description: '유저 id' })
@@ -30,6 +38,14 @@ export class SimpleUserDto {
   nickname: string;
 }
 
+export class NicknameDto {
+  @ApiProperty({ description: '닉네임' })
+  @IsString()
+  @MinLength(2, { message: '닉네임은 최소 2글자로 입력해 주세요.' })
+  @MaxLength(8, { message: '닉네임은 최대 8글자로 입력해 주세요.' })
+  nickname: string;
+}
+
 export class UserProfileDto {
   @ApiProperty({ description: '유저 id' })
   id: number;
@@ -54,6 +70,9 @@ export class UserProfileDto {
 
   @ApiProperty({ description: '래임게임 패배 카운트' })
   ladderLoseCount: number;
+
+  @ApiProperty({ description: '유저 래더 레벨' })
+  ladderLevel: number;
 }
 
 export class WinLoseCountDto {
@@ -71,4 +90,7 @@ export class WinLoseCountDto {
 
   @ApiProperty({ description: '래임게임 패배 카운트' })
   ladderLoseCount: number;
+
+  @ApiProperty({ description: '유저 래더 레벨' })
+  ladderLevel: number;
 }

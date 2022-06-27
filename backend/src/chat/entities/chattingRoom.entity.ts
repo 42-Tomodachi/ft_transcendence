@@ -48,6 +48,7 @@ export class ChatRoom extends BaseEntity {
     const chattingRoomsDto = new ChatRoomDto();
     chattingRoomsDto.id = this.id;
     chattingRoomsDto.title = this.title;
+    chattingRoomsDto.isPublic = this.password ? true : false;
     chattingRoomsDto.ownerId = this.ownerId;
     chattingRoomsDto.numberOfParticipants = this.chatParticipant.length;
     chattingRoomsDto.isDm = this.isDm;

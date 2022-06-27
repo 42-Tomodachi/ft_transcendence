@@ -74,12 +74,13 @@ export class ChatService {
   }
 
   async createChattingRoom(
+    userId: number,
     createChattingRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
     const chattingRoom = new ChatRoom();
     chattingRoom.title = createChattingRoomDto.title;
     chattingRoom.password = createChattingRoomDto.password;
-    chattingRoom.ownerId = createChattingRoomDto.ownerId;
+    chattingRoom.ownerId = userId;
     chattingRoom.isDm = createChattingRoomDto.isDm;
 
     const createdChattingRoom = await this.chatRoomRepo.save(chattingRoom);
@@ -139,7 +140,7 @@ export class ChatService {
       throw new BadRequestException('채팅방의 비밀번호가 일치하지 않습니다.');
     }
 
-    if (!this.isExistMember(roomId, userId)) {
+    if (!(await this.isExistMember(roomId, userId))) {
       const chatParticipant = new ChatParticipant();
       chatParticipant.chattingRoomId = roomId;
       chatParticipant.userId = userId;
@@ -171,5 +172,27 @@ export class ChatService {
     const updatedRoom = await this.chatRoomRepo.save(room);
 
     return updatedRoom.toChatRoomDataDto();
+  }
+
+  async exitRoom(roomId: number, userId: number): Promise<void> {
+    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
+    if (!room) {
+      throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    }
+
+    if (
+      !(await this.chatParticipantRepo.findOneBy({
+        chattingRoomId: roomId,
+        userId,
+      }))
+    ) {
+      throw new BadRequestException('참여중인 채팅방이 아닙니다.');
+    }
+
+    if (room.ownerId === userId) {
+      await this.chatRoomRepo.delete({ id: roomId });
+    } else {
+      await this.chatParticipantRepo.delete({ chattingRoomId: roomId, userId });
+    }
   }
 }

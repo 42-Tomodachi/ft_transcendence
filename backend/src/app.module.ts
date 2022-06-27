@@ -65,10 +65,11 @@ import { MulterModule } from '@nestjs/platform-express';
     //   provide: APP_FILTER,
     //   useClass: AllExceptionsFilter,
     // },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: TransformInterceptor,
-    },
+    // 프론트 요청으로 응답 인터셉터 주석 처리함.
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: TransformInterceptor,
+    // },
     {
       provide: APP_PIPE,
       useClass: ValidationPipe,

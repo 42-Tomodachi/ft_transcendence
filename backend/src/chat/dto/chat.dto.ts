@@ -20,6 +20,9 @@ export class ChatRoomDto {
   @ApiProperty({ description: '채팅방 제목' })
   title: string;
 
+  @ApiProperty({ description: '공개방 여부, (공개방: true, 비공개: false)' })
+  isPublic: boolean;
+
   @ApiProperty({ description: '채팅방 소유자' })
   ownerId: number;
 
@@ -39,10 +42,6 @@ export class CreateChatRoomDto {
   @IsString()
   @IsOptional()
   password: string | null;
-
-  @ApiProperty({ description: '채팅방 소유자 userId' })
-  @IsNumber()
-  ownerId: number;
 
   @ApiProperty({ description: 'dm방인지 여부' })
   @IsBoolean()

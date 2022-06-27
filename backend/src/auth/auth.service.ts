@@ -66,6 +66,7 @@ export class AuthService {
   userToIsSignedUpDto(user: User): IsSignedUpDto {
     const isSignedUpDto = new IsSignedUpDto();
 
+    isSignedUpDto.id = user.id;
     isSignedUpDto.nickname = user.nickname;
     isSignedUpDto.email = user.email;
     isSignedUpDto.avatar = user.avatar;
@@ -111,16 +112,16 @@ export class AuthService {
     return this.userToIsSignedUpDto(updatedUser);
   }
 
-  async signUp(updateUserDto: UpdateUserDto): Promise<IsSignedUpDto> {
-    if (
-      updateUserDto.nickname &&
-      (await this.isDuplicateNickname(updateUserDto.nickname))
-    ) {
-      throw new BadRequestException('중복된 닉네임 입니다.');
-    }
+  // async signUp(updateUserDto: UpdateUserDto): Promise<IsSignedUpDto> {
+  //   if (
+  //     updateUserDto.nickname &&
+  //     (await this.isDuplicateNickname(updateUserDto.nickname))
+  //   ) {
+  //     throw new BadRequestException('중복된 닉네임 입니다.');
+  //   }
 
-    return await this.updateUser(updateUserDto);
-  }
+  //   return await this.updateUser(updateUserDto);
+  // }
 
   async isDuplicateNickname(nickname: string): Promise<boolean> {
     if (nickname.length < 2 || nickname.length > 8) {

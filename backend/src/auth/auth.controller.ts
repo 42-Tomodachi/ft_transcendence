@@ -12,6 +12,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   EmailDto,
+  NicknameDto,
   UpdateUserDto,
   UserProfileDto,
 } from '../users/dto/users.dto';
@@ -51,21 +52,21 @@ export class AuthController {
     return await this.authService.isSignedUp(code);
   }
 
-  @ApiOperation({ summary: 'kankim✅ 회원가입' })
-  @Post('signUp')
-  async signUp(@Body() updateUserdto: UpdateUserDto): Promise<IsSignedUpDto> {
-    return await this.authService.signUp(updateUserdto);
-  }
+  // @ApiOperation({ summary: 'kankim✅ 회원가입' })
+  // @Post('signUp')
+  // async signUp(@Body() updateUserdto: UpdateUserDto): Promise<IsSignedUpDto> {
+  //   return await this.authService.signUp(updateUserdto);
+  // }
 
   @ApiOperation({ summary: 'kankim✅ 닉네임 중복 확인' })
   @Post('isDuplicateNickname')
   async isDuplicateNickname(
-    @Body('nickname') nickname: string,
+    @Body() nicknameDto: NicknameDto,
   ): Promise<boolean> {
-    return await this.authService.isDuplicateNickname(nickname);
+    return await this.authService.isDuplicateNickname(nicknameDto.nickname);
   }
 
-  @ApiOperation({ summary: '✅ 2차 인증 설정' })
+  @ApiOperation({ summary: ' 2차 인증 설정' })
   @Post('/enableSecondAuth/:id')
   async enableSecondAuth(
     @Param('id', ParseIntPipe) id: number,
@@ -74,7 +75,7 @@ export class AuthController {
     this.authService.enableSecondAuth(id, emailDto.email);
   }
 
-  @ApiOperation({ summary: '✅ 2차 인증 해제' })
+  @ApiOperation({ summary: ' 2차 인증 해제' })
   @Post('/disableSecondAuth/:id')
   async disableSecondAuth(
     @Param('id', ParseIntPipe) id: number,
@@ -82,14 +83,14 @@ export class AuthController {
     this.authService.disableSecondAuth(id);
   }
 
-  @ApiOperation({ summary: '✅ 2차 인증 이메일 발송' })
+  @ApiOperation({ summary: ' 2차 인증 이메일 발송' })
   @Get('/shootSecondAuth/:id')
   @UseGuards(AuthGuard())
   async shootSecAuth(@Param('id', ParseIntPipe) id: number): Promise<boolean> {
     return this.authService.shootSecondAuth(id);
   }
 
-  @ApiOperation({ summary: '✅ 2차 인증 번호 검증' })
+  @ApiOperation({ summary: ' 2차 인증 번호 검증' })
   @Post('/verifySecondAuth/:id')
   async verifySecondAuth(
     @Param('id', ParseIntPipe) id: number,

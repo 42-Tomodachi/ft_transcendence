@@ -20,18 +20,24 @@ export class ChatContents extends BaseEntity {
   chattingRoomId: number;
 
   @ApiProperty({ description: '[FK] 메세지 보낸 유저 id' })
-  @Column()
-  userId: number;
+  @Column({ nullable: true })
+  userId: number | null;
 
   @ApiProperty({ description: '메세지 내용' })
   @Column()
   content: string;
 
+  @ApiProperty({ description: '공지 메세지 여부' })
+  @Column({ default: false })
+  isNotice: boolean;
+
   @ApiProperty({ description: '메세지 보낸 시간' })
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 
-  @ManyToOne(() => ChatRoom, (chattingRoom) => chattingRoom.chatContents)
+  @ManyToOne(() => ChatRoom, (chattingRoom) => chattingRoom.chatContents, {
+    onDelete: 'CASCADE',
+  })
   chattingRoom: ChatRoom;
 
   @ManyToOne(() => User, (user) => user.sender)
