@@ -20,9 +20,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
 
     }
 
-    @SubscribeMessage('submitChat')
-    submitChat(client: Socket, message: string): void {
-        
+    @SubscribeMessage('enterChatRoom')
+    enterChatRoom(client: Socket, roomId: string): void {
+        client.join(roomId);
     }
 
 }

@@ -213,7 +213,7 @@ export class ChatService {
     chatContents.isNotice = createChatContentDto.isBroadcast;
     this.chatContentsRepo.save(chatContents);
     //전체에 emit
-    this.ChatGateway.server.emit("addChat", chatContents);
+    this.ChatGateway.server.to(roomId.toString()).emit("addChat", chatContents);
   }
 }
 
