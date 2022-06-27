@@ -24,6 +24,7 @@ async function bootstrap() {
     origin: '*',
     methods: '*',
   });
+
   await app.listen(5500);
 }
 bootstrap();

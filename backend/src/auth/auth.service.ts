@@ -8,10 +8,12 @@ import { EmailService } from '../emails/email.service';
 import { IsSignedUpDto } from './dto/auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
+    public readonly configService: ConfigService,
     private readonly usersService: UsersService,
     private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
@@ -33,11 +35,9 @@ export class AuthService {
       url: `https://api.intra.42.fr/oauth/token`,
       data: {
         grant_type: 'authorization_code',
-        client_id:
-          'c44164aba01e6b4652fb6a4107e5188020a7e0c823b5013b2879b85ef7ea9abb',
-        client_secret:
-          'b3ee694a82c2014be143f7a31575cd6b15c3e7bf3fbf0ba7ca6de057e9f8673d',
-        redirect_uri: 'http://localhost:3000/callback',
+        client_id: this.configService.get<string>('CLIENT_ID'),
+        client_secret: this.configService.get<string>('CLIENT_SECRET'),
+        redirect_uri: this.configService.get<string>('REDIRECT_URI'),
         code,
       },
     });
