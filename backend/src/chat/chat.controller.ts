@@ -21,7 +21,7 @@ import {
   RoomPasswordDto,
   ChatRoomIdDto,
   UpdateChatRoomDto,
-  ChatContentDto,
+  CreateChatContentDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -205,9 +205,9 @@ export class ChatController {
   async submitChatContent(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
-    // @Body() ChatContentDto: ChatContentDto,
+    @Body() createChatContentDto: CreateChatContentDto,
   ): Promise<void> {
-    // this.chatService.submitChatContent(roomId,ChatContentDto);
-    this.chatService.submitChatContent(roomId);
+    this.chatService.submitChatContent(roomId, userId, createChatContentDto);
+    // this.chatService.submitChatContent(roomId);
   }
 }

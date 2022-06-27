@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatGateway } from './chat.gateway';
 import {
-  ChatContentDto,
+  CreateChatContentDto,
   ChatRoomDataDto,
   ChatRoomDto,
   ChatRoomIdDto,
@@ -201,18 +201,19 @@ export class ChatService {
 
   async submitChatContent(
     roomId: number,
-    // ChatContentDto: ChatContentDto,
+    userId: number,
+    createChatContentDto: CreateChatContentDto,
   ): Promise<void> {
     //채팅 DB에 저장
-    // const message = ChatContentDto.message;
-    // const chatContents = new ChatContents();
+    const chatContents = new ChatContents();
 
-    // chatContents.chattingRoomId = roomId;
-    // chatContents.userId = ;
-    // chatContents.content = message;
-
-    // this.chatContentsRepo.save();
+    chatContents.chattingRoomId = roomId;
+    chatContents.userId = userId;
+    chatContents.content = createChatContentDto.message;;
+    chatContents.isNotice = createChatContentDto.isBroadcast;
+    this.chatContentsRepo.save(chatContents);
     //전체에 emit
-    this.ChatGateway.server.emit("addChat", { content: "hello", isNotice: 0 });
+    this.ChatGateway.server.emit("addChat", chatContents);
   }
 }
+
