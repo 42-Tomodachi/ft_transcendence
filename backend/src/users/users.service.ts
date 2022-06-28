@@ -35,6 +35,10 @@ export class UsersService {
   }
 
   async getFriends(userId: number): Promise<SimpleUserDto[]> {
+    if ((await this.userRepo.findOneBy({ id: userId })) === null) {
+      throw new BadRequestException('존재하지 않는 유저 입니다.');
+    }
+
     const friends = await this.followRepo
       .createQueryBuilder('follow')
       .leftJoinAndSelect('follow.follow', 'followee')
@@ -101,6 +105,19 @@ export class UsersService {
       this.getUserById(targetId),
     ]);
 
+    if (!followerUser || !followUser) {
+      throw new BadRequestException('존재하지 않는 유저입니다.');
+    }
+
+    if (
+      (await this.followRepo.findOneBy({
+        followerId: myId,
+        followId: targetId,
+      })) !== null
+    ) {
+      throw new BadRequestException('이미 팔로우 하는 유저입니다.');
+    }
+
     const follow = new Follow();
     follow.follower = followerUser;
     follow.follow = followUser;
@@ -128,6 +145,9 @@ export class UsersService {
     userId: number,
     nicknameForUpdate: string,
   ): Promise<UserProfileDto> {
+    if ((await this.userRepo.findOneBy({ id: userId })) === null) {
+      throw new BadRequestException('존재하지 않는 유저 입니다.');
+    }
     if (await this.isDuplicateNickname(nicknameForUpdate)) {
       throw new BadRequestException('이미 존재하는 닉네임 입니다.');
     }
