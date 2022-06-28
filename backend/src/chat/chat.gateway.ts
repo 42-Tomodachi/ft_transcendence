@@ -1,3 +1,4 @@
+import { InjectRepository } from '@nestjs/typeorm';
 import {
     OnGatewayConnection,
     OnGatewayDisconnect,
@@ -6,9 +7,17 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { Repository } from 'typeorm';
+import { ChatParticipant } from './entities/chatParticipant.entity';
+import { ChatRoom } from './entities/chattingRoom.entity';
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
+constructor(
+    @InjectRepository(ChatParticipant)
+    private readonly chatParticipantRepo: Repository<ChatParticipant>,
+    ) {}
+    
     @WebSocketServer()
     server: Server;
 
@@ -17,13 +26,16 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     }
 
     async handleDisconnect(client: any) {
-
+        
     }
 
     @SubscribeMessage('enterChatRoom')
-    enterChatRoom(client: Socket, roomId: string): void {
-        client.join(roomId);
-        console.log(`${client.id} is enter ${roomId} room.`);
+    async enterChatRoom(client: Socket, roomId: number): Promise<void> {
+        client.join(roomId.toString());
+        
+        const chatParticipants: ChatParticipant[] = await this.chatParticipantRepo.find({ where: [{ chattingRoomId: roomId }, ]});
+        client.emit("updateChatList", chatParticipants);
+        // console.log(`${client.id} is enter ${roomId} room.`);
     }
 
 }
