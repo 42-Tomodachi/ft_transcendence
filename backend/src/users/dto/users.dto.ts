@@ -38,6 +38,17 @@ export class SimpleUserDto {
   nickname: string;
 }
 
+export class UserListDto {
+  @ApiProperty({ description: '유저 id' })
+  id: number;
+
+  @ApiProperty({ description: '닉네임' })
+  nickname: string;
+
+  @ApiProperty({ description: '역할' })
+  role: string;
+}
+
 export class NicknameDto {
   @ApiProperty({ description: '닉네임' })
   @IsString()
