@@ -46,7 +46,7 @@ export class UserListDto {
   nickname: string;
 
   @ApiProperty({ description: '역할' })
-  role: string;
+  role: string = 'guest';
 }
 
 export class NicknameDto {
