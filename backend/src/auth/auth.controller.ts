@@ -33,7 +33,10 @@ export class AuthController {
   @ApiOperation({ summary: '[test for backend] 42 oauth page 로 redirection' })
   @Get('oauthPage')
   async getOatuhPage() {
-    return this.authService.configService.get<string>('42OAUTH_PAGE');
+    return (
+      process.env.EC2_42OAUTH_PAGE ||
+      this.authService.configService.get<string>('42OAUTH_PAGE')
+    );
   }
 
   // @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
@@ -61,6 +64,8 @@ export class AuthController {
   async isDuplicateNickname(
     @Body() nicknameDto: NicknameDto,
   ): Promise<boolean> {
+    console.log(process.env.TYPEORM_USERNAME);
+
     return await this.authService.isDuplicateNickname(nicknameDto.nickname);
   }
 

@@ -35,9 +35,15 @@ export class AuthService {
       url: `https://api.intra.42.fr/oauth/token`,
       data: {
         grant_type: 'authorization_code',
-        client_id: this.configService.get<string>('CLIENT_ID'),
-        client_secret: this.configService.get<string>('CLIENT_SECRET'),
-        redirect_uri: this.configService.get<string>('REDIRECT_URI'),
+        client_id:
+          process.env.EC2_CLIENT_ID ||
+          this.configService.get<string>('CLIENT_ID'),
+        client_secret:
+          process.env.EC2_CLIENT_SECRET ||
+          this.configService.get<string>('CLIENT_SECRET'),
+        redirect_uri:
+          process.env.EC2_REDIRECT_URI ||
+          this.configService.get<string>('REDIRECT_URI'),
         code,
       },
     });

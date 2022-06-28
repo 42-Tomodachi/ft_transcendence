@@ -2,12 +2,11 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
 export const TypeORMConfig: TypeOrmModuleOptions = {
   type: 'postgres',
-  host: process.env.HOST,
-  port: +process.env.PORT,
-  username: 'postgres',
-  // username: process.env.USERNAME, // todo: 유저네임을 이 행으로 교체할 경우 에러 발생함.. 왜?
-  password: process.env.PASSWORD,
-  database: process.env.DATABASE,
+  host: process.env.EC2_TYPEORM_HOST || process.env.TYPEORM_HOST,
+  port: +process.env.EC2_TYPEORM_PORT || +process.env.TYPEORM_PORT,
+  username: process.env.EC2_TYPEORM_USERNAME || process.env.TYPEORM_USERNAME,
+  password: process.env.EC2_TYPEORM_PASSWORD || process.env.TYPEORM_PASSWORD,
+  database: process.env.EC2_TYPEORM_DATABASE || process.env.TYPEORM_DATABASE,
   entities: ['dist/**/*.entity{.ts,.js}'],
   synchronize: false,
   logging: true,
