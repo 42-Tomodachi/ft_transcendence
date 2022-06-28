@@ -99,10 +99,10 @@ export class UsersService {
     return false;
   }
 
-  async addFriend(myId: number, targetId: number): Promise<void> {
+  async addFriend(followerId: number, followId: number): Promise<void> {
     const [followerUser, followUser] = await Promise.all([
-      this.getUserById(myId),
-      this.getUserById(targetId),
+      this.getUserById(followerId),
+      this.getUserById(followId),
     ]);
 
     if (!followerUser || !followUser) {
@@ -111,8 +111,8 @@ export class UsersService {
 
     if (
       (await this.followRepo.findOneBy({
-        followerId: myId,
-        followId: targetId,
+        followerId: followerId,
+        followId: followId,
       })) !== null
     ) {
       throw new BadRequestException('이미 팔로우 하는 유저입니다.');
@@ -123,6 +123,23 @@ export class UsersService {
     follow.follow = followUser;
 
     await this.followRepo.save(follow);
+  }
+
+  async removeFriend(followerId: number, followId: number) {
+    const [followerUser, followUser] = await Promise.all([
+      this.getUserById(followerId),
+      this.getUserById(followId),
+    ]);
+
+    if (!followerUser || !followUser) {
+      throw new BadRequestException('존재하지 않는 유저입니다.');
+    }
+
+    if ((await this.followRepo.findOneBy({ followerId, followId })) === null) {
+      throw new BadRequestException('팔로우 하지 않는 관계입니다.');
+    }
+
+    await this.followRepo.delete({ followerId, followId });
   }
 
   async getGameRecords(userId: number): Promise<GameRecordDto[]> {
