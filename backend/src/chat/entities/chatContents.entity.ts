@@ -21,7 +21,7 @@ export class ChatContents extends BaseEntity {
 
   @ApiProperty({ description: '[FK] 메세지 보낸 유저 id' })
   @Column({ nullable: true })
-  userId: number | null;  
+  userId: number | null;
 
   @ApiProperty({ description: '메세지 내용' })
   @Column()

@@ -9,7 +9,7 @@ import {
   minLength,
 } from 'class-validator';
 
-export class UpdateUserDto {
+export class UserDto {
   @ApiProperty({ description: '유저 id' })
   @IsNumber()
   userId: number;
@@ -38,7 +38,7 @@ export class SimpleUserDto {
   nickname: string;
 }
 
-export class UserListDto {
+export class ChatRoomUserDto {
   @ApiProperty({ description: '유저 id' })
   id: number;
 

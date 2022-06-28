@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNumber, IsOptional, IsString, IsDateString, ValidateNested } from 'class-validator';
-import { UpdateUserDto } from 'src/users/dto/users.dto';
+import { ChatRoomUserDto } from 'src/users/dto/users.dto';
 import { PrimaryColumnCannotBeNullableError } from 'typeorm';
 
 export class ChatRoomDataDto {
@@ -97,15 +97,15 @@ export class UpdateChatRoomDto {
 }
 
 export class CreateChatContentDto {
-  
+
   @ApiProperty({ description: '공지 메시지인지 여부' })
   @IsBoolean()
   isBroadcast: boolean;
-  
-  @ApiProperty({ description: '공지 메시지인지 여부' })
+
+  @ApiProperty({ description: '공지 메세지가 아닐 경우, 보낸이의 정보가 들어간다.' })
   @IsOptional()
   @ValidateNested()
-  from?: UpdateUserDto;
+  from?: ChatRoomUserDto;
 
   @ApiProperty({ description: '채팅 내용' })
   @IsString()
@@ -117,5 +117,5 @@ export class CreateChatContentDto {
 
   @ApiProperty({ description: '만들어진 시간' })
   @IsDateString()
-  createdAt: string;
+  createdTime: string;
 }
