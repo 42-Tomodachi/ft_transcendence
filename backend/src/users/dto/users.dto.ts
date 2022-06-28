@@ -30,6 +30,12 @@ export class EmailDto {
   email: string;
 }
 
+export class NumberDto {
+  @ApiProperty({ description: '숫자' })
+  @IsNumber()
+  number: number;
+}
+
 export class SimpleUserDto {
   @ApiProperty({ description: '유저 id' })
   id: number;
