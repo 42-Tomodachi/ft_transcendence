@@ -8,6 +8,7 @@ import { EmailService } from '../emails/email.service';
 import { IsSignedUpDto } from './dto/auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { session } from 'passport';
 
 @Injectable()
 export class AuthService {
@@ -131,14 +132,48 @@ export class AuthService {
     return await this.usersService.isDuplicateNickname(nickname);
   }
 
-  async enableSecondAuth(id: number, email: string): Promise<void> {
+  async startSecondAuth(id: number, email: string): Promise<boolean> {
+    const user = await this.usersService.getUserById(id);
+
+    if (user === null) {
+      return false;
+    }
+
+    const code = Math.floor(Math.random() * 1000000);
+    user.secondAuthEmail = email;
+    user.secondAuthCode = code;
+
+    await user.save();
+    await this.emailService.sendEmail(email, code);
+    return true;
+  }
+
+  async verifySecondAuth(id: number, code: number): Promise<boolean> {
+    const user = await this.usersService.getUserById(id);
+
+    if (user === null) {
+      return false;
+    }
+
+    if (user.secondAuthCode === code) {
+      user.secondAuthCode = 7777777;
+      await user.save();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  async enrollSecondAuth(id: number): Promise<void> {
     const user = await this.usersService.getUserById(id);
 
     if (user === undefined) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
+    if (user.secondAuthCode !== 7777777) {
+      throw new BadRequestException('인증되지 않은 유저입니다.');
+    }
 
-    user.secondAuthEmail = email;
     user.isSecondAuthOn = true;
     await user.save();
   }
@@ -150,12 +185,9 @@ export class AuthService {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
 
+    user.secondAuthEmail = null;
+    user.secondAuthCode = 0;
     user.isSecondAuthOn = false;
-    await user.save();
-  }
-
-  async activateSecondAuth(user: User) {
-    user.secondAuthCode = Math.floor(Math.random() * 1000000);
     await user.save();
   }
 
@@ -165,21 +197,11 @@ export class AuthService {
     if (user === null || user.isSecondAuthOn === false) {
       return false;
     }
-    await this.activateSecondAuth(user);
-    await this.emailService.sendEmail(
-      user.secondAuthEmail,
-      user.secondAuthCode,
-    );
+
+    const code = Math.floor(Math.random() * 1000000);
+    user.secondAuthCode = code;
+
+    await this.emailService.sendEmail(user.secondAuthEmail, code);
     return true;
-  }
-
-  async verifySecondAuth(id: number, code: number): Promise<boolean> {
-    const user = await this.usersService.getUserById(id);
-
-    if (user.secondAuthCode === code) {
-      return true;
-    } else {
-      return false;
-    }
   }
 }
