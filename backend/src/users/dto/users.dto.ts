@@ -52,7 +52,7 @@ export class ChatRoomUserDto {
   nickname: string;
 
   @ApiProperty({ description: '역할' })
-  role: string = 'guest';
+  role = 'guest';
 }
 
 export class NicknameDto {

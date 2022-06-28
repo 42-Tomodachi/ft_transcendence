@@ -67,8 +67,6 @@ export class AuthController {
   async isDuplicateNickname(
     @Body() nicknameDto: NicknameDto,
   ): Promise<boolean> {
-    console.log(process.env.TYPEORM_USERNAME);
-
     return await this.authService.isDuplicateNickname(nicknameDto.nickname);
   }
 
