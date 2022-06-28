@@ -9,7 +9,7 @@ import {
   minLength,
 } from 'class-validator';
 
-export class UserDto {
+export class UpdateUserDto {
   @ApiProperty({ description: '유저 id' })
   @IsNumber()
   userId: number;
