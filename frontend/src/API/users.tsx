@@ -14,16 +14,16 @@ const usersPath = (path: string) => {
 
 const usersAPI = {
   // TODO: upload file
-  uploadAvatarImg: async (id: number, body: FormData) => {
-    try {
-      const url = usersPath(`/${id}/uploadImage`);
-      const res = await instance.post(url, body);
-      return res.data;
-    } catch (e) {
-      if (e instanceof Error) console.error(e.message);
-      else console.error(e);
-    }
-  },
+  // uploadAvatarImg: async (id: number, body: FormData) => {
+  //   try {
+  //     const url = usersPath(`/${id}/uploadImage`);
+  //     const res = await instance.post(url, body);
+  //     return res.data;
+  //   } catch (e) {
+  //     if (e instanceof Error) console.error(e.message);
+  //     else console.error(e);
+  //   }
+  // },
   getAllUsersIdNickName: async (): Promise<IUserKey[] | []> => {
     try {
       const url = usersPath(``);
