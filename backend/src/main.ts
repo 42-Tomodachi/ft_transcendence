@@ -3,7 +3,9 @@ import { AppModule } from './app.module';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
 import * as timezone from 'dayjs/plugin/timezone';
+import * as session from 'express-session';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { env } from 'process';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -19,6 +21,14 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
+  app.use(
+    session({
+      secret: 'this will be replaced to actual secret from env',
+      resave: false,
+      saveUninitialized: false,
+    }),
+  );
 
   app.enableCors({
     origin: '*',

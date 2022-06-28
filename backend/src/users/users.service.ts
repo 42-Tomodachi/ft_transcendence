@@ -109,6 +109,9 @@ export class UsersService {
   }
 
   async getGameRecords(userId: number): Promise<GameRecordDto[]> {
+    if ((await this.gameRecordRepo.findOneBy({ id: userId })) === null) {
+      throw new BadRequestException('존재하지 않는 유저입니다.');
+    }
     const gameRecords = await this.gameRecordRepo
       .createQueryBuilder('gameRecord')
       .leftJoinAndSelect('gameRecord.playerOne', 'playerOne')
