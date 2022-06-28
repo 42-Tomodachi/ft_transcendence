@@ -136,7 +136,7 @@ export class AuthService {
     const user = await this.usersService.getUserById(id);
 
     if (user === null) {
-      return false;
+      throw new BadRequestException('존재하지 않는 유저입니다.');
     }
 
     const code = Math.floor(Math.random() * 1000000);
@@ -152,7 +152,7 @@ export class AuthService {
     const user = await this.usersService.getUserById(id);
 
     if (user === null) {
-      return false;
+      throw new BadRequestException('존재하지 않는 유저입니다.');
     }
 
     if (user.secondAuthCode === code) {
@@ -189,7 +189,7 @@ export class AuthService {
     }
 
     user.secondAuthEmail = null;
-    user.secondAuthCode = 0;
+    user.secondAuthCode = null;
     user.isSecondAuthOn = false;
     await user.save();
   }
@@ -197,8 +197,11 @@ export class AuthService {
   async shootSecondAuth(id: number): Promise<boolean> {
     const user = await this.usersService.getUserById(id);
 
-    if (user === null || user.isSecondAuthOn === false) {
-      return false;
+    if (user === null) {
+      throw new BadRequestException('존재하지 않는 유저입니다.');
+    }
+    if (user.isSecondAuthOn === false) {
+      throw new BadRequestException('이미 등록된 유저입니다.');
     }
 
     const code = Math.floor(Math.random() * 1000000);
