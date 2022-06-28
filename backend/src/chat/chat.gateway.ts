@@ -23,6 +23,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
     @SubscribeMessage('enterChatRoom')
     enterChatRoom(client: Socket, roomId: string): void {
         client.join(roomId);
+        console.log(`${client.id} is enter ${roomId} room.`);
     }
 
 }

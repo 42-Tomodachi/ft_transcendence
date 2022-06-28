@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserListDto } from 'src/users/dto/users.dto';
+import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
 import { ChatGateway } from './chat.gateway';
 import {
@@ -14,6 +16,7 @@ import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chattingRoom.entity';
 
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -23,7 +26,9 @@ export class ChatService {
     private readonly chatParticipantRepo: Repository<ChatParticipant>,
     @InjectRepository(ChatRoom)
     private readonly chatRoomRepo: Repository<ChatRoom>,
-    private readonly ChatGateway: ChatGateway
+    private readonly ChatGateway: ChatGateway,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) {}
 
   async getChatRoomById(id: number): Promise<ChatRoom> {
@@ -147,8 +152,21 @@ export class ChatService {
       const chatParticipant = new ChatParticipant();
       chatParticipant.chattingRoomId = roomId;
       chatParticipant.userId = userId;
-
       await this.chatParticipantRepo.save(chatParticipant);
+      
+      // 채널 유저들의 유저목록 업데이트
+      const userListDto = new UserListDto();
+      userListDto.id = userId;
+      const user: User = await this.userRepo.findOneBy({ id: userId });
+      userListDto.nickname = user.nickname;
+      userListDto.role = chatParticipant.role;
+      this.ChatGateway.server.to(roomId.toString()).emit("updateUser", userListDto);
+
+      // 채널 유저들에게 입장 메세지 전송
+      const createChatContentDto = new CreateChatContentDto();
+      createChatContentDto.isBroadcast = true;
+      createChatContentDto.message = `${user.nickname} 님이 입장하셨습니다.`;
+      this.submitChatContent(roomId, userId, createChatContentDto);
     }
 
     return { chatRoomId: roomId };
@@ -213,7 +231,7 @@ export class ChatService {
     chatContents.isNotice = createChatContentDto.isBroadcast;
     this.chatContentsRepo.save(chatContents);
     //전체에 emit
-    this.ChatGateway.server.to(roomId.toString()).emit("addChat", createChatContentDto);
+    this.ChatGateway.server.to(roomId.toString()).emit("updateChat", createChatContentDto);
   }
 }
 
