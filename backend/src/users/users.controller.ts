@@ -66,8 +66,8 @@ export class UsersController {
   @ApiOperation({ summary: '✅ 본인 정보 가져오기' })
   @Get('/own')
   @UseGuards(AuthGuard())
-  async getOwnInfo(@GetJwtUser() user: User): Promise<User> {
-    return user;
+  async getOwnInfo(@GetJwtUser() user: User): Promise<UserProfileDto> {
+    return user.toUserProfileDto();
   }
 
   @ApiOperation({ summary: 'kankim✅ 특정 유저의 프로필 조회' })
