@@ -170,6 +170,9 @@ export class AuthService {
     if (user === undefined) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
+    if (user.isSecondAuthOn === true) {
+      throw new BadRequestException('이미 등록된 유저입니다.');
+    }
     if (user.secondAuthCode !== 7777777) {
       throw new BadRequestException('인증되지 않은 유저입니다.');
     }
