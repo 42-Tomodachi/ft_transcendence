@@ -7,10 +7,9 @@ export interface IUser extends IUserKey {
   email: string;
   avatar: string;
 }
-export interface IUserAuth {
-  secondAuth: boolean;
-  accessToken?: string;
-  isSigned: boolean;
+export interface IUserAuth extends IUser {
+  isSecondAuthOn: boolean;
+  jwt: string;
 }
 export interface IUserProfile extends IUser, IWinLoseCount {}
 
@@ -39,6 +38,14 @@ export interface IGameRecord {
   isWin: true;
   opponentNickname: string;
 }
+export interface IFollowId {
+  followId: number;
+}
+
+export interface INickname {
+  nickname: string;
+}
+
 export interface IMessage {
   id: number;
   isBroadcast: boolean;
