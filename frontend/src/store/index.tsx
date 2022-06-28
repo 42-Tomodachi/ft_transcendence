@@ -5,7 +5,7 @@ import {
   ModalType,
   SECOND_AUTH,
   SET_NICKNAME,
-  IUser,
+  IUserAuth,
   UserStatusType,
   HandleUserType,
 } from '../utils/interface';
@@ -31,8 +31,8 @@ type stateType = {
     setModal: (type: ModalType | null) => void;
   };
   userData: {
-    user: IUser | null;
-    setUser: (type: HandleUserType, user?: IUser) => void;
+    user: IUserAuth | null;
+    setUser: (type: HandleUserType, user?: IUserAuth) => void;
   };
   userStatus: {
     userStatus: UserStatusType;
@@ -46,21 +46,21 @@ interface AllContextApiProps {
 
 const AllContextApi = ({ children }: AllContextApiProps) => {
   const [modal, setModal] = useState<ModalType | null>(null);
-  const [user, setUser] = useState<IUser | null>(null);
+  const [user, setUser] = useState<IUserAuth | null>(null);
   const [userStatus, setUserStatus] = useState<UserStatusType>(LOGOUT);
 
   const handleModal = (type: ModalType | null) => {
     setModal(type);
   };
 
-  const handleUser = (type: string, user?: IUser) => {
+  const handleUser = (type: string, user?: IUserAuth) => {
     switch (type) {
       case LOGIN:
         if (user) {
           setUser(user);
           if (!user.nickname) {
             setUserStatus(SET_NICKNAME);
-          } else if (user.secondAuth) {
+          } else if (user.isSecondAuthOn) {
             setUserStatus(SECOND_AUTH);
           } else {
             setUserStatus(LOGIN);
