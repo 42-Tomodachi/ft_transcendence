@@ -8,11 +8,13 @@ import { EmailService } from '../emails/email.service';
 import { IsSignedUpDto } from './dto/auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { session } from 'passport';
 
 @Injectable()
 export class AuthService {
   constructor(
+    public readonly configService: ConfigService,
     private readonly usersService: UsersService,
     private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
@@ -35,10 +37,14 @@ export class AuthService {
       data: {
         grant_type: 'authorization_code',
         client_id:
-          'c44164aba01e6b4652fb6a4107e5188020a7e0c823b5013b2879b85ef7ea9abb',
+          process.env.EC2_CLIENT_ID ||
+          this.configService.get<string>('CLIENT_ID'),
         client_secret:
-          'b3ee694a82c2014be143f7a31575cd6b15c3e7bf3fbf0ba7ca6de057e9f8673d',
-        redirect_uri: 'http://localhost:3000/callback',
+          process.env.EC2_CLIENT_SECRET ||
+          this.configService.get<string>('CLIENT_SECRET'),
+        redirect_uri:
+          process.env.EC2_REDIRECT_URI ||
+          this.configService.get<string>('REDIRECT_URI'),
         code,
       },
     });

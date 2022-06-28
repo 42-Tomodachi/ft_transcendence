@@ -23,6 +23,7 @@ import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { IsSignedUpDto } from './dto/auth.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -34,11 +35,11 @@ export class AuthController {
 
   @ApiOperation({ summary: '[test for backend] 42 oauth page 로 redirection' })
   @Get('oauthPage')
-  @Redirect(
-    'https://api.intra.42.fr/oauth/authorize?client_id=c44164aba01e6b4652fb6a4107e5188020a7e0c823b5013b2879b85ef7ea9abb&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fcallback&response_type=code',
-  )
   async getOatuhPage() {
-    return 'getOauthPage';
+    return (
+      process.env.EC2_42OAUTH_PAGE ||
+      this.authService.configService.get<string>('42OAUTH_PAGE')
+    );
   }
 
   // @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
@@ -66,6 +67,8 @@ export class AuthController {
   async isDuplicateNickname(
     @Body() nicknameDto: NicknameDto,
   ): Promise<boolean> {
+    console.log(process.env.TYPEORM_USERNAME);
+
     return await this.authService.isDuplicateNickname(nicknameDto.nickname);
   }
 
