@@ -1,7 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { ChatRoomUserDto } from 'src/users/dto/users.dto';
+import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
+import { ChatGateway } from './chat.gateway';
 import {
+  CreateChatContentDto,
   ChatRoomDataDto,
   ChatRoomDto,
   ChatRoomIdDto,
@@ -21,7 +25,10 @@ export class ChatService {
     private readonly chatParticipantRepo: Repository<ChatParticipant>,
     @InjectRepository(ChatRoom)
     private readonly chatRoomRepo: Repository<ChatRoom>,
-  ) {}
+    private readonly ChatGateway: ChatGateway,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) { }
 
   async getChatRoomById(id: number): Promise<ChatRoom> {
     const chatRoom = await this.chatRoomRepo.findOneOrFail({ where: { id } });
@@ -144,8 +151,22 @@ export class ChatService {
       const chatParticipant = new ChatParticipant();
       chatParticipant.chattingRoomId = roomId;
       chatParticipant.userId = userId;
-
       await this.chatParticipantRepo.save(chatParticipant);
+
+      // 채널 유저들의 유저목록 업데이트
+      const chatRoomUserDto = new ChatRoomUserDto();
+      chatRoomUserDto.id = userId;
+      const user: User = await this.userRepo.findOneBy({ id: userId });
+      chatRoomUserDto.nickname = user.nickname;
+      this.ChatGateway.server
+        .to(roomId.toString())
+        .emit('updateUser', chatRoomUserDto);
+
+      // 채널 유저들에게 입장 메세지 전송
+      const createChatContentDto = new CreateChatContentDto();
+      createChatContentDto.isBroadcast = true;
+      createChatContentDto.message = `${user.nickname} 님이 입장하셨습니다.`;
+      this.submitChatContent(roomId, userId, createChatContentDto);
     }
 
     return { chatRoomId: roomId };
@@ -170,7 +191,6 @@ export class ChatService {
     room.password = updateChatRoomDto.password;
 
     const updatedRoom = await this.chatRoomRepo.save(room);
-
     return updatedRoom.toChatRoomDataDto();
   }
 
@@ -180,19 +200,50 @@ export class ChatService {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
     }
 
-    if (
-      !(await this.chatParticipantRepo.findOneBy({
-        chattingRoomId: roomId,
-        userId,
-      }))
-    ) {
+    const chatParticipant = await this.chatParticipantRepo.findOneBy({
+      chattingRoomId: roomId,
+      userId,
+    });
+
+    if (!chatParticipant) {
       throw new BadRequestException('참여중인 채팅방이 아닙니다.');
     }
 
     if (room.ownerId === userId) {
+      // 방 폭파 + 방에서 다 내보내기
       await this.chatRoomRepo.delete({ id: roomId });
+      await this.chatParticipantRepo.delete({ chattingRoomId: roomId });
+      await this.ChatGateway.server.to(roomId.toString()).emit('deleteRoom');
     } else {
       await this.chatParticipantRepo.delete({ chattingRoomId: roomId, userId });
+
+      // 방 유저들에게 유저목록 업데이트 지시하기
+      const chatParticipants: ChatParticipant[] =
+        await this.chatParticipantRepo.find({
+          where: [{ chattingRoomId: roomId }],
+        });
+      this.ChatGateway.server
+        .to(roomId.toString())
+        .emit('updateUserList', chatParticipant);
     }
+  }
+
+  async submitChatContent(
+    roomId: number,
+    userId: number,
+    createChatContentDto: CreateChatContentDto,
+  ): Promise<void> {
+    //채팅 DB에 저장
+    const chatContents = new ChatContents();
+
+    chatContents.chattingRoomId = roomId;
+    chatContents.userId = userId;
+    chatContents.content = createChatContentDto.message;
+    chatContents.isNotice = createChatContentDto.isBroadcast;
+    this.chatContentsRepo.save(chatContents);
+    //전체에 emit
+    this.ChatGateway.server
+      .to(roomId.toString())
+      .emit('updateChat', createChatContentDto);
   }
 }
