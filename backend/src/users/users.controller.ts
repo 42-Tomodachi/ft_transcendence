@@ -3,13 +3,15 @@ import {
   Get,
   Body,
   Post,
+  Put,
   Param,
   ParseIntPipe,
   UploadedFile,
   UseInterceptors,
-  Put,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { User } from './entities/users.entity';
 import { UsersService } from './users.service';
 import {
   NicknameDto,
@@ -22,6 +24,8 @@ import { editFileName, imageFileFilter } from '../files/file-uploading.utils';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { GameRecordDto } from './dto/gameRecord.dto';
 import { FollowIdDto } from './dto/follow.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { GetJwtUser } from 'src/auth/jwt.strategy';
 
 @ApiTags('users')
 @Controller('users')
@@ -57,6 +61,13 @@ export class UsersController {
     const userInfo = await this.usersService.getUsers();
 
     return userInfo;
+  }
+
+  @ApiOperation({ summary: '✅ 본인 정보 가져오기' })
+  @Get('/own')
+  @UseGuards(AuthGuard())
+  async getOwnInfo(@GetJwtUser() user: User): Promise<UserProfileDto> {
+    return user.toUserProfileDto();
   }
 
   @ApiOperation({ summary: 'kankim✅ 특정 유저의 프로필 조회' })
