@@ -9,6 +9,7 @@ import {
   UploadedFile,
   UseInterceptors,
   UseGuards,
+  Delete,
   Res,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -88,6 +89,15 @@ export class UsersController {
     @Body() followIdDto: FollowIdDto,
   ): Promise<void> {
     await this.usersService.addFriend(followerId, followIdDto.followId);
+  }
+
+  @ApiOperation({ summary: 'kankim✅ 친구 삭제' })
+  @Delete(':id/friends')
+  async removeFriend(
+    @Param('id', ParseIntPipe) followerId: number,
+    @Body() followIdDto: FollowIdDto,
+  ): Promise<void> {
+    await this.usersService.removeFriend(followerId, followIdDto.followId);
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 목록( id, 닉네임 ) 조회' })
