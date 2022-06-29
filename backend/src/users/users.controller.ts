@@ -9,6 +9,7 @@ import {
   UploadedFile,
   UseInterceptors,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User } from './entities/users.entity';
