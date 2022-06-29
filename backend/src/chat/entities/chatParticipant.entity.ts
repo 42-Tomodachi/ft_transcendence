@@ -3,6 +3,7 @@ import { User } from 'src/users/entities/users.entity';
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -33,6 +34,10 @@ export class ChatParticipant extends BaseEntity {
   @ApiProperty({ description: '음소거 여부' })
   @Column({ default: false })
   isMuted: boolean;
+
+  @ApiProperty({ description: '채팅방 입장 시간' })
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdTime: Date;
 
   @ManyToOne(() => ChatRoom, (chattingRoom) => chattingRoom.chatParticipant, {
     onDelete: 'CASCADE',

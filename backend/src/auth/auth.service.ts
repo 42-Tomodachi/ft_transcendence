@@ -207,7 +207,7 @@ export class AuthService {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
     if (user.isSecondAuthOn === false) {
-      throw new BadRequestException('이미 등록된 유저입니다.');
+      throw new BadRequestException('2차 인증을 설정하지 않은 유저입니다.');
     }
 
     const code = Math.floor(Math.random() * 1000000);

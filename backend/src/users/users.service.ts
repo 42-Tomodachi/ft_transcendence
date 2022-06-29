@@ -77,7 +77,7 @@ export class UsersService {
     fileName: string,
   ): Promise<string> {
     const user = await this.userRepo.findOne({ where: { id } });
-    user.avatar = `http://localhost:5500/users/${fileName}`;
+    user.avatar = `${process.env.SERVER_ADDRESS}/users/${fileName}`;
     await user.save();
 
     return user.avatar;
