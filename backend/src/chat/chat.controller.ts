@@ -208,15 +208,15 @@ export class ChatController {
   //   const a = 'banParticipant';
   // }
 
-  // // 음소거
-  // @ApiOperation({ summary: '음소거 시키기' })
-  // @Patch(':roomId/mute')
-  // async muteParticipant(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  //   @Query('targetUserId', ParseIntPipe) targetUserId: number,
-  // ): Promise<void> {
-  //   const a = 'muteParticipant';
-  // }
+  @ApiOperation({ summary: '음소거 시키기 토글_jihokim' })
+  @Patch(':roomId/mute_one_toggle')
+  async muteParticipant(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Query('targetUserId', ParseIntPipe) targetUserId: number,
+  ): Promise<boolean> {
+    return this.chatService.muteCertainParticipant(roomId, targetUserId);
+  }
+
   // 인터페이스를 통해 게임 할 수 있도록 초대
   // 인터페이스를 통해 다른 유저의 프로필 보기
 

@@ -4,6 +4,7 @@ import { ChatRoomUserDto } from 'src/users/dto/users.dto';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { DataSource, Repository } from 'typeorm';
+import { callbackify } from 'util';
 import { ChatGateway } from './chat.gateway';
 import {
   CreateChatContentDto,
@@ -11,6 +12,7 @@ import {
   ChatRoomIdDto,
   CreateChatRoomDto,
   UpdateChatRoomDto,
+  RoomPasswordDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -234,6 +236,31 @@ export class ChatService {
         .to(roomId.toString())
         .emit('updateUserList', chatParticipant);
     }
+  }
+
+  async muteCertainParticipant(
+    roomId: number,
+    userId: number,
+  ): Promise<boolean> {
+    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
+    if (!room) {
+      throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    }
+
+    const chatParticipant = room.chatParticipant.find(
+      (participant) => participant.userId == userId,
+    );
+    if (!chatParticipant) {
+      throw new BadRequestException('존재하지 않는 참여자입니다.');
+    }
+
+    if (chatParticipant.isMuted) {
+      chatParticipant.isMuted = false;
+    } else {
+      chatParticipant.isMuted = true;
+    }
+    await chatParticipant.save();
+    return chatParticipant.isMuted;
   }
 
   async submitChatContent(
