@@ -8,6 +8,6 @@ export const TypeORMConfig: TypeOrmModuleOptions = {
   password: process.env.EC2_TYPEORM_PASSWORD || process.env.TYPEORM_PASSWORD,
   database: process.env.EC2_TYPEORM_DATABASE || process.env.TYPEORM_DATABASE,
   entities: ['dist/**/*.entity{.ts,.js}'],
-  synchronize: false,
+  synchronize: true,
   logging: true,
 };

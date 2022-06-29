@@ -32,7 +32,7 @@ import { GetJwtUser } from 'src/auth/jwt.strategy';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @ApiOperation({ summary: 'seungyel 이미지 업로드' })
+  @ApiOperation({ summary: 'seungyel✅ 이미지 업로드' })
   @Post('/:id/uploadImage')
   @UseInterceptors(
     FileInterceptor('image', {
