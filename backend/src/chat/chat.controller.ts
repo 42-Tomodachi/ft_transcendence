@@ -149,33 +149,6 @@ export class ChatController {
   //   return [];
   // }
 
-  // // 채팅 방 제목 수정
-  // @ApiOperation({ summary: '채팅 방 제목 수정' })
-  // @Patch(':roomId/title')
-  // async updateRoomTitle(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  // ): Promise<void> {
-  //   const a = 'updateRoomTitle';
-  // }
-
-  // // 채팅 방 비밀번호 수정
-  // @ApiOperation({ summary: '채팅 방 비밀번호 수정' })
-  // @Patch(':roomId/password')
-  // async updateRoomPassword(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  // ): Promise<void> {
-  //   const a = 'updateRoomPassword';
-  // }
-
-  // // 채팅 방 비밀번호 제거
-  // @ApiOperation({ summary: '채팅 방 비밀번호 제거' })
-  // @Delete(':roomId/password')
-  // async removeRoomPassword(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  // ): Promise<void> {
-  //   const a = 'removeRoomPassword';
-  // }
-
   // // 게스트를 관리자로 설정하기(오너, 관리자)
   // @ApiOperation({
   //   summary: '게스트를 관리자로 설정하기(오너, 관리자만 가능)',

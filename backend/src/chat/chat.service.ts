@@ -260,6 +260,13 @@ export class ChatService {
       chatParticipant.isMuted = true;
     }
     await chatParticipant.save();
+
+    // timer 10 min.
+
+    this.ChatGateway.server
+      .to(roomId.toString())
+      .emit('updateUserList', chatParticipant);
+
     return chatParticipant.isMuted;
   }
 
