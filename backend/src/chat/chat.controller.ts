@@ -11,12 +11,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import {
   ChatRoomParticipantsDto,
   ChatRoomDataDto,
-  ChatRoomDto,
   CreateChatRoomDto,
   RoomPasswordDto,
   ChatRoomIdDto,
@@ -35,7 +34,7 @@ export class ChatController {
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 목록 가져오기' })
   @Get('')
-  async getChattingRooms(): Promise<ChatRoomDto[]> {
+  async getChattingRooms(): Promise<ChatRoomDataDto[]> {
     const chattingRooms = this.chatService.getChatRooms();
 
     return chattingRooms;
@@ -45,7 +44,7 @@ export class ChatController {
   @Get('/users/:userId')
   async getParticipatingChattingRooms(
     @Param('userId') userId: number,
-  ): Promise<ChatRoomDto[]> {
+  ): Promise<ChatRoomDataDto[]> {
     const chattingRooms =
       this.chatService.getParticipatingChattingRooms(userId);
 
@@ -109,6 +108,15 @@ export class ChatController {
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<void> {
     await this.chatService.exitRoom(roomId, userId);
+  }
+
+  @ApiOperation({ summary: 'kankim✅ dm방 입장하기' })
+  @Post(':myId/dmRooms')
+  async enterDmRoom(
+    @Param('myId', ParseIntPipe) myId: number,
+    @Query('partnerId', ParseIntPipe) partnerId: number,
+  ): Promise<ChatRoomDataDto> {
+    return await this.chatService.enterDmRoom(myId, partnerId);
   }
 
   // // 채팅방 유저 목록 가져오기
