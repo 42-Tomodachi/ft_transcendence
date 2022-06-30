@@ -34,3 +34,9 @@ export class IsSignedUpDto {
   @IsString()
   jwt: string;
 }
+
+export class CodeStringDto {
+  @ApiProperty({ description: '문자열 코드' })
+  @IsString()
+  code: string;
+}

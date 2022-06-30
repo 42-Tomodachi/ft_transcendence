@@ -6,32 +6,19 @@ import {
   Delete,
   Query,
   Param,
-  Redirect,
   ParseIntPipe,
   UseGuards,
-  Session,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  EmailDto,
-  NicknameDto,
-  NumberDto,
-  UpdateUserDto,
-  UserProfileDto,
-} from '../users/dto/users.dto';
+import { EmailDto, NicknameDto } from '../users/dto/users.dto';
 import { AuthService } from './auth.service';
-import { UsersService } from '../users/users.service';
-import { IsSignedUpDto } from './dto/auth.dto';
+import { IsSignedUpDto, CodeStringDto } from './dto/auth.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { ConfigService } from '@nestjs/config';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly usersService: UsersService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @ApiOperation({ summary: '[test for backend] 42 oauth page 로 redirection' })
   @Get('oauthPage')
@@ -52,8 +39,8 @@ export class AuthController {
     summary: 'kankim✅ 유저의 회원가입 여부 확인',
   })
   @Post('isSignedUp')
-  async isSignedUp(@Body('code') code: string): Promise<IsSignedUpDto> {
-    return await this.authService.isSignedUp(code);
+  async isSignedUp(@Body() codeDto: CodeStringDto): Promise<IsSignedUpDto> {
+    return await this.authService.isSignedUp(codeDto.code);
   }
 
   // @ApiOperation({ summary: 'kankim✅ 회원가입' })
