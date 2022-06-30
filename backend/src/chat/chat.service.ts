@@ -31,8 +31,6 @@ export class ChatService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private dataSource: DataSource,
-    @InjectRepository(BlockedUser)
-    private readonly blockedUserRepo: Repository<BlockedUser>,
   ) {}
 
   async getChatRoomById(id: number): Promise<ChatRoom> {
@@ -340,49 +338,5 @@ export class ChatService {
     });
 
     return chatRoomDataDto;
-  }
-
-  async getChatContents(
-    roomId: number,
-    userId: number,
-  ): Promise<CreateChatContentDto[]> {
-    const { createdTime: participatedTime } =
-      await this.chatParticipantRepo.findOneBy({
-        chattingRoomId: roomId,
-        userId,
-      });
-    const blockedUsers = await this.blockedUserRepo.findBy({
-      blockerId: userId,
-    });
-
-    const chatContents = await this.chatContentsRepo
-      .createQueryBuilder('chatContents')
-      .leftJoinAndSelect('chatContents.user', 'user')
-      .leftJoinAndSelect('user.chatParticipant', 'chatParticipant')
-      .where('chatContents.chattingRoomId = :roomId', { roomId })
-      .andWhere('chatContents.createdTime > :participatedTime', {
-        participatedTime,
-      })
-      .getMany();
-
-    return chatContents
-      .filter((chatContent) => {
-        if (!chatContent.userId) {
-          return true;
-        }
-
-        for (const blockedUser of blockedUsers) {
-          if (
-            chatContent.userId === blockedUser.blockedId &&
-            chatContent.createdTime > blockedUser.createdTime
-          ) {
-            return false;
-          }
-        }
-        return true;
-      })
-      .map((chatContent) => {
-        return chatContent.toCreateChatContentDto(roomId, userId);
-      });
   }
 }
