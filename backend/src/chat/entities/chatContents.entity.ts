@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { ChatRoomUserDto } from 'src/users/dto/users.dto';
 import { User } from 'src/users/entities/users.entity';
 import {
   BaseEntity,
@@ -8,6 +9,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { CreateChatContentDto } from '../dto/chat.dto';
 import { ChatRoom } from './chattingRoom.entity';
 
 @Entity()
@@ -42,4 +44,24 @@ export class ChatContents extends BaseEntity {
 
   @ManyToOne(() => User, (user) => user.sender)
   user: User;
+
+  toCreateChatContentDto(roomId: number, userId: number): CreateChatContentDto {
+    const createChatContentDto = new CreateChatContentDto();
+    createChatContentDto.isBroadcast = this.isNotice;
+    if (!this.isNotice) {
+      const chatRoomUserDto = new ChatRoomUserDto();
+      chatRoomUserDto.id = this.user.id;
+      chatRoomUserDto.nickname = this.user.nickname;
+      chatRoomUserDto.role = this.user.chatParticipant.find(
+        (person) => person.chattingRoomId === roomId,
+      ).role;
+
+      createChatContentDto.from = chatRoomUserDto;
+    }
+    createChatContentDto.message = this.content;
+    createChatContentDto.fromUser = this.userId === userId ? true : false;
+    createChatContentDto.createdTime = this.createdTime;
+
+    return createChatContentDto;
+  }
 }

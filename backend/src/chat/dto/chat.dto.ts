@@ -125,5 +125,5 @@ export class CreateChatContentDto {
 
   @ApiProperty({ description: '만들어진 시간' })
   @IsDateString()
-  createdTime: string;
+  createdTime: Date;
 }

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from 'src/auth/auth.module';
+import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
@@ -11,7 +12,13 @@ import { ChatRoom } from './entities/chattingRoom.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ChatContents, ChatParticipant, ChatRoom, User]),
+    TypeOrmModule.forFeature([
+      ChatContents,
+      ChatParticipant,
+      ChatRoom,
+      User,
+      BlockedUser,
+    ]),
     AuthModule,
   ],
   controllers: [ChatController],
