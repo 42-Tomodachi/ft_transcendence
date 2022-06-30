@@ -201,9 +201,7 @@ export class ChatController {
   async banParticipant(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
-    //강퇴시킨 유저 권한 확인하기 -> 강퇴할 능력있는지? 확인해야함.
   ): Promise<void> {
-    const a = 'banParticipant';
     return this.chatService.banUser(roomId, targetUserId);
   }
 
