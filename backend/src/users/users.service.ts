@@ -108,6 +108,9 @@ export class UsersService {
     if (!followerUser || !followUser) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
+    if (followerId === followId) {
+      throw new BadRequestException('자신을 친구추가할 수 없습니다.');
+    }
 
     if (
       (await this.followRepo.findOneBy({
