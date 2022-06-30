@@ -10,7 +10,7 @@ export const authAPI = {
     try {
       const url = authPath(`/isSignedUp`);
       const response = await instance.post(url, body);
-      return response.data.data;
+      return response.data;
     } catch (e) {
       if (e instanceof Error) {
         console.log(e.message);
