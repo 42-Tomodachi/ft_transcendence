@@ -211,10 +211,13 @@ export class ChatService {
       throw new BadRequestException('참여중인 채팅방이 아닙니다.');
     }
 
+    if (room.isDm) {
+      userId = room.ownerId;
+    }
+
     if (room.ownerId === userId) {
       // 방 폭파 + 방에서 다 내보내기
       await this.chatRoomRepo.delete({ id: roomId });
-      await this.chatParticipantRepo.delete({ chattingRoomId: roomId });
       await this.ChatGateway.server.to(roomId.toString()).emit('deleteRoom');
     } else {
       await this.chatParticipantRepo.delete({ chattingRoomId: roomId, userId });
