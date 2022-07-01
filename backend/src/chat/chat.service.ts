@@ -240,14 +240,19 @@ export class ChatService {
     roomId: number,
     userId: number,
   ): Promise<boolean> {
-    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
+    const room = await this.chatRoomRepo.findOneByOrFail({ id: roomId });
     if (!room) {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
     }
 
-    const chatParticipant = room.chatParticipant.find(
+    const chatParticipants: ChatParticipant[] =
+      await this.chatParticipantRepo.find({
+        where: [{ chatRoomId: roomId }],
+      });
+    const chatParticipant: ChatParticipant = chatParticipants.find(
       (participant) => participant.userId === userId,
     );
+
     if (!chatParticipant) {
       throw new BadRequestException('존재하지 않는 참여자입니다.');
     }

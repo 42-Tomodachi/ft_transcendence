@@ -180,8 +180,8 @@ export class ChatController {
   //   const a = 'banParticipant';
   // }
 
-  @ApiOperation({ summary: '음소거 시키기 토글_jihokim' })
-  @Patch(':roomId/mute_one_toggle')
+  @ApiOperation({ summary: '✅ 음소거 시키기 토글: jihokim' })
+  @Patch(':roomId/mute_toggle')
   async muteParticipant(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
