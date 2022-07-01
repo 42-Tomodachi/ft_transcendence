@@ -62,10 +62,32 @@ export class ChatService {
     return chatRoom.chatParticipant;
   }
 
-  async getParticipatingChatRooms(userId: number): Promise<ChatRoomDataDto[]> {
-    const chatRooms = await this.chatRoomRepo
-      .createQueryBuilder('chatRoom')
-      .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
+  async banUser(roomId: number, targetUserId: number): Promise<void> {
+    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
+    if (!room) {
+      throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    }
+    const chatParticipant = await ChatParticipant.findOneBy({ userId: targetUserId, chattingRoomId: roomId });
+    if (!chatParticipant) {
+      throw new BadRequestException('존재하지 않는 참여자입니다.');
+    }
+    if (room.isDm === true) {
+      console.log("chatParticipant.chattingRoom.isDm",room.isDm);
+      throw new BadRequestException('DM방 입니다.');
+    }
+    if (chatParticipant.role === 'guest') {
+      throw new BadRequestException('권한이 없는 사용자입니다.');
+    }
+    chatParticipant.isBanned = true;
+    await chatParticipant.save();
+  }
+
+  async getParticipatingChattingRooms(
+    userId: number,
+  ): Promise<ChatRoomDataDto[]> {
+    const chattingRooms = await this.chatRoomRepo
+      .createQueryBuilder('chattingRoom')
+      .leftJoinAndSelect('chattingRoom.chatParticipant', 'chatParticipant')
       .where('chatParticipant.userId = :userId', { userId })
       .getMany();
 
