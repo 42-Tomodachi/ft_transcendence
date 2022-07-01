@@ -34,35 +34,34 @@ export class ChatController {
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 목록 가져오기' })
   @Get('')
-  async getChattingRooms(): Promise<ChatRoomDataDto[]> {
-    const chattingRooms = this.chatService.getChatRooms();
+  async getChatRooms(): Promise<ChatRoomDataDto[]> {
+    const chatRooms = this.chatService.getChatRooms();
 
-    return chattingRooms;
+    return chatRooms;
   }
 
   @ApiOperation({ summary: 'kankim✅ 참여중인 채팅방 목록 가져오기' })
   @Get('/users/:userId')
-  async getParticipatingChattingRooms(
+  async getParticipatingChatRooms(
     @Param('userId') userId: number,
   ): Promise<ChatRoomDataDto[]> {
-    const chattingRooms =
-      this.chatService.getParticipatingChattingRooms(userId);
+    const chatRooms = this.chatService.getParticipatingChatRooms(userId);
 
-    return chattingRooms;
+    return chatRooms;
   }
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 만들기' })
   @Post(':userId')
-  async createChattingRoom(
+  async createChatRoom(
     @Param('userId') userId: number,
-    @Body() createChattingRoomDto: CreateChatRoomDto,
+    @Body() createChatRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
-    const chattingRoom = await this.chatService.createChattingRoom(
+    const chatRoom = await this.chatService.createChatRoom(
       userId,
-      createChattingRoomDto,
+      createChatRoomDto,
     );
 
-    return chattingRoom;
+    return chatRoom;
   }
 
   @ApiOperation({ summary: '채팅방 참여자 목록 가져오기' })
@@ -75,12 +74,12 @@ export class ChatController {
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 입장하기' })
   @Post(':roomId/users/:userId')
-  async enterChattingRoom(
+  async enterChatRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() roomPasswordDto: RoomPasswordDto,
   ): Promise<ChatRoomIdDto> {
-    return await this.chatService.enterChattingRoom(
+    return await this.chatService.enterChatRoom(
       roomId,
       userId,
       roomPasswordDto.password,

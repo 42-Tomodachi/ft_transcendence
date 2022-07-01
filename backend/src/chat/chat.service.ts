@@ -16,7 +16,7 @@ import {
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
-import { ChatRoom as ChatRoom } from './entities/chattingRoom.entity';
+import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
 
 @Injectable()
 export class ChatService {
@@ -43,14 +43,14 @@ export class ChatService {
 
   async getChatRooms(): Promise<ChatRoomDataDto[]> {
     let chatRooms = await this.chatRoomRepo
-      .createQueryBuilder('chattingRoom')
-      .leftJoinAndSelect('chattingRoom.chatParticipant', 'chatParticipant')
+      .createQueryBuilder('chatRoom')
+      .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
       .getMany();
 
-    chatRooms = chatRooms.filter((chattingRoom) => !chattingRoom.isDm);
+    chatRooms = chatRooms.filter((chatRoom) => !chatRoom.isDm);
 
-    return chatRooms.map((chattingRoom) => {
-      return chattingRoom.toChatRoomDto();
+    return chatRooms.map((chatRoom) => {
+      return chatRoom.toChatRoomDto();
     });
   }
 
@@ -60,57 +60,55 @@ export class ChatService {
     return chatRoom.chatParticipant;
   }
 
-  async getParticipatingChattingRooms(
-    userId: number,
-  ): Promise<ChatRoomDataDto[]> {
-    const chattingRooms = await this.chatRoomRepo
-      .createQueryBuilder('chattingRoom')
-      .leftJoinAndSelect('chattingRoom.chatParticipant', 'chatParticipant')
+  async getParticipatingChatRooms(userId: number): Promise<ChatRoomDataDto[]> {
+    const chatRooms = await this.chatRoomRepo
+      .createQueryBuilder('chatRoom')
+      .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
       .where('chatParticipant.userId = :userId', { userId })
       .getMany();
 
-    return chattingRooms.map((chattingRoom) => {
-      return chattingRoom.toChatRoomDto();
+    return chatRooms.map((chatRoom) => {
+      return chatRoom.toChatRoomDto();
     });
   }
 
-  async addUserToChattingRoom(
-    chattingRoomId: number,
+  async addUserToChatRoom(
+    chatRoomId: number,
     userId: number,
     role: 'owner' | 'manager' | 'guest',
   ) {
     const chatParticipant = new ChatParticipant();
     chatParticipant.role = role;
-    chatParticipant.chattingRoomId = chattingRoomId;
+    chatParticipant.chatRoomId = chatRoomId;
     chatParticipant.userId = userId;
 
     await this.chatParticipantRepo.save(chatParticipant);
   }
 
-  async createChattingRoom(
+  async createChatRoom(
     userId: number,
-    createChattingRoomDto: CreateChatRoomDto,
+    createChatRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
-    const chattingRoom = new ChatRoom();
-    chattingRoom.title = createChattingRoomDto.title;
-    chattingRoom.password = createChattingRoomDto.password;
-    chattingRoom.ownerId = userId;
-    chattingRoom.isDm = createChattingRoomDto.isDm;
+    const chatRoom = new ChatRoom();
+    chatRoom.title = createChatRoomDto.title;
+    chatRoom.password = createChatRoomDto.password;
+    chatRoom.ownerId = userId;
+    chatRoom.isDm = createChatRoomDto.isDm;
 
-    const createdChattingRoom = await this.chatRoomRepo.save(chattingRoom);
+    const createdChatRoom = await this.chatRoomRepo.save(chatRoom);
 
-    await this.addUserToChattingRoom(
-      createdChattingRoom.id,
-      createdChattingRoom.ownerId,
+    await this.addUserToChatRoom(
+      createdChatRoom.id,
+      createdChatRoom.ownerId,
       'owner',
     );
 
-    const chattingRoomDataDto = new ChatRoomDataDto();
-    chattingRoomDataDto.id = createdChattingRoom.id;
-    chattingRoomDataDto.title = createdChattingRoom.title;
-    chattingRoomDataDto.ownerId = createdChattingRoom.ownerId;
+    const chatRoomDataDto = new ChatRoomDataDto();
+    chatRoomDataDto.id = createdChatRoom.id;
+    chatRoomDataDto.title = createdChatRoom.title;
+    chatRoomDataDto.ownerId = createdChatRoom.ownerId;
 
-    return chattingRoomDataDto;
+    return chatRoomDataDto;
   }
 
   // 채팅방이 존재할 경우 채팅방 엔티티를 리턴하고 존재하지 않을 경우 null을 리턴함
@@ -137,12 +135,12 @@ export class ChatService {
   // 채팅방 참여자일 경우 chatParticipant 엔티티 리턴, 참여자가 아닐 경우 null 리턴
   async isExistMember(roomId: number, userId: number) {
     return await this.chatParticipantRepo.findOneBy({
-      chattingRoomId: roomId,
+      chatRoomId: roomId,
       userId,
     });
   }
 
-  async enterChattingRoom(
+  async enterChatRoom(
     roomId: number,
     userId: number,
     roomPassword: string | null,
@@ -156,7 +154,7 @@ export class ChatService {
 
     if (!(await this.isExistMember(roomId, userId))) {
       const chatParticipant = new ChatParticipant();
-      chatParticipant.chattingRoomId = roomId;
+      chatParticipant.chatRoomId = roomId;
       chatParticipant.userId = userId;
       await this.chatParticipantRepo.save(chatParticipant);
 
@@ -208,7 +206,7 @@ export class ChatService {
     }
 
     const chatParticipant = await this.chatParticipantRepo.findOneBy({
-      chattingRoomId: roomId,
+      chatRoomId: roomId,
       userId,
     });
 
@@ -225,12 +223,12 @@ export class ChatService {
       await this.chatRoomRepo.delete({ id: roomId });
       await this.ChatGateway.server.to(roomId.toString()).emit('deleteRoom');
     } else {
-      await this.chatParticipantRepo.delete({ chattingRoomId: roomId, userId });
+      await this.chatParticipantRepo.delete({ chatRoomId: roomId, userId });
 
       // 방 유저들에게 유저목록 업데이트 지시하기
       const chatParticipants: ChatParticipant[] =
         await this.chatParticipantRepo.find({
-          where: [{ chattingRoomId: roomId }],
+          where: [{ chatRoomId: roomId }],
         });
       this.ChatGateway.server
         .to(roomId.toString())
@@ -248,7 +246,7 @@ export class ChatService {
     }
 
     const chatParticipant = room.chatParticipant.find(
-      (participant) => participant.userId == userId,
+      (participant) => participant.userId === userId,
     );
     if (!chatParticipant) {
       throw new BadRequestException('존재하지 않는 참여자입니다.');
@@ -278,7 +276,7 @@ export class ChatService {
     //채팅 DB에 저장
     const chatContents = new ChatContents();
 
-    chatContents.chattingRoomId = roomId;
+    chatContents.chatRoomId = roomId;
     chatContents.userId = userId;
     chatContents.content = createChatContentDto.message;
     chatContents.isNotice = createChatContentDto.isBroadcast;
@@ -336,12 +334,12 @@ export class ChatService {
       chatRoomDataDto = (await t.save(chatRoomForCreate)).toChatRoomDataDto();
 
       const chatParticipantForMe = new ChatParticipant();
-      chatParticipantForMe.chattingRoomId = chatRoomDataDto.id;
+      chatParticipantForMe.chatRoomId = chatRoomDataDto.id;
       chatParticipantForMe.userId = myId;
       chatParticipantForMe.role = 'owner';
       await t.save(chatParticipantForMe);
       const chatParticipantForPartner = new ChatParticipant();
-      chatParticipantForPartner.chattingRoomId = chatRoomDataDto.id;
+      chatParticipantForPartner.chatRoomId = chatRoomDataDto.id;
       chatParticipantForPartner.userId = partnerId;
       await t.save(chatParticipantForPartner);
     });
@@ -355,7 +353,7 @@ export class ChatService {
   ): Promise<CreateChatContentDto[]> {
     const { createdTime: participatedTime } =
       await this.chatParticipantRepo.findOneBy({
-        chattingRoomId: roomId,
+        chatRoomId: roomId,
         userId,
       });
     const blockedUsers = await this.blockedUserRepo.findBy({
@@ -366,7 +364,7 @@ export class ChatService {
       .createQueryBuilder('chatContents')
       .leftJoinAndSelect('chatContents.user', 'user')
       .leftJoinAndSelect('user.chatParticipant', 'chatParticipant')
-      .where('chatContents.chattingRoomId = :roomId', { roomId })
+      .where('chatContents.chatRoomId = :roomId', { roomId })
       .andWhere('chatContents.createdTime > :participatedTime', {
         participatedTime,
       })

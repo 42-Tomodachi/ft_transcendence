@@ -8,7 +8,7 @@ import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
-import { ChatRoom } from './entities/chattingRoom.entity';
+import { ChatRoom } from './entities/chatRoom.entity';
 
 @Module({
   imports: [

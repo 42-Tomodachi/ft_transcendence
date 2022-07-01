@@ -9,7 +9,7 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
-  
+
   @Get('image/:imgpath')
   seeUploadedFile(@Param('imgpath') image: string, @Res() res) {
     return res.sendFile(image, { root: '/app/files' });
