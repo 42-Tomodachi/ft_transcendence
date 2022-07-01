@@ -47,14 +47,15 @@ export class UsersController {
     }),
   )
   async uploadedFile(@UploadedFile() file, @Param('id') id: number) {
+    // this.usersService.beforeUploadImage(id); //업로드 된 파일 이름.
     const response = {
       originalname: file.originalname,
       filename: file.filename,
       UpdateImg: await this.usersService.findByNicknameAndUpdateImg(
         id,
         file.filename,
-      ),
-    };
+        ),
+      };
     return response;
   }
 

@@ -35,6 +35,22 @@ export class UsersService {
     });
   }
 
+  // parsingPath(path: string): string{
+  //   console.log(path);
+  //   const name = path.substring(path.lastIndexOf('/') + 1);
+  //   console.log("name", name);
+
+  //   return name;
+  // }
+
+  // async beforeUploadImage( id: number) {
+  //   const user = await this.userRepo.findOne({ where: { id } });
+  //   if (user.avatar != null) {
+  //     const path = this.parsingPath(user.avatar);
+  //     // fs.unlinkSync("../files/" + path);
+  //   }
+  // }
+
   async getFriends(userId: number): Promise<SimpleUserDto[]> {
     if ((await this.userRepo.findOneBy({ id: userId })) === null) {
       throw new BadRequestException('존재하지 않는 유저 입니다.');
@@ -82,7 +98,7 @@ export class UsersService {
     fileName: string,
   ): Promise<string> {
     const user = await this.userRepo.findOne({ where: { id } });
-    user.avatar = `${process.env.SERVER_ADDRESS}/users/${fileName}`;
+    user.avatar = `${process.env.SERVER_ADDRESS}/image/${fileName}`;
     await user.save();
 
     return user.avatar;
