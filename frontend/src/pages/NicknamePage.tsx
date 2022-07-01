@@ -5,6 +5,7 @@ import styled from '@emotion/styled';
 import { AllContext } from '../store';
 import { LOGIN } from '../utils/interface';
 import imageCompression from 'browser-image-compression';
+import { usersAPI } from '../API/users';
 
 // TODO : 최초 42api 토큰 요청시 성공하면 인트라 사진도 갖고오도록 할 예정?
 const DEFAULT_PROFILE =
@@ -21,6 +22,7 @@ const NicknamePage: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
+  const [testImg, setTestImg] = useState<File | string>(''); // TODO: File or string ?
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     //  NOTE : 정규식 적용
@@ -35,28 +37,21 @@ const NicknamePage: React.FC = () => {
     setNickName(inputNickValue);
   };
 
-  const compressImg = async (image: File) => {
-    try {
-      const imgOption = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 800,
-      };
-      return await imageCompression(image, imgOption);
-    } catch (e) {
-      if (e instanceof Error) console.error(e.message);
-      else console.error(e);
-    }
-  };
-
   const onFindImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.length) {
       const imgTarget = e.target.files[0];
       const fileReader = new FileReader();
-      const compressImgResult = await compressImg(imgTarget);
+      const compressImgResult = await imageCompression(imgTarget, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 800,
+      }); // TODO: 분명 File 타입으로 반환되는데 정작 저장은 Blob로 됨
 
       if (compressImgResult !== undefined) {
-        fileReader.readAsDataURL(compressImgResult);
+        // setTestImg(compressImgResult);
+        fileReader.readAsDataURL(imgTarget);
         fileReader.onload = () => setProfileImg(fileReader.result as string);
+        setTestImg(imgTarget);
+        // console.dir(testImg);
       }
     }
   };
@@ -76,7 +71,7 @@ const NicknamePage: React.FC = () => {
     return true;
   };
 
-  // TODO: 전체 닉네임들을 다 탐색해야함(front or back)
+  // TODO: 입력된 닉네임만 서버에 요청해서 응답 받기
   const onCheck = () => {
     // console.log('한글 중복 check용 log');
     //  const result = await axios.get(`http://localhost:4000/profile/`);
@@ -93,7 +88,13 @@ const NicknamePage: React.FC = () => {
     if (!isEnabled) {
       setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
     } else {
-      // TODO : 서버에 전송하기
+      const userId = 1;
+      const formData = new FormData();
+      formData.append('image', testImg); // TODO: 압축된 이미지로 전송되야함(현재는 원본 이미지)
+      // TODO: 서버에 id에 맞게 전송하기
+      usersAPI.uploadAvatarImg(userId, formData).then(data => console.dir(data));
+      // TODO: 닉네임도 id에 맞게 전송
+      usersAPI.updateUserNickname(userId, nickName);
       setUserStatus(LOGIN);
     }
   };

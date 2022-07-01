@@ -46,6 +46,12 @@ export interface INickname {
   nickname: string;
 }
 
+export interface IUserAvatar {
+  originalname: string;
+  filename: string;
+  UpdateImg: string;
+}
+
 export interface IMessage {
   id: number;
   isBroadcast: boolean;

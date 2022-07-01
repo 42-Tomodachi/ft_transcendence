@@ -1,11 +1,10 @@
-import { instance } from './index';
+import { instance, instance2 } from './index';
 import {
   IUserKey,
   IUserProfile,
   IGameRecord,
   IUserWinLoseount,
-  IFollowId,
-  INickname,
+  IUserAvatar,
 } from '../utils/interface';
 
 const usersPath = (path: string) => {
@@ -13,17 +12,17 @@ const usersPath = (path: string) => {
 };
 
 const usersAPI = {
-  // TODO: upload file
-  // uploadAvatarImg: async (id: number, body: FormData) => {
-  //   try {
-  //     const url = usersPath(`/${id}/uploadImage`);
-  //     const res = await instance.post(url, body);
-  //     return res.data;
-  //   } catch (e) {
-  //     if (e instanceof Error) console.error(e.message);
-  //     else console.error(e);
-  //   }
-  // },
+  uploadAvatarImg: async (id: number, body: FormData): Promise<IUserAvatar | null> => {
+    try {
+      const url = usersPath(`/${id}/uploadImage`);
+      const res = await instance2.post(url, body);
+      return res.data;
+    } catch (e) {
+      if (e instanceof Error) console.error(e.message);
+      else console.error(e);
+      return null;
+    }
+  },
   getAllUsersIdNickName: async (): Promise<IUserKey[] | []> => {
     try {
       const url = usersPath(``);
@@ -46,10 +45,10 @@ const usersAPI = {
       return null;
     }
   },
-  makeFriend: async (id: number, body: IFollowId): Promise<string | null> => {
+  makeFriend: async (id: number, followId: number): Promise<string | null> => {
     try {
       const url = usersPath(`/${id}/friends`);
-      const res = await instance.post(url, body); // TODO: 201이면 따로 반환되는게 없음
+      const res = await instance.post(url, { followId });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e);
@@ -79,10 +78,10 @@ const usersAPI = {
       return [];
     }
   },
-  updateUserNickname: async (id: number, body: INickname): Promise<string | null> => {
+  updateUserNickname: async (id: number, nickname: string): Promise<string | null> => {
     try {
       const url = usersPath(`/${id}/nickname`);
-      const res = await instance.put(url, body);
+      const res = await instance.put(url, { nickname });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -101,18 +100,17 @@ const usersAPI = {
       return null;
     }
   },
-  // TODO: 친구 해제 API
-  // deleteFriend: async (id: number, body: IFollowId): Promise<string | null> => {
-  //   try {
-  //     const url = usersPath(`/${id}/friends`);
-  //     const res = await instance.delete(url, body);
-  //     return res.data;
-  //   } catch (e) {
-  //     if (e instanceof Error) console.error(e);
-  //     else console.error(e);
-  //     return null;
-  //   }
-  // },
+  deleteFriend: async (id: number, followId: number): Promise<string | null> => {
+    try {
+      const url = usersPath(`/${id}/friends`);
+      const res = await instance.delete(url, { data: followId });
+      return res.data;
+    } catch (e) {
+      if (e instanceof Error) console.error(e);
+      else console.error(e);
+      return null;
+    }
+  },
 };
 
 export { usersAPI };
