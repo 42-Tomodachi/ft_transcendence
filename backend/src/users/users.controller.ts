@@ -28,6 +28,7 @@ import { GameRecordDto } from './dto/gameRecord.dto';
 import { FollowIdDto } from './dto/follow.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetJwtUser } from 'src/auth/jwt.strategy';
+import { BlockResultDto } from './dto/blockedUser.dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -135,5 +136,17 @@ export class UsersController {
     @Param('id', ParseIntPipe) userId: number,
   ): Promise<WinLoseCountDto> {
     return await this.usersService.getWinLoseCount(userId);
+  }
+
+  @ApiOperation({
+    summary:
+      'kankim✅ 유저 차단하기 토글. target유저를 차단했으면 true, 차단 해제 했으면 false 리턴',
+  })
+  @Put(':myId')
+  async blockUserToggle(
+    @Param('myId', ParseIntPipe) myId: number,
+    @Body('targetId', ParseIntPipe) targetId: number,
+  ): Promise<BlockResultDto> {
+    return await this.usersService.blockUserToggle(myId, targetId);
   }
 }
