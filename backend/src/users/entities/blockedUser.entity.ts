@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -20,6 +21,10 @@ export class BlockedUser extends BaseEntity {
   @ApiProperty({ description: '[FK] 차단 당하는 유저의 id' })
   @Column()
   blockedId: number;
+
+  @ApiProperty({ description: '차단한 시간' })
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdTime: Date;
 
   @ManyToOne(() => User, (user) => user.blocker)
   blocker: User;

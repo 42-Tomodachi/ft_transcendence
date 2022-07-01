@@ -1,13 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatRoomUserDto } from 'src/users/dto/users.dto';
+import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ChatGateway } from './chat.gateway';
 import {
   CreateChatContentDto,
   ChatRoomDataDto,
-  ChatRoomDto,
   ChatRoomIdDto,
   CreateChatRoomDto,
   UpdateChatRoomDto,
@@ -28,6 +28,9 @@ export class ChatService {
     private readonly ChatGateway: ChatGateway,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private dataSource: DataSource,
+    @InjectRepository(BlockedUser)
+    private readonly blockedUserRepo: Repository<BlockedUser>,
   ) {}
 
   async getChatRoomById(id: number): Promise<ChatRoom> {
@@ -36,7 +39,7 @@ export class ChatService {
     return chatRoom;
   }
 
-  async getChatRooms(): Promise<ChatRoomDto[]> {
+  async getChatRooms(): Promise<ChatRoomDataDto[]> {
     let chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chattingRoom')
       .leftJoinAndSelect('chattingRoom.chatParticipant', 'chatParticipant')
@@ -55,7 +58,9 @@ export class ChatService {
     return chatRoom.chatParticipant;
   }
 
-  async getParticipatingChattingRooms(userId: number): Promise<ChatRoomDto[]> {
+  async getParticipatingChattingRooms(
+    userId: number,
+  ): Promise<ChatRoomDataDto[]> {
     const chattingRooms = await this.chatRoomRepo
       .createQueryBuilder('chattingRoom')
       .leftJoinAndSelect('chattingRoom.chatParticipant', 'chatParticipant')
@@ -77,7 +82,7 @@ export class ChatService {
     chatParticipant.chattingRoomId = chattingRoomId;
     chatParticipant.userId = userId;
 
-    this.chatParticipantRepo.save(chatParticipant);
+    await this.chatParticipantRepo.save(chatParticipant);
   }
 
   async createChattingRoom(
@@ -209,10 +214,13 @@ export class ChatService {
       throw new BadRequestException('참여중인 채팅방이 아닙니다.');
     }
 
+    if (room.isDm) {
+      userId = room.ownerId;
+    }
+
     if (room.ownerId === userId) {
       // 방 폭파 + 방에서 다 내보내기
       await this.chatRoomRepo.delete({ id: roomId });
-      await this.chatParticipantRepo.delete({ chattingRoomId: roomId });
       await this.ChatGateway.server.to(roomId.toString()).emit('deleteRoom');
     } else {
       await this.chatParticipantRepo.delete({ chattingRoomId: roomId, userId });
@@ -245,5 +253,109 @@ export class ChatService {
     this.ChatGateway.server
       .to(roomId.toString())
       .emit('updateChat', createChatContentDto);
+  }
+
+  async enterDmRoom(myId: number, partnerId: number): Promise<ChatRoomDataDto> {
+    const chatRooms = await this.chatRoomRepo
+      .createQueryBuilder('chatRoom')
+      .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
+      .where('chatRoom.isDm = true')
+      .andWhere('chatRoom.ownerId = :myId or chatRoom.ownerId = :partnerId', {
+        myId,
+        partnerId,
+      })
+      .getMany();
+
+    const chatRoom = chatRooms.find((chatRoom) => {
+      let isCorrectMember = 0;
+
+      chatRoom.chatParticipant.forEach((person) => {
+        if (person.userId === myId || person.userId === partnerId) {
+          ++isCorrectMember;
+        }
+      });
+
+      if (isCorrectMember === 2) {
+        return true;
+      } else {
+        return false;
+      }
+    });
+
+    if (chatRoom) {
+      return chatRoom.toChatRoomDataDto();
+    }
+
+    const myUser = await this.userRepo.findOneBy({ id: myId });
+    const partnerUser = await this.userRepo.findOneBy({ id: partnerId });
+    if (!myUser || !partnerUser) {
+      throw new BadRequestException('존재하지 않는 유저입니다.');
+    }
+
+    let chatRoomDataDto: ChatRoomDataDto;
+    await this.dataSource.transaction(async (t) => {
+      const chatRoomForCreate = new ChatRoom();
+      chatRoomForCreate.title = `Dm Room of ${myUser.nickname} and ${partnerUser.nickname}`;
+      chatRoomForCreate.ownerId = myId;
+      chatRoomForCreate.isDm = true;
+
+      chatRoomDataDto = (await t.save(chatRoomForCreate)).toChatRoomDataDto();
+
+      const chatParticipantForMe = new ChatParticipant();
+      chatParticipantForMe.chattingRoomId = chatRoomDataDto.id;
+      chatParticipantForMe.userId = myId;
+      chatParticipantForMe.role = 'owner';
+      await t.save(chatParticipantForMe);
+      const chatParticipantForPartner = new ChatParticipant();
+      chatParticipantForPartner.chattingRoomId = chatRoomDataDto.id;
+      chatParticipantForPartner.userId = partnerId;
+      await t.save(chatParticipantForPartner);
+    });
+
+    return chatRoomDataDto;
+  }
+
+  async getChatContents(
+    roomId: number,
+    userId: number,
+  ): Promise<CreateChatContentDto[]> {
+    const { createdTime: participatedTime } =
+      await this.chatParticipantRepo.findOneBy({
+        chattingRoomId: roomId,
+        userId,
+      });
+    const blockedUsers = await this.blockedUserRepo.findBy({
+      blockerId: userId,
+    });
+
+    const chatContents = await this.chatContentsRepo
+      .createQueryBuilder('chatContents')
+      .leftJoinAndSelect('chatContents.user', 'user')
+      .leftJoinAndSelect('user.chatParticipant', 'chatParticipant')
+      .where('chatContents.chattingRoomId = :roomId', { roomId })
+      .andWhere('chatContents.createdTime > :participatedTime', {
+        participatedTime,
+      })
+      .getMany();
+
+    return chatContents
+      .filter((chatContent) => {
+        if (!chatContent.userId) {
+          return true;
+        }
+
+        for (const blockedUser of blockedUsers) {
+          if (
+            chatContent.userId === blockedUser.blockedId &&
+            chatContent.createdTime > blockedUser.createdTime
+          ) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .map((chatContent) => {
+        return chatContent.toCreateChatContentDto(roomId, userId);
+      });
   }
 }
