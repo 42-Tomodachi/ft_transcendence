@@ -21,6 +21,7 @@ import {
   ChatRoomIdDto,
   UpdateChatRoomDto,
   CreateChatContentDto,
+  BooleanDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -185,7 +186,7 @@ export class ChatController {
   async muteParticipant(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
-  ): Promise<boolean> {
+  ): Promise<BooleanDto> {
     return this.chatService.muteCertainParticipant(roomId, targetUserId);
   }
 

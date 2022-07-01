@@ -13,6 +13,7 @@ import {
   CreateChatRoomDto,
   UpdateChatRoomDto,
   RoomPasswordDto,
+  BooleanDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -239,8 +240,8 @@ export class ChatService {
   async muteCertainParticipant(
     roomId: number,
     userId: number,
-  ): Promise<boolean> {
-    const room = await this.chatRoomRepo.findOneByOrFail({ id: roomId });
+  ): Promise<BooleanDto> {
+    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
     if (!room) {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
     }
@@ -270,7 +271,9 @@ export class ChatService {
       .to(roomId.toString())
       .emit('updateUserList', chatParticipant);
 
-    return chatParticipant.isMuted;
+    const result: BooleanDto = new BooleanDto();
+    result.boolean = chatParticipant.isMuted;
+    return result;
   }
 
   async submitChatContent(
