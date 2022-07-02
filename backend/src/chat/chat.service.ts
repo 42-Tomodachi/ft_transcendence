@@ -238,7 +238,7 @@ export class ChatService {
     }
   }
 
-  async toggleManager(
+  async toggleParticipantRole(
     roomId: number,
     callingUserId: number,
     targetUserId: number,

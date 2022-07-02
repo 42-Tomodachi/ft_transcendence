@@ -173,13 +173,17 @@ export class ChatController {
   // }
 
   @ApiOperation({ summary: '✅ 관리자로 설정 토글: jihokim' })
-  @Patch(':roomId/admin_toggle')
+  @Patch(':roomId/role_toggle')
   async toggleManager(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('callingUserId', ParseIntPipe) callingUserId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
   ): Promise<ParticipantRoleDto> {
-    return this.chatService.toggleManager(roomId, callingUserId, targetUserId);
+    return this.chatService.toggleParticipantRole(
+      roomId,
+      callingUserId,
+      targetUserId,
+    );
   }
 
   // // 강퇴
