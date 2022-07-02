@@ -22,7 +22,7 @@ const NicknamePage: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
-  const [testImg, setTestImg] = useState<File | string>(''); // TODO: File or string ?
+  const [convertImg, setConvertImg] = useState<File | string>(''); // TODO: File or string ?
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     //  NOTE : 정규식 적용
@@ -37,21 +37,22 @@ const NicknamePage: React.FC = () => {
     setNickName(inputNickValue);
   };
 
-  const onFindImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFindImage = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     if (e.target.files?.length) {
       const imgTarget = e.target.files[0];
       const fileReader = new FileReader();
       const compressImgResult = await imageCompression(imgTarget, {
-        maxSizeMB: 1,
         maxWidthOrHeight: 800,
-      }); // TODO: 분명 File 타입으로 반환되는데 정작 저장은 Blob로 됨
+      });
 
       if (compressImgResult !== undefined) {
-        // setTestImg(compressImgResult);
-        fileReader.readAsDataURL(imgTarget);
+        const convertResult = new File([compressImgResult], imgTarget.name, {
+          type: imgTarget.type,
+          lastModified: imgTarget.lastModified,
+        });
+        setConvertImg(convertResult);
+        fileReader.readAsDataURL(convertResult);
         fileReader.onload = () => setProfileImg(fileReader.result as string);
-        setTestImg(imgTarget);
-        // console.dir(testImg);
       }
     }
   };
@@ -62,7 +63,7 @@ const NicknamePage: React.FC = () => {
       if (e.nativeEvent.isComposing === false) onCheck();
     }
   };
-  const checkNickName = (resNickName: string) => {
+  const checkNickName = (resNickName: string): boolean => {
     if (nickName === resNickName) {
       setCheckNickMsg(`중복된 닉네임입니다.`);
       setIsEnabled(false);
@@ -73,10 +74,10 @@ const NicknamePage: React.FC = () => {
 
   // TODO: 입력된 닉네임만 서버에 요청해서 응답 받기
   const onCheck = () => {
-    // console.log('한글 중복 check용 log');
     //  const result = await axios.get(`http://localhost:4000/profile/`);
     // const userList = result.data;
 
+    // TODO: 닉네임 중복 API 사용
     const resNickName = 'mike2ox';
     if (checkNickName(resNickName)) {
       setCheckNickMsg(`사용 가능한 닉네임입니다.`);
@@ -88,12 +89,12 @@ const NicknamePage: React.FC = () => {
     if (!isEnabled) {
       setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
     } else {
+      // TODO: 서버, 닉네임도 id에 맞게 전송
       const userId = 1;
       const formData = new FormData();
-      formData.append('image', testImg); // TODO: 압축된 이미지로 전송되야함(현재는 원본 이미지)
-      // TODO: 서버에 id에 맞게 전송하기
-      usersAPI.uploadAvatarImg(userId, formData).then(data => console.dir(data));
-      // TODO: 닉네임도 id에 맞게 전송
+
+      formData.append('image', convertImg);
+      usersAPI.uploadAvatarImg(userId, formData);
       usersAPI.updateUserNickname(userId, nickName);
       setUserStatus(LOGIN);
     }
