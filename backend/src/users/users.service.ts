@@ -31,7 +31,7 @@ export class UsersService {
     const users = await this.userRepo.find();
 
     return users.map((user) => {
-      return { id: user.id, nickname: user.nickname };
+      return { id: user.id, nickname: user.nickname, status: user.userStatus };
     });
   }
 
