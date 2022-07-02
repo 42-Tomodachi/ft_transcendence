@@ -128,6 +128,12 @@ export class CreateChatContentDto {
   createdTime: Date;
 }
 
+export class ParticipantRoleDto {
+  @ApiProperty({ description: '채팅 참여자 역할' })
+  @IsString()
+  role: 'owner' | 'manager' | 'guest';
+}
+
 export class BooleanDto {
   @ApiProperty({ description: 'true or false' })
   @IsBoolean()
