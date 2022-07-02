@@ -8,7 +8,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { ChatRoom } from './chattingRoom.entity';
+import { ChatRoom } from './chatRoom.entity';
 
 @Entity()
 export class ChatParticipant extends BaseEntity {
@@ -17,7 +17,7 @@ export class ChatParticipant extends BaseEntity {
 
   @ApiProperty({ description: '[FK] 채팅방 id' })
   @Column()
-  chattingRoomId: number;
+  chatRoomId: number;
 
   @ApiProperty({ description: '[FK] 채팅방 참여자의 유저 id' })
   @Column()
@@ -39,10 +39,10 @@ export class ChatParticipant extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 
-  @ManyToOne(() => ChatRoom, (chattingRoom) => chattingRoom.chatParticipant, {
+  @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.chatParticipant, {
     onDelete: 'CASCADE',
   })
-  chattingRoom: ChatRoom;
+  chatRoom: ChatRoom;
 
   @ManyToOne(() => User, (user) => user.chatParticipant)
   user: User;

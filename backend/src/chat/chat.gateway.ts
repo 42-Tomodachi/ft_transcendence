@@ -9,7 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Repository } from 'typeorm';
 import { ChatParticipant } from './entities/chatParticipant.entity';
-import { ChatRoom } from './entities/chattingRoom.entity';
+import { ChatRoom } from './entities/chatRoom.entity';
 
 @WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect{
@@ -33,7 +33,7 @@ constructor(
     async enterChatRoom(client: Socket, roomId: number): Promise<void> {
         client.join(roomId.toString());
         
-        const chatParticipants: ChatParticipant[] = await this.chatParticipantRepo.find({ where: [{ chattingRoomId: roomId }, ]});
+        const chatParticipants: ChatParticipant[] = await this.chatParticipantRepo.find({ where: [{ chatRoomId: roomId }, ]});
         client.emit("updateChatList", chatParticipants);
         // console.log(`${client.id} is enter ${roomId} room.`);
     }

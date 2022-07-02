@@ -21,6 +21,7 @@ import {
   ChatRoomIdDto,
   UpdateChatRoomDto,
   CreateChatContentDto,
+  BooleanDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -34,35 +35,34 @@ export class ChatController {
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 목록 가져오기' })
   @Get('')
-  async getChattingRooms(): Promise<ChatRoomDataDto[]> {
-    const chattingRooms = this.chatService.getChatRooms();
+  async getChatRooms(): Promise<ChatRoomDataDto[]> {
+    const chatRooms = this.chatService.getChatRooms();
 
-    return chattingRooms;
+    return chatRooms;
   }
 
   @ApiOperation({ summary: 'kankim✅ 참여중인 채팅방 목록 가져오기' })
   @Get('/users/:userId')
-  async getParticipatingChattingRooms(
+  async getParticipatingChatRooms(
     @Param('userId') userId: number,
   ): Promise<ChatRoomDataDto[]> {
-    const chattingRooms =
-      this.chatService.getParticipatingChattingRooms(userId);
+    const chatRooms = this.chatService.getParticipatingChatRooms(userId);
 
-    return chattingRooms;
+    return chatRooms;
   }
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 만들기' })
   @Post(':userId')
-  async createChattingRoom(
+  async createChatRoom(
     @Param('userId') userId: number,
-    @Body() createChattingRoomDto: CreateChatRoomDto,
+    @Body() createChatRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
-    const chattingRoom = await this.chatService.createChattingRoom(
+    const chatRoom = await this.chatService.createChatRoom(
       userId,
-      createChattingRoomDto,
+      createChatRoomDto,
     );
 
-    return chattingRoom;
+    return chatRoom;
   }
 
   @ApiOperation({ summary: '채팅방 참여자 목록 가져오기' })
@@ -75,12 +75,12 @@ export class ChatController {
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 입장하기' })
   @Post(':roomId/users/:userId')
-  async enterChattingRoom(
+  async enterChatRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() roomPasswordDto: RoomPasswordDto,
   ): Promise<ChatRoomIdDto> {
-    return await this.chatService.enterChattingRoom(
+    return await this.chatService.enterChatRoom(
       roomId,
       userId,
       roomPasswordDto.password,
@@ -149,33 +149,6 @@ export class ChatController {
   //   return [];
   // }
 
-  // // 채팅 방 제목 수정
-  // @ApiOperation({ summary: '채팅 방 제목 수정' })
-  // @Patch(':roomId/title')
-  // async updateRoomTitle(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  // ): Promise<void> {
-  //   const a = 'updateRoomTitle';
-  // }
-
-  // // 채팅 방 비밀번호 수정
-  // @ApiOperation({ summary: '채팅 방 비밀번호 수정' })
-  // @Patch(':roomId/password')
-  // async updateRoomPassword(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  // ): Promise<void> {
-  //   const a = 'updateRoomPassword';
-  // }
-
-  // // 채팅 방 비밀번호 제거
-  // @ApiOperation({ summary: '채팅 방 비밀번호 제거' })
-  // @Delete(':roomId/password')
-  // async removeRoomPassword(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  // ): Promise<void> {
-  //   const a = 'removeRoomPassword';
-  // }
-
   // // 게스트를 관리자로 설정하기(오너, 관리자)
   // @ApiOperation({
   //   summary: '게스트를 관리자로 설정하기(오너, 관리자만 가능)',
@@ -208,15 +181,15 @@ export class ChatController {
   //   const a = 'banParticipant';
   // }
 
-  // // 음소거
-  // @ApiOperation({ summary: '음소거 시키기' })
-  // @Patch(':roomId/mute')
-  // async muteParticipant(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  //   @Query('targetUserId', ParseIntPipe) targetUserId: number,
-  // ): Promise<void> {
-  //   const a = 'muteParticipant';
-  // }
+  @ApiOperation({ summary: '✅ 음소거 시키기 토글: jihokim' })
+  @Patch(':roomId/mute_toggle')
+  async muteParticipant(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Query('targetUserId', ParseIntPipe) targetUserId: number,
+  ): Promise<BooleanDto> {
+    return this.chatService.muteCertainParticipant(roomId, targetUserId);
+  }
+
   // 인터페이스를 통해 게임 할 수 있도록 초대
   // 인터페이스를 통해 다른 유저의 프로필 보기
 

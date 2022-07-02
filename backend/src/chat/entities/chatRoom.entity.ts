@@ -33,27 +33,27 @@ export class ChatRoom extends BaseEntity {
 
   @OneToMany(
     () => ChatParticipant,
-    (chatParticipant) => chatParticipant.chattingRoom,
+    (chatParticipant) => chatParticipant.chatRoom,
   )
   chatParticipant: ChatParticipant[];
 
-  @OneToMany(() => ChatContents, (chatContents) => chatContents.chattingRoom)
+  @OneToMany(() => ChatContents, (chatContents) => chatContents.chatRoom)
   chatContents: ChatContents[];
 
   toChatRoomDto(): ChatRoomDto {
     if (this.chatParticipant === undefined) {
-      throw Error('chatParticipant join required to chattingRoom');
+      throw Error('chatParticipant join required to chatRoom');
     }
 
-    const chattingRoomsDto = new ChatRoomDto();
-    chattingRoomsDto.id = this.id;
-    chattingRoomsDto.title = this.title;
-    chattingRoomsDto.isPublic = this.password ? true : false;
-    chattingRoomsDto.ownerId = this.ownerId;
-    chattingRoomsDto.numberOfParticipants = this.chatParticipant.length;
-    chattingRoomsDto.isDm = this.isDm;
+    const chatRoomsDto = new ChatRoomDto();
+    chatRoomsDto.id = this.id;
+    chatRoomsDto.title = this.title;
+    chatRoomsDto.isPublic = this.password ? true : false;
+    chatRoomsDto.ownerId = this.ownerId;
+    chatRoomsDto.numberOfParticipants = this.chatParticipant.length;
+    chatRoomsDto.isDm = this.isDm;
 
-    return chattingRoomsDto;
+    return chatRoomsDto;
   }
 
   toChatRoomDataDto(): ChatRoomDataDto {

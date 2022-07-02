@@ -127,3 +127,9 @@ export class CreateChatContentDto {
   @IsDateString()
   createdTime: Date;
 }
+
+export class BooleanDto {
+  @ApiProperty({ description: 'true or false' })
+  @IsBoolean()
+  boolean: boolean;
+}

@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { CreateChatContentDto } from '../dto/chat.dto';
-import { ChatRoom } from './chattingRoom.entity';
+import { ChatRoom } from './chatRoom.entity';
 
 @Entity()
 export class ChatContents extends BaseEntity {
@@ -19,7 +19,7 @@ export class ChatContents extends BaseEntity {
 
   @ApiProperty({ description: '[FK] 채팅방 id' })
   @Column()
-  chattingRoomId: number;
+  chatRoomId: number;
 
   @ApiProperty({ description: '[FK] 메세지 보낸 유저 id' })
   @Column({ nullable: true })
@@ -37,10 +37,10 @@ export class ChatContents extends BaseEntity {
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 
-  @ManyToOne(() => ChatRoom, (chattingRoom) => chattingRoom.chatContents, {
+  @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.chatContents, {
     onDelete: 'CASCADE',
   })
-  chattingRoom: ChatRoom;
+  chatRoom: ChatRoom;
 
   @ManyToOne(() => User, (user) => user.sender)
   user: User;
@@ -53,7 +53,7 @@ export class ChatContents extends BaseEntity {
       chatRoomUserDto.id = this.user.id;
       chatRoomUserDto.nickname = this.user.nickname;
       chatRoomUserDto.role = this.user.chatParticipant.find(
-        (person) => person.chattingRoomId === roomId,
+        (person) => person.chatRoomId === roomId,
       ).role;
 
       createChatContentDto.from = chatRoomUserDto;
