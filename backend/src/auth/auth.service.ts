@@ -212,6 +212,7 @@ export class AuthService {
 
     const code = Math.floor(Math.random() * 1000000);
     user.secondAuthCode = code;
+    user.save();
 
     await this.emailService.sendEmail(user.secondAuthEmail, code);
     return true;
