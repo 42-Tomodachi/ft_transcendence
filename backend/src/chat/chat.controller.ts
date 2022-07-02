@@ -28,7 +28,7 @@ import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { AuthGuard } from '@nestjs/passport';
 
-@ApiTags('chat')
+@ApiTags('chats')
 @Controller('chats')
 // @UseGuards(AuthGuard()) // todo: 모든 api 구현 후 조건별로 api 적용할 것
 export class ChatController {
@@ -167,7 +167,7 @@ export class ChatController {
   // @Patch(':roomId/revokeManager')
   // async revokeManager(
   //   @Param('roomId', ParseIntPipe) roomId: number,
-  //   @Query('targetUserId', ParseIntPipe) targetUserId: number,
+  //   @Query('targetUserId', ParseInt1Pipe) targetUserId: number,
   // ): Promise<void> {
   //   const a = 'revokeManager';
   // }
@@ -186,15 +186,15 @@ export class ChatController {
     );
   }
 
-  // // 강퇴
-  // @ApiOperation({ summary: '강퇴 시키기' })
-  // @Patch(':roomId/ban')
-  // async banParticipant(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  //   @Query('targetUserId', ParseIntPipe) targetUserId: number,
-  // ): Promise<void> {
-  //   const a = 'banParticipant';
-  // }
+  @ApiOperation({ summary: 'seungyel✅ 강퇴 시키기' })
+  @Patch(':roomId/ban/:userId')
+  async banParticipant(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('targetUserId', ParseIntPipe) targetUserId: number,
+  ): Promise<void> {
+    return this.chatService.banUser(roomId, userId, targetUserId);
+  }
 
   @ApiOperation({ summary: '✅ 음소거 시키기 토글: jihokim' })
   @Patch(':roomId/mute_toggle')
