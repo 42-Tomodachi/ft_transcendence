@@ -1,9 +1,9 @@
-import { instance, instance2 } from './index';
+import { instance } from './index';
 import {
   IUserKey,
   IUserProfile,
   IGameRecord,
-  IUserWinLoseount,
+  IUserWinLoseCount,
   IUserAvatar,
 } from '../utils/interface';
 
@@ -15,7 +15,9 @@ const usersAPI = {
   uploadAvatarImg: async (id: number, body: FormData): Promise<IUserAvatar | null> => {
     try {
       const url = usersPath(`/${id}/uploadImage`);
-      const res = await instance2.post(url, body);
+      const res = await instance.post(url, body, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -29,7 +31,7 @@ const usersAPI = {
       const res = await instance.get(url);
       return res.data;
     } catch (e) {
-      if (e instanceof Error) console.log(e.message);
+      if (e instanceof Error) console.error(e.message);
       else console.error(e);
       return [];
     }
@@ -40,7 +42,7 @@ const usersAPI = {
       const res = await instance.get(url);
       return res.data;
     } catch (e) {
-      if (e instanceof Error) console.error(e);
+      if (e instanceof Error) console.error(e.message);
       else console.error(e);
       return null;
     }
@@ -51,7 +53,7 @@ const usersAPI = {
       const res = await instance.post(url, { followId });
       return res.data;
     } catch (e) {
-      if (e instanceof Error) console.error(e);
+      if (e instanceof Error) console.error(e.message);
       else console.error(e);
       return null;
     }
@@ -62,7 +64,7 @@ const usersAPI = {
       const res = await instance.get(url);
       return res.data;
     } catch (e) {
-      if (e instanceof Error) console.log(e.message);
+      if (e instanceof Error) console.error(e.message);
       else console.error(e);
       return [];
     }
@@ -89,7 +91,7 @@ const usersAPI = {
       return null;
     }
   },
-  getUserWinLoseCount: async (id: number): Promise<IUserWinLoseount | null> => {
+  getUserWinLoseCount: async (id: number): Promise<IUserWinLoseCount | null> => {
     try {
       const url = usersPath(`/${id}/winLoseCount`);
       const res = await instance.get(url);
@@ -106,7 +108,7 @@ const usersAPI = {
       const res = await instance.delete(url, { data: followId });
       return res.data;
     } catch (e) {
-      if (e instanceof Error) console.error(e);
+      if (e instanceof Error) console.error(e.message);
       else console.error(e);
       return null;
     }

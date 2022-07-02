@@ -6,10 +6,6 @@ const url = process.env.REACT_APP_BACK_API;
 export const instance = axios.create({
   baseURL: url,
 });
-export const instance2 = axios.create({
-  baseURL: url,
-  headers: { 'Content-Type': 'multipart/form-data' }, // INFO: check header capital character !!!!
-});
 
 /* NOTE: Default 양식
 

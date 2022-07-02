@@ -29,7 +29,7 @@ export interface IWinLoseCount {
   ladderLevel: number;
 }
 
-export interface IUserWinLoseount extends IWinLoseCount {
+export interface IUserWinLoseCount extends IWinLoseCount {
   id: number;
 }
 
