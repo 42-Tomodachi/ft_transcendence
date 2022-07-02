@@ -197,12 +197,13 @@ export class ChatController {
   // }
   // 강퇴
   @ApiOperation({ summary: 'seungyel✅ 강퇴 시키기' })
-  @Post(':roomId/ban')
+  @Patch(':roomId/ban/:userId')
   async banParticipant(
     @Param('roomId', ParseIntPipe) roomId: number,
+    @Param('userId', ParseIntPipe) userId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
   ): Promise<void> {
-    return this.chatService.banUser(roomId, targetUserId);
+    return this.chatService.banUser(roomId, userId, targetUserId);
   }
 
   @ApiOperation({ summary: '✅ 음소거 시키기 토글: jihokim' })

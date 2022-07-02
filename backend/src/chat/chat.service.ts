@@ -62,7 +62,7 @@ export class ChatService {
     return chatRoom.chatParticipant;
   }
 
-  async banUser(roomId: number, targetUserId: number): Promise<void> {
+  async banUser(roomId: number, callingUserId: number, targetUserId: number): Promise<void> {
     const room = await this.chatRoomRepo.findOneBy({ id: roomId });
     if (!room) {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
@@ -75,7 +75,8 @@ export class ChatService {
       console.log("chatParticipant.chattingRoom.isDm",room.isDm);
       throw new BadRequestException('DM방 입니다.');
     }
-    if (chatParticipant.role === 'guest') {
+    const findRole = await ChatParticipant.findOneBy({ userId: callingUserId });
+    if (findRole.role === 'guest') {
       throw new BadRequestException('권한이 없는 사용자입니다.');
     }
     chatParticipant.isBanned = true;
