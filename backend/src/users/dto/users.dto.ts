@@ -42,6 +42,9 @@ export class SimpleUserDto {
 
   @ApiProperty({ description: '닉네임' })
   nickname: string;
+
+  @ApiProperty({ description: '로그인 상태' })
+  status: 'on' | 'off' | 'play';
 }
 
 export class ChatRoomUserDto {

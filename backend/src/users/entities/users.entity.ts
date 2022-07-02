@@ -60,9 +60,11 @@ export class User extends BaseEntity {
   ladderLoseCount: number;
 
   // todo: 실시간으로 유저의 상태를 나타내지 않기로 함. 유저목록 갱신할 때 마다 api 호출 해야 하는데 그때 사용할 컬럼
-  @ApiProperty({ description: '유저 상태 inactive | active | inGame' })
-  @Column({ default: 'inactive' })
-  userStatus: 'inactive' | 'active' | 'inGame';
+  @ApiProperty({
+    description: '유저 상태 on | off | play, 프론트 요청으로 변경',
+  })
+  @Column({ default: 'off' })
+  userStatus: 'on' | 'off' | 'play';
 
   @OneToMany(() => Follow, (follow) => follow.follower)
   follower: Follow[];
