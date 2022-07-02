@@ -1,11 +1,17 @@
-export interface IUser {
-  id?: number;
+export interface IUserKey {
+  id: number;
   nickname: string;
+}
+
+export interface IUser extends IUserKey {
   email: string;
   avatar: string;
+}
+export interface IUserAuth extends IUser {
   isSecondAuthOn: boolean;
   jwt: string;
 }
+export interface IUserProfile extends IUser, IWinLoseCount {}
 
 export interface IRoomList {
   id: number;
@@ -15,7 +21,23 @@ export interface IRoomList {
   isLadder: boolean;
   isGameStart?: boolean;
 }
+export interface IWinLoseCount {
+  winCount: number;
+  loseCount: number;
+  ladderWinCount: number;
+  ladderLoseCount: number;
+  ladderLevel: number;
+}
 
+export interface IUserWinLoseount extends IWinLoseCount {
+  id: number;
+}
+
+export interface IGameRecord {
+  isLadder: true;
+  isWin: true;
+  opponentNickname: string;
+}
 export interface IMessage {
   id: number;
   isBroadcast: boolean;
@@ -33,7 +55,7 @@ export type ButtonColorType = 'white' | 'white2' | 'main' | 'gradient';
 
 export interface IUserList {
   id: number;
-  username: string;
+  nickname: string;
   isfriend: boolean;
   status: 'on' | 'off' | 'play';
 }
