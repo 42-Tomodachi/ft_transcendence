@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsSignedUpDto } from 'src/auth/dto/auth.dto';
 import { Repository } from 'typeorm';
+import { BlockResultDto } from './dto/blockedUser.dto';
 import { GameRecordDto } from './dto/gameRecord.dto';
 import {
   UpdateUserDto,
@@ -187,5 +188,35 @@ export class UsersService {
     }
 
     return user.toWinLoseCount();
+  }
+
+  async blockUserToggle(
+    myId: number,
+    targetId: number,
+  ): Promise<BlockResultDto> {
+    const myUser = await this.userRepo.findOneBy({ id: myId });
+    const targetUser = await this.userRepo.findOneBy({ id: targetId });
+
+    if (!myUser || !targetUser) {
+      throw new BadRequestException('유저가 존재하지 않습니다.');
+    }
+
+    const block = await this.blockedUserRepo.findOneBy({
+      blockerId: myId,
+      blockedId: targetId,
+    });
+
+    if (block) {
+      await this.blockedUserRepo.delete({ id: block.id });
+
+      return { isBlocked: false };
+    } else {
+      const blockedUserForCreate = new BlockedUser();
+      blockedUserForCreate.blockerId = myId;
+      blockedUserForCreate.blockedId = targetId;
+      await this.blockedUserRepo.save(blockedUserForCreate);
+
+      return { isBlocked: true };
+    }
   }
 }
