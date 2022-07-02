@@ -18,6 +18,15 @@ async function bootstrap() {
     .setTitle('42-Tomodachi')
     .setDescription(`42-Tomodachi's transcendence API description`)
     .setVersion('1.0')
+    // .addBearerAuth(  // swagger jwt 세팅
+    //   {
+    //     type: 'http',
+    //     scheme: 'bearer',
+    //     name: 'JWT',
+    //     in: 'header',
+    //   },
+    //   'access-token',
+    // )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

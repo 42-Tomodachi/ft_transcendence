@@ -12,7 +12,7 @@ import {
   Delete,
   Res,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User } from './entities/users.entity';
 import { UsersService } from './users.service';
 import {
@@ -57,6 +57,8 @@ export class UsersController {
     return response;
   }
 
+  // @ApiBearerAuth('access-token') //JWT 토큰 키 설정
+  // @UseGuards(AuthGuard())
   @ApiOperation({ summary: 'kankim✅ 모든 유저의 id, 닉네임 가져오기' })
   @Get('')
   async getUsers(): Promise<SimpleUserDto[]> {
