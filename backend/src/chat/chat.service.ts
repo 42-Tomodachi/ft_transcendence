@@ -72,10 +72,9 @@ export class ChatService {
       throw new BadRequestException('존재하지 않는 참여자입니다.');
     }
     if (room.isDm === true) {
-      console.log("chatParticipant.chattingRoom.isDm",room.isDm);
       throw new BadRequestException('DM방 입니다.');
     }
-    const findRole = await ChatParticipant.findOneBy({ userId: callingUserId });
+    const findRole = await ChatParticipant.findOneBy({ userId: callingUserId, chattingRoomId: roomId });
     if (findRole.role === 'guest') {
       throw new BadRequestException('권한이 없는 사용자입니다.');
     }
