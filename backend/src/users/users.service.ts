@@ -47,7 +47,11 @@ export class UsersService {
       .getMany();
 
     return friends.map((friend) => {
-      return { id: friend.follow.id, nickname: friend.follow.nickname };
+      return {
+        id: friend.follow.id,
+        nickname: friend.follow.nickname,
+        status: friend.follow.userStatus,
+      };
     });
   }
 
