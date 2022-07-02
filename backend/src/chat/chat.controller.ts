@@ -186,16 +186,6 @@ export class ChatController {
     );
   }
 
-  // // 강퇴
-  // @ApiOperation({ summary: '강퇴 시키기' })
-  // @Patch(':roomId/ban')
-  // async banParticipant(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  //   @Query('targetUserId', ParseIntPipe) targetUserId: number,
-  // ): Promise<void> {
-  //   const a = 'banParticipant';
-  // }
-  // 강퇴
   @ApiOperation({ summary: 'seungyel✅ 강퇴 시키기' })
   @Patch(':roomId/ban/:userId')
   async banParticipant(

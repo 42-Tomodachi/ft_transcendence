@@ -67,14 +67,14 @@ export class ChatService {
     if (!room) {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
     }
-    const chatParticipant = await ChatParticipant.findOneBy({ userId: targetUserId, chattingRoomId: roomId });
+    const chatParticipant = await ChatParticipant.findOneBy({ userId: targetUserId, chatRoomId: roomId });
     if (!chatParticipant) {
       throw new BadRequestException('존재하지 않는 참여자입니다.');
     }
     if (room.isDm === true) {
       throw new BadRequestException('DM방 입니다.');
     }
-    const findRole = await ChatParticipant.findOneBy({ userId: callingUserId, chattingRoomId: roomId });
+    const findRole = await ChatParticipant.findOneBy({ userId: callingUserId, chatRoomId: roomId });
     if (findRole.role === 'guest') {
       throw new BadRequestException('권한이 없는 사용자입니다.');
     }
@@ -82,10 +82,10 @@ export class ChatService {
     await chatParticipant.save();
   }
 
-  async getParticipatingChattingRooms(
+  async getParticipatingChatRooms(
     userId: number,
   ): Promise<ChatRoomDataDto[]> {
-    const chattingRooms = await this.chatRoomRepo
+    const chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chattingRoom')
       .leftJoinAndSelect('chattingRoom.chatParticipant', 'chatParticipant')
       .where('chatParticipant.userId = :userId', { userId })
