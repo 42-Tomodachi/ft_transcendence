@@ -14,6 +14,7 @@ import {
   UpdateChatRoomDto,
   RoomPasswordDto,
   BooleanDto,
+  ParticipantRoleDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -235,6 +236,55 @@ export class ChatService {
         .to(roomId.toString())
         .emit('updateUserList', chatParticipant);
     }
+  }
+
+  async toggleManager(
+    roomId: number,
+    callingUserId: number,
+    targetUserId: number,
+  ): Promise<ParticipantRoleDto> {
+    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
+    if (!room) {
+      throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    }
+
+    const chatParticipants: ChatParticipant[] =
+      await this.chatParticipantRepo.find({
+        where: [{ chatRoomId: roomId }],
+      });
+    const targetParticipant: ChatParticipant = chatParticipants.find(
+      (participant) => participant.userId === targetUserId,
+    );
+    const callingParticipant: ChatParticipant = chatParticipants.find(
+      (participant) => participant.userId === callingUserId,
+    );
+
+    if (!targetParticipant) {
+      throw new BadRequestException('존재하지 않는 참여자입니다.');
+    }
+
+    if (targetParticipant.role === 'guest') {
+      if (callingParticipant.role === 'guest') {
+        throw new BadRequestException('변경 권한이 없습니다.');
+      }
+      targetParticipant.role = 'manager';
+    } else if (targetParticipant.role === 'manager') {
+      if (callingParticipant.role !== 'owner') {
+        throw new BadRequestException('변경 권한이 없습니다.');
+      }
+      targetParticipant.role = 'guest';
+    } else {
+      throw new BadRequestException('Owner는 절대권력 입니다.');
+    }
+    await targetParticipant.save();
+
+    this.ChatGateway.server
+      .to(roomId.toString())
+      .emit('updateUserList', targetParticipant);
+
+    const result: ParticipantRoleDto = new ParticipantRoleDto();
+    result.role = targetParticipant.role;
+    return result;
   }
 
   async muteCertainParticipant(

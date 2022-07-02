@@ -22,6 +22,7 @@ import {
   UpdateChatRoomDto,
   CreateChatContentDto,
   BooleanDto,
+  ParticipantRoleDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -170,6 +171,16 @@ export class ChatController {
   // ): Promise<void> {
   //   const a = 'revokeManager';
   // }
+
+  @ApiOperation({ summary: '✅ 관리자로 설정 토글: jihokim' })
+  @Patch(':roomId/admin_toggle')
+  async toggleManager(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Query('callingUserId', ParseIntPipe) callingUserId: number,
+    @Query('targetUserId', ParseIntPipe) targetUserId: number,
+  ): Promise<ParticipantRoleDto> {
+    return this.chatService.toggleManager(roomId, callingUserId, targetUserId);
+  }
 
   // // 강퇴
   // @ApiOperation({ summary: '강퇴 시키기' })
