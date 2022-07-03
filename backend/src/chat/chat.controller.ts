@@ -14,7 +14,6 @@ import {
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import {
-  ChatRoomParticipantsDto,
   ChatRoomDataDto,
   CreateChatRoomDto,
   RoomPasswordDto,
