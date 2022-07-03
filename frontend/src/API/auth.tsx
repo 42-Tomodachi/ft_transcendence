@@ -14,9 +14,9 @@ export const authAPI = {
       return response.data;
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e.message);
+        console.error(e.message);
       } else {
-        console.log(e);
+        console.error(e);
       }
       return null;
     }
@@ -30,9 +30,9 @@ export const authAPI = {
       return response.data;
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e.message);
+        console.error(e.message);
       } else {
-        console.log(e);
+        console.error(e);
       }
       return null;
     }
@@ -46,9 +46,9 @@ export const authAPI = {
       return true;
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e.message);
+        console.error(e.message);
       } else {
-        console.log(e);
+        console.error(e);
       }
       return false;
     }
@@ -66,9 +66,9 @@ export const authAPI = {
       return response.data;
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e.message);
+        console.error(e.message);
       } else {
-        console.log(e);
+        console.error(e);
       }
       return null;
     }
@@ -82,9 +82,9 @@ export const authAPI = {
       return true;
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e.message);
+        console.error(e.message);
       } else {
-        console.log(e);
+        console.error(e);
       }
       return false;
     }
@@ -102,9 +102,9 @@ export const authAPI = {
       return response.data;
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e.message);
+        console.error(e.message);
       } else {
-        console.log(e);
+        console.error(e);
       }
       return null;
     }
@@ -118,9 +118,9 @@ export const authAPI = {
       return response.data.data;
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e.message);
+        console.error(e.message);
       } else {
-        console.log(e);
+        console.error(e);
       }
       return null;
     }
