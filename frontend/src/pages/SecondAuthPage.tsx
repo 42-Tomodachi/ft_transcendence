@@ -1,13 +1,10 @@
 import React, { useState, useContext, useEffect } from 'react';
-import axios from 'axios';
 import styled from '@emotion/styled';
 import Button from '../components/common/Button';
 import { AllContext } from '../store';
 import { LOGIN } from '../utils/interface';
 import { authAPI } from '../API';
 
-// const jwt =
-//   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiZW1haWwiOiJkaHllb25Ac3R1ZGVudC40MnNlb3VsLmtyIiwiaWF0IjoxNjU2NzYyMDk0LCJleHAiOjE2NTY3NjIwOTd9.q4xlxwBcGiddi4BcA_sj3jMKT9UsxsFCZNQZbBHk2Ss';
 const SecondAuthPage: React.FC = () => {
   const [authCode, setAuthcode] = useState<string>('');
   const [errMsg, setErrMsg] = useState<string>('');
