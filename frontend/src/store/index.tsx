@@ -2,6 +2,7 @@ import React, { createContext, useState } from 'react';
 import {
   LOGIN,
   LOGOUT,
+  EDIT,
   ModalType,
   SECOND_AUTH,
   SET_NICKNAME,
@@ -79,7 +80,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     setModal(type);
   };
 
-  const handleUser = (type: string, user?: IUserAuth) => {
+  const handleUser = (type: HandleUserType, user?: IUserAuth) => {
     switch (type) {
       case LOGIN:
         if (user) {
@@ -91,6 +92,11 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
           } else {
             setUserStatus(LOGIN);
           }
+        }
+        return;
+      case EDIT:
+        if (user) {
+          setUser(user);
         }
         return;
       case LOGOUT:

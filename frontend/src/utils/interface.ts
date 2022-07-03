@@ -82,11 +82,12 @@ export const PLAY = 'play' as const;
 
 export const LOGIN = 'LOGIN' as const;
 export const LOGOUT = 'LOGOUT' as const;
+export const EDIT = 'EDIT' as const;
 export const SET_NICKNAME = 'SET_NICKNAME' as const;
 export const SECOND_AUTH = 'SECOND_AUTH' as const;
 
 export type UserStatusType = 'LOGIN' | 'LOGOUT' | 'SET_NICKNAME' | 'SECOND_AUTH';
-export type HandleUserType = 'LOGIN' | 'LOGOUT';
+export type HandleUserType = 'LOGIN' | 'LOGOUT' | 'EDIT';
 
 export const GAME = 'GAME' as const;
 export const CHAT = 'CHAT' as const;
@@ -95,7 +96,8 @@ export const HOME = 'HOME' as const;
 export type MenuType = 'GAME' | 'CHAT';
 
 export const SHOW_PROFILE = 'SHOW_PROFILE' as const;
-export const HANDLE_SECOND_AUTH = 'HANDLE_SECOND_AUTH' as const;
+export const ON_SECOND_AUTH = 'ON_SECOND_AUTH' as const;
+export const OFF_SECOND_AUTH = 'OFF_SECOND_AUTH' as const;
 export const EDIT_NICKNAME = 'EDIT_NICKNAME' as const;
 export const MAKE_GAME_ROOM = 'MAKE_GAME_ROOM' as const;
 export const MAKE_CHAT_ROOM = 'MAKE_CHAT_ROOM' as const;
@@ -112,7 +114,8 @@ export const FIGHT_REQ_MODAL = 'FIGHT_REQ_MODAL' as const;
 
 export type ModalType =
   | 'SHOW_PROFILE' // 프로필 정보 보기
-  | 'HANDLE_SECOND_AUTH' // 이메일 인증
+  | 'ON_SECOND_AUTH' // 2차 인증 켜기
+  | 'OFF_SECOND_AUTH' // 2차 인증 끄기
   | 'EDIT_NICKNAME' // 닉네임 수정
   | 'MAKE_GAME_ROOM' // 게임방 만들기
   | 'MAKE_CHAT_ROOM' // 채팅방 만들기

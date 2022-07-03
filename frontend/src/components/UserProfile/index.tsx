@@ -4,39 +4,14 @@ import Button from '../common/Button';
 import axios from 'axios';
 import ProfileImage from '../common/ProfileImage';
 import { AllContext } from '../../store';
-import { HANDLE_SECOND_AUTH } from '../../utils/interface';
+import { OFF_SECOND_AUTH, ON_SECOND_AUTH } from '../../utils/interface';
 
 const ProfilePage: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
-  // const [user, setUser] = useState({
-  //   id: '',
-  //   user: '',
-  //   user_nick: '',
-  //   user_lv: '',
-  //   gen_win: '',
-  //   gen_lose: '',
-  //   lad_win: '',
-  //   lad_lose: '',
-  //   picture: '',
-  // });
 
-  // 리프레쉬할때 값이 조금 늦게 튀어나오는건 전역으로 데이터를 관리하면서
-  // 다시 한번 확인하기로 결정
   useEffect(() => {
-    // axios.get(`http://localhost:4000/user_info`).then(res =>
-    //   setUser({
-    //     id: res.data.id,
-    //     user: res.data.user,
-    //     user_nick: res.data.user_nick,
-    //     user_lv: res.data.user_lv,
-    //     gen_win: res.data.gen_win,
-    //     gen_lose: res.data.gen_lose,
-    //     lad_win: res.data.lad_win,
-    //     lad_lose: res.data.lad_lose,
-    //     picture: res.data.picture,
-    //   }),
-    // );
+    //
   }, []);
 
   return (
@@ -71,10 +46,10 @@ const ProfilePage: React.FC = () => {
         <Button color="gradient" text="닉네임 변경" width={120} height={30} />
         <Button
           color="gradient"
-          text="2차 인증 활성화"
+          text={user?.isSecondAuthOn ? '2차 인증 해제' : '2차 인증 활성화'}
           width={120}
           height={30}
-          onClick={() => setModal(HANDLE_SECOND_AUTH)}
+          onClick={() => setModal(user?.isSecondAuthOn ? OFF_SECOND_AUTH : ON_SECOND_AUTH)}
         />
       </OtherBtnBlock>
     </MainBlock>

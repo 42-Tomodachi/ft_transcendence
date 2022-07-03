@@ -4,12 +4,13 @@ import Button from '../Button';
 import Modal from '.';
 import { authAPI } from '../../../API';
 import { AllContext } from '../../../store';
+import { EDIT } from '../../../utils/interface';
 
 const reg = new RegExp(
   /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/,
 );
-const HandleSecondAuth: React.FC = () => {
-  const { user } = useContext(AllContext).userData;
+const OnSecondAuth: React.FC = () => {
+  const { user, setUser } = useContext(AllContext).userData;
   const { jwt } = useContext(AllContext).jwtData;
   const { setModal } = useContext(AllContext).modalData;
   const [errMsg, setErrMsg] = useState<string>('');
@@ -65,6 +66,7 @@ const HandleSecondAuth: React.FC = () => {
       const res = await authAPI.enrollSecondAuth(user.id);
       if (res) {
         setErrMsg('활성화에 성공하였습니다.');
+        setUser(EDIT, { ...user, isSecondAuthOn: true });
         setModal(null);
       } else {
         setErrMsg('활성화에 실패했습니다.');
@@ -217,4 +219,4 @@ const ErrAuth = styled.span`
   color: #ff6363;
 `;
 //============================================
-export default HandleSecondAuth;
+export default OnSecondAuth;
