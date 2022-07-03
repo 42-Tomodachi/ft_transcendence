@@ -15,6 +15,7 @@ import { BlockedUser } from './entities/blockedUser.entity';
 import { Follow } from './entities/follow.entity';
 import { GameRecord } from './entities/gameRecord.entity';
 import { User } from './entities/users.entity';
+import * as fs from 'fs';
 
 @Injectable()
 export class UsersService {
@@ -35,21 +36,23 @@ export class UsersService {
     });
   }
 
-  // parsingPath(path: string): string{
-  //   console.log(path);
-  //   const name = path.substring(path.lastIndexOf('/') + 1);
-  //   console.log("name", name);
+  parsingPath(path: string): string{
+    console.log(path);
+    const name = path.substring(path.lastIndexOf('/') + 1);
 
-  //   return name;
-  // }
+    return name;
+  }
 
-  // async beforeUploadImage( id: number) {
-  //   const user = await this.userRepo.findOne({ where: { id } });
-  //   if (user.avatar != null) {
-  //     const path = this.parsingPath(user.avatar);
-  //     // fs.unlinkSync("../files/" + path);
-  //   }
-  // }
+  async beforeUploadImage( id: number) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (user.avatar != null) {
+      const path = './files/' + this.parsingPath(user.avatar);
+      const result = fs.existsSync(path);
+      if(result) {
+        fs.unlinkSync(path);
+      }
+    }
+  }
 
   async getFriends(userId: number): Promise<SimpleUserDto[]> {
     if ((await this.userRepo.findOneBy({ id: userId })) === null) {
