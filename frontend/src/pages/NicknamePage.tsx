@@ -4,6 +4,8 @@ import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
 import { LOGIN } from '../utils/interface';
+import imageCompression from 'browser-image-compression';
+import { usersAPI } from '../API/users';
 
 // TODO : 최초 42api 토큰 요청시 성공하면 인트라 사진도 갖고오도록 할 예정?
 const DEFAULT_PROFILE =
@@ -20,6 +22,7 @@ const NicknamePage: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
+  const [convertImg, setConvertImg] = useState<File | string>(''); // TODO: File or string ?
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     //  NOTE : 정규식 적용
@@ -33,13 +36,24 @@ const NicknamePage: React.FC = () => {
     setIsEnabled(false);
     setNickName(inputNickValue);
   };
-  const onFindImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const onFindImage = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     if (e.target.files?.length) {
       const imgTarget = e.target.files[0];
       const fileReader = new FileReader();
+      const compressImgResult = await imageCompression(imgTarget, {
+        maxWidthOrHeight: 800,
+      });
 
-      fileReader.readAsDataURL(imgTarget);
-      fileReader.onload = () => setProfileImg(fileReader.result as string);
+      if (compressImgResult !== undefined) {
+        const convertResult = new File([compressImgResult], imgTarget.name, {
+          type: imgTarget.type,
+          lastModified: imgTarget.lastModified,
+        });
+        setConvertImg(convertResult);
+        fileReader.readAsDataURL(convertResult);
+        fileReader.onload = () => setProfileImg(fileReader.result as string);
+      }
     }
   };
   const onKeyEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -49,7 +63,7 @@ const NicknamePage: React.FC = () => {
       if (e.nativeEvent.isComposing === false) onCheck();
     }
   };
-  const checkNickName = (resNickName: string) => {
+  const checkNickName = (resNickName: string): boolean => {
     if (nickName === resNickName) {
       setCheckNickMsg(`중복된 닉네임입니다.`);
       setIsEnabled(false);
@@ -58,12 +72,12 @@ const NicknamePage: React.FC = () => {
     return true;
   };
 
-  // TODO: 전체 닉네임들을 다 탐색해야함(front or back)
+  // TODO: 입력된 닉네임만 서버에 요청해서 응답 받기
   const onCheck = () => {
-    // console.log('한글 중복 check용 log');
     //  const result = await axios.get(`http://localhost:4000/profile/`);
     // const userList = result.data;
 
+    // TODO: 닉네임 중복 API 사용
     const resNickName = 'mike2ox';
     if (checkNickName(resNickName)) {
       setCheckNickMsg(`사용 가능한 닉네임입니다.`);
@@ -75,7 +89,13 @@ const NicknamePage: React.FC = () => {
     if (!isEnabled) {
       setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
     } else {
-      // TODO : 서버에 전송하기
+      // TODO: 서버, 닉네임도 id에 맞게 전송
+      const userId = 1;
+      const formData = new FormData();
+
+      formData.append('image', convertImg);
+      usersAPI.uploadAvatarImg(userId, formData);
+      usersAPI.updateUserNickname(userId, nickName);
       setUserStatus(LOGIN);
     }
   };

@@ -44,12 +44,11 @@
   ],
   "user": {
     "id": 1,
-    "nickname": "",
-    "username": "bbb",
+    "nickname": "asdf",
     "email": "noenna@naver.com",
     "avatar": "",
-    "secondAuth": true,
-    "isSigned": true
+    "isSecondAuthOn": true,
+    "jwt": "jwtjwtjwtjwtjwtjwtjwtjwtjwtjwtjwtjwt"
   },
   "user_info": {
     "id": 0,
@@ -185,121 +184,121 @@
   "userlist": [
     {
       "id": 1,
-      "username": "junselee",
+      "nickname": "junselee",
       "isfriend": true,
       "status": "on"
     },
     {
       "id": 2,
-      "username": "sgang",
+      "nickname": "sgang",
       "isfriend": true,
       "status": "play"
     },
     {
       "id": 3,
-      "username": "dhyeon",
+      "nickname": "dhyeon",
       "isfriend": false,
       "status": "on"
     },
     {
       "id": 4,
-      "username": "ulee",
+      "nickname": "ulee",
       "isfriend": true,
       "status": "play"
     },
     {
       "id": 5,
-      "username": "seungyel",
+      "nickname": "seungyel",
       "isfriend": true,
       "status": "off"
     },
     {
       "id": 6,
-      "username": "jihokim",
+      "nickname": "jihokim",
       "isfriend": false,
       "status": "on"
     },
     {
       "id": 7,
-      "username": "kyukim",
+      "nickname": "kyukim",
       "isfriend": false,
       "status": "off"
     },
     {
       "id": 8,
-      "username": "hyechoi",
+      "nickname": "hyechoi",
       "isfriend": true,
       "status": "off"
     },
     {
       "id": 9,
-      "username": "inshin",
+      "nickname": "inshin",
       "isfriend": false,
       "status": "play"
     },
     {
       "id": 10,
-      "username": "yuchoi",
+      "nickname": "yuchoi",
       "isfriend": false,
       "status": "on"
     },
     {
       "id": 11,
-      "username": "amigo",
+      "nickname": "amigo",
       "isfriend": false,
       "status": "on"
     },
     {
       "id": 12,
-      "username": "friend",
+      "nickname": "friend",
       "isfriend": true,
       "status": "on"
     },
     {
       "id": 13,
-      "username": "domodacci",
+      "nickname": "domodacci",
       "isfriend": true,
       "status": "play"
     },
     {
       "id": 14,
-      "username": "mate",
+      "nickname": "mate",
       "isfriend": false,
       "status": "off"
     },
     {
       "id": 15,
-      "username": "rosa",
+      "nickname": "rosa",
       "isfriend": true,
       "status": "off"
     },
     {
       "id": 16,
-      "username": "dacci",
+      "nickname": "dacci",
       "isfriend": true,
       "status": "off"
     },
     {
       "id": 17,
-      "username": "temate",
+      "nickname": "temate",
       "isfriend": false,
       "status": "off"
     },
     {
       "id": 18,
-      "username": "noah",
+      "nickname": "noah",
       "isfriend": true,
       "status": "off"
     },
     {
       "id": 19,
-      "username": "jun",
+      "nickname": "jun",
       "isfriend": true,
       "status": "play"
     },
     {
       "id": 20,
-      "username": "polarbear",
+      "nickname": "polarbear",
       "isfriend": false,
       "status": "on"
     }
