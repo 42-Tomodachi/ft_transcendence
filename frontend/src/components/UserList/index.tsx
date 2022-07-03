@@ -27,7 +27,7 @@ const UserList: React.FC = () => {
         } else return b.status.localeCompare(a.status);
       });
       data.sort((a: IUserList, b: IUserList) => {
-        if (a.status !== OFF && b.status !== OFF) return a.nickname.localeCompare(b?.nickname);
+        if (a.status !== OFF && b.status !== OFF) return a.nickname.localeCompare(b.nickname);
       });
       setuserList(data);
     });
