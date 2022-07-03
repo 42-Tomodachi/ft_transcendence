@@ -1,60 +1,57 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import styled from '@emotion/styled';
 import Button from '../components/common/Button';
 import { AllContext } from '../store';
 import { LOGIN } from '../utils/interface';
+import { authAPI } from '../API';
 
-/*
- * 요청사항 : line20 useStete이름 변경. 버튼으로 교체
- * useState변수이름 수정했습니다.
- * 직접 만든 버튼에서 공용버튼으로 교체했습니다.
- */
+// const jwt =
+//   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiZW1haWwiOiJkaHllb25Ac3R1ZGVudC40MnNlb3VsLmtyIiwiaWF0IjoxNjU2NzYyMDk0LCJleHAiOjE2NTY3NjIwOTd9.q4xlxwBcGiddi4BcA_sj3jMKT9UsxsFCZNQZbBHk2Ss';
 const SecondAuthPage: React.FC = () => {
-  /*
-   * authCode : 서버로부터 받아온 인증코드 관리.
-   * errMsg : "코드가 일치하지 않습니다." 문구 관리.
-   */
   const [authCode, setAuthcode] = useState<string>('');
-  const [errMsg, setErrmsg] = useState<string>('');
+  const [errMsg, setErrMsg] = useState<string>('');
   const { setUserStatus } = useContext(AllContext).userStatus;
+  const { user } = useContext(AllContext).userData;
+  const { jwt } = useContext(AllContext).jwtData;
+  let timer: NodeJS.Timer;
 
-  /*
-   * 요청사항 : onCheck 이벤트 속성 명시
-   * event.preventDefault(); 사용이 필요없어져서 삭제합니다.
-   * 마지막 동기처리 안쓸거같아서 삭제합니다. (.then)
-   */
-  const onCheck = () => {
-    axios
-      .get(`http://localhost:4000/auth/${1}`)
-      .then(function (response) {
-        if (authCode === response.data.authCode) {
-          alert(`안녕하세요 ${response.data.user}!`);
+  const sendCode = async () => {
+    setErrMsg('...');
+    clearTimeout(timer);
+    timer = setTimeout(async () => {
+      await authAPI.sendSecondAuthCode(5, jwt);
+      setErrMsg('설정한 메일로 코드가 전송되었습니다.');
+    }, 100);
+  };
+
+  useEffect(() => {
+    if (user) {
+      sendCode();
+    }
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const onCheck = async () => {
+    if (user) {
+      const res = await authAPI.checkSecondAuthCode(user.id, Number(authCode), jwt);
+      if (res) {
+        setErrMsg('인증에 성공하였습니다.');
+        timer = setTimeout(() => {
           setUserStatus(LOGIN);
-        } else setErrmsg('코드가 일치하지 않습니다');
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+          clearTimeout(timer);
+        }, 1000);
+      } else {
+        setErrMsg('코드가 일치하지 않습니다.');
+      }
+    } else setErrMsg('다시 시도해주세요.');
   };
 
-  /*
-   * 제이슨서버 id:2에 유저정보및 인증코드가 들어있다고 가정하고
-   * axios로 값을 요청합니다.
-   * 성공 또는 실패에 맞게 then, catch로.
-   * post patch delete는 이 페이지 제작엔 필요없을거같아서 삭제.
-   * 마지막 동기처리 안쓸거같아서 삭제합니다. (.then)
-   */
   const onGetQuery = () => {
-    axios
-      .get(`http://localhost:4000/auth/${1}`)
-      .then(function (response) {
-        alert('인증코드 : ' + response.data.authCode);
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+    sendCode();
   };
+
   return (
     <Wrap>
       <LoginBox>
@@ -66,7 +63,7 @@ const SecondAuthPage: React.FC = () => {
             type="text"
             onChange={event => {
               setAuthcode(event.target.value);
-              setErrmsg('');
+              setErrMsg('');
             }}
             required
           />
