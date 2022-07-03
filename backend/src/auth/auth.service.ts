@@ -92,6 +92,8 @@ export class AuthService {
     const userEmail = await this.getUserEmail(accessToken);
 
     const user = await this.usersService.getUserByEmail(userEmail);
+    user.userStatus = 'on';
+    await user.save();
 
     if (!user) {
       const createdUser = await this.usersService.createUser({
@@ -137,6 +139,10 @@ export class AuthService {
     }
 
     return await this.usersService.isDuplicateNickname(nickname);
+  }
+
+  async logoutStatus(userId: number): Promise<void> {
+    (await this.userRepo.findOneBy({ id: userId })).userStatus = 'off';
   }
 
   async startSecondAuth(
