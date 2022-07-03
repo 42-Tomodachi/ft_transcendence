@@ -23,7 +23,7 @@ export class AuthService {
 
   // async issueJwt(id: number): Promise<string> {
   //   const user = await this.usersService.getUserById(id);
-
+  
   //   return this.jwtService.sign({
   //     id: user.id,
   //     email: user.email,
@@ -91,6 +91,8 @@ export class AuthService {
     const userEmail = await this.getUserEmail(accessToken);
 
     const user = await this.usersService.getUserByEmail(userEmail);
+    user.userStatus = 'on';
+    await user.save();
 
     if (!user) {
       const createdUser = await this.usersService.createUser({
@@ -136,6 +138,12 @@ export class AuthService {
     }
 
     return await this.usersService.isDuplicateNickname(nickname);
+  }
+
+  // const user: User = await this.userRepo.findOneBy({ id: userId });
+
+  async logoutStatus(nickname: string): Promise<void> {
+    (await this.userRepo.findOneBy({ nickname : nickname })).userStatus = 'off';
   }
 
   async startSecondAuth(id: number, email: string): Promise<boolean> {

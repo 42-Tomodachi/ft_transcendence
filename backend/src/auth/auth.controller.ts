@@ -14,6 +14,7 @@ import { EmailDto, NicknameDto } from '../users/dto/users.dto';
 import { AuthService } from './auth.service';
 import { IsSignedUpDto, CodeStringDto } from './dto/auth.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { query } from 'express';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -55,6 +56,12 @@ export class AuthController {
     @Body() nicknameDto: NicknameDto,
   ): Promise<boolean> {
     return await this.authService.isDuplicateNickname(nicknameDto.nickname);
+  }
+
+  @ApiOperation({ summary: '로그아웃' })
+  @Post('logout')
+  async logOut(@Param('nickname') nickname: string): Promise<void> {
+    return await this.authService.logoutStatus(nickname);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 시작' })
