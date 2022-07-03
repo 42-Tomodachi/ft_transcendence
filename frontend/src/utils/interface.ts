@@ -29,7 +29,7 @@ export interface IWinLoseCount {
   ladderLevel: number;
 }
 
-export interface IUserWinLoseount extends IWinLoseCount {
+export interface IUserWinLoseCount extends IWinLoseCount {
   id: number;
 }
 
@@ -38,6 +38,20 @@ export interface IGameRecord {
   isWin: true;
   opponentNickname: string;
 }
+export interface IFollowId {
+  followId: number;
+}
+
+export interface INickname {
+  nickname: string;
+}
+
+export interface IUserAvatar {
+  originalname: string;
+  filename: string;
+  UpdateImg: string;
+}
+
 export interface IMessage {
   id: number;
   isBroadcast: boolean;

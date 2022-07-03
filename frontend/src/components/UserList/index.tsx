@@ -22,11 +22,12 @@ const UserList: React.FC = () => {
   useEffect(() => {
     axios.get('http://localhost:4000/userlist').then(({ data }) => {
       data.sort((a: IUserList, b: IUserList) => {
-        if (a.status === b.status) return a.username.localeCompare(b.username);
-        else return b.status.localeCompare(a.status);
+        if (a.status === b.status) {
+          return a.nickname.localeCompare(b.nickname);
+        } else return b.status.localeCompare(a.status);
       });
       data.sort((a: IUserList, b: IUserList) => {
-        if (a.status !== OFF && b.status !== OFF) return a.username.localeCompare(b.username);
+        if (a.status !== OFF && b.status !== OFF) return a.nickname.localeCompare(b.nickname);
       });
       setuserList(data);
     });
@@ -62,17 +63,17 @@ const UserList: React.FC = () => {
               <UserItem key={index} user={user} activeMenu={activeMenu} />
             ),
             // activeMenu === 'ALL' ? (
-            //   <UserItem status={list.status} key={index} onClick={() => console.log(list.username)}>
-            //     {list.username}
+            //   <UserItem status={list.status} key={index} onClick={() => console.log(list.nickname)}>
+            //     {list.nickname}
             //   </UserItem>
             // ) : (
             //   list.isfriend && (
             //     <UserItem
             //       status={list.status}
             //       key={index}
-            //       onClick={() => console.log(list.username)}
+            //       onClick={() => console.log(list.nickname)}
             //     >
-            //       {list.username}
+            //       {list.nickname}
             //     </UserItem>
             //   )
             // ),

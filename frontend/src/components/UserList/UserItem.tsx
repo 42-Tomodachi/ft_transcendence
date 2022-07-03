@@ -15,12 +15,12 @@ const UserItem: React.FC<UserItemProps> = ({ user, activeMenu }) => {
     <>
       {activeMenu === 'ALL' ? (
         <UserItemContainer status={user.status} onClick={() => setModal(SHOW_PROFILE)}>
-          {user.username}
+          {user.nickname}
         </UserItemContainer>
       ) : (
         user.isfriend && (
           <UserItemContainer status={user.status} onClick={() => setModal(SHOW_PROFILE)}>
-            {user.username}
+            {user.nickname}
           </UserItemContainer>
         )
       )}
