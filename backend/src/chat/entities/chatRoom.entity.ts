@@ -46,7 +46,7 @@ export class ChatRoom extends BaseEntity {
     }
 
     const chatRoomsDto = new ChatRoomDto();
-    chatRoomsDto.id = this.id;
+    chatRoomsDto.roomId = this.id;
     chatRoomsDto.title = this.title;
     chatRoomsDto.isPublic = this.password ? true : false;
     chatRoomsDto.ownerId = this.ownerId;
@@ -58,7 +58,7 @@ export class ChatRoom extends BaseEntity {
 
   toChatRoomDataDto(): ChatRoomDataDto {
     const chatRoomDataDto = new ChatRoomDataDto();
-    chatRoomDataDto.id = this.id;
+    chatRoomDataDto.roomId = this.id;
     chatRoomDataDto.title = this.title;
     chatRoomDataDto.ownerId = this.ownerId;
 

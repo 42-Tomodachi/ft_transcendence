@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChatRoomUserDto } from 'src/users/dto/users.dto';
+import { ChatRoomDto, ChatRoomUserDto } from 'src/chat/dto/chat.dto';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -45,7 +45,7 @@ export class ChatService {
     return chatRoom;
   }
 
-  async getChatRooms(): Promise<ChatRoomDataDto[]> {
+  async getChatRooms(): Promise<ChatRoomDto[]> {
     let chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chatRoom')
       .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
@@ -94,7 +94,7 @@ export class ChatService {
     await chatParticipant.save();
   }
 
-  async getParticipatingChatRooms(userId: number): Promise<ChatRoomDataDto[]> {
+  async getParticipatingChatRooms(userId: number): Promise<ChatRoomDto[]> {
     const chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chattingRoom')
       .leftJoinAndSelect('chattingRoom.chatParticipant', 'chatParticipant')
@@ -141,7 +141,7 @@ export class ChatService {
     );
 
     const chatRoomDataDto = new ChatRoomDataDto();
-    chatRoomDataDto.id = createdChatRoom.id;
+    chatRoomDataDto.roomId = createdChatRoom.id;
     chatRoomDataDto.title = createdChatRoom.title;
     chatRoomDataDto.ownerId = createdChatRoom.ownerId;
 
@@ -199,9 +199,12 @@ export class ChatService {
 
       // 채널 유저들의 유저목록 업데이트
       const chatRoomUserDto = new ChatRoomUserDto();
-      chatRoomUserDto.id = userId;
+      chatRoomUserDto.userId = userId;
       const user: User = await this.userRepo.findOneBy({ id: userId });
       chatRoomUserDto.nickname = user.nickname;
+      chatRoomUserDto.role = user.chatParticipant.find(
+        (person) => person.chatRoomId === roomId,
+      ).role;
       this.ChatGateway.server
         .to(roomId.toString())
         .emit('updateUser', chatRoomUserDto);
@@ -213,7 +216,7 @@ export class ChatService {
       this.submitChatContent(roomId, userId, createChatContentDto);
     }
 
-    return { chatRoomId: roomId };
+    return { roomId: roomId };
   }
 
   async updateRoom(
@@ -429,12 +432,12 @@ export class ChatService {
       chatRoomDataDto = (await t.save(chatRoomForCreate)).toChatRoomDataDto();
 
       const chatParticipantForMe = new ChatParticipant();
-      chatParticipantForMe.chatRoomId = chatRoomDataDto.id;
+      chatParticipantForMe.chatRoomId = chatRoomDataDto.roomId;
       chatParticipantForMe.userId = myId;
       chatParticipantForMe.role = 'owner';
       await t.save(chatParticipantForMe);
       const chatParticipantForPartner = new ChatParticipant();
-      chatParticipantForPartner.chatRoomId = chatRoomDataDto.id;
+      chatParticipantForPartner.chatRoomId = chatRoomDataDto.roomId;
       chatParticipantForPartner.userId = partnerId;
       await t.save(chatParticipantForPartner);
     });

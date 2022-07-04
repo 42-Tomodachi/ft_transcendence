@@ -100,7 +100,7 @@ export class User extends BaseEntity {
 
   toUserProfileDto() {
     const userProfileDto = new UserProfileDto();
-    userProfileDto.id = this.id;
+    userProfileDto.userId = this.id;
     userProfileDto.nickname = this.nickname;
     userProfileDto.avatar = this.avatar;
     userProfileDto.email = this.email;
@@ -115,7 +115,7 @@ export class User extends BaseEntity {
 
   toWinLoseCount(): WinLoseCountDto {
     const winLoseCountDto = new WinLoseCountDto();
-    winLoseCountDto.id = this.id;
+    winLoseCountDto.userId = this.id;
     winLoseCountDto.winCount = this.winCount;
     winLoseCountDto.loseCount = this.loseCount;
     winLoseCountDto.ladderLoseCount = this.ladderLoseCount;
