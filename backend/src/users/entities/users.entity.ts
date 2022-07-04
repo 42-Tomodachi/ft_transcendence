@@ -41,7 +41,7 @@ export class User extends BaseEntity {
 
   @ApiProperty({ description: '이메일로 보낸 코드와 비교할 2차 인증 코드' })
   @Column({ nullable: true, default: null })
-  secondAuthCode: number | null;
+  secondAuthCode: string | null;
 
   @ApiProperty({ description: '승리 횟수' })
   @Column({ default: 0 })

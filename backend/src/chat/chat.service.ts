@@ -19,6 +19,8 @@ import {
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
+import * as bcrypt from 'bcryptjs';
+import { EmailService } from 'src/emails/email.service';
 
 @Injectable()
 export class ChatService {
@@ -121,9 +123,12 @@ export class ChatService {
     userId: number,
     createChatRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(createChatRoomDto.password, salt);
+
     const chatRoom = new ChatRoom();
     chatRoom.title = createChatRoomDto.title;
-    chatRoom.password = createChatRoomDto.password;
+    chatRoom.password = hashedPassword;
     chatRoom.ownerId = userId;
     chatRoom.isDm = createChatRoomDto.isDm;
 
@@ -150,15 +155,20 @@ export class ChatService {
 
   async isCorrectPasswordOfChatRoom(
     roomId: number,
-    roomPassword: string,
+    roomPassword: string | null,
   ): Promise<boolean> {
     const room = await this.isExistChatRoom(roomId);
 
     if (!room) {
       throw new BadRequestException('존재하지 않는 채팅방 입니다.');
     }
-
-    if (room.password === roomPassword) {
+    if (!room.password) {
+      return true;
+    }
+    if (room.password && !roomPassword) {
+      throw new BadRequestException('비밀번호를 입력해 주세요.');
+    }
+    if (await bcrypt.compare(roomPassword, room.password)) {
       return true;
     }
     return false;
@@ -177,10 +187,7 @@ export class ChatService {
     userId: number,
     roomPassword: string | null,
   ): Promise<ChatRoomIdDto> {
-    if (
-      roomPassword &&
-      !this.isCorrectPasswordOfChatRoom(roomId, roomPassword)
-    ) {
+    if (!(await this.isCorrectPasswordOfChatRoom(roomId, roomPassword))) {
       throw new BadRequestException('채팅방의 비밀번호가 일치하지 않습니다.');
     }
 
