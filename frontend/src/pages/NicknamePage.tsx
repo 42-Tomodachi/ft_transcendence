@@ -6,17 +6,14 @@ import { AllContext } from '../store';
 import { LOGIN } from '../utils/interface';
 import imageCompression from 'browser-image-compression';
 import { usersAPI } from '../API/users';
-
-// TODO : 최초 42api 토큰 요청시 성공하면 인트라 사진도 갖고오도록 할 예정?
-const DEFAULT_PROFILE =
-  'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
+import DefaultProfile from '../assets/default-image.png';
 
 const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]{2,8}$/;
 const minNickName = 2;
 const maxNickName = 8;
 
 const NicknamePage: React.FC = () => {
-  const [profileImg, setProfileImg] = useState<string>(DEFAULT_PROFILE);
+  const [profileImg, setProfileImg] = useState<string>(DefaultProfile);
   const [nickName, setNickName] = useState<string>('');
   const [checkNickMsg, setCheckNickMsg] = useState<string>('');
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
@@ -88,6 +85,8 @@ const NicknamePage: React.FC = () => {
   const onClickSubmit = () => {
     if (!isEnabled) {
       setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
+    } else if (!convertImg) {
+      setCheckNickMsg(`프로필 이미지를 등록해주세요`);
     } else {
       // TODO: 서버, 닉네임도 id에 맞게 전송
       const userId = 1;
