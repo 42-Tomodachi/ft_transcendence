@@ -7,6 +7,7 @@ import {
   IsDateString,
   ValidateNested,
 } from 'class-validator';
+import { UserProfileDto } from 'src/users/dto/users.dto';
 import { PrimaryColumnCannotBeNullableError } from 'typeorm';
 
 export class ChatRoomDto {
@@ -129,4 +130,12 @@ export class BooleanDto {
   @ApiProperty({ description: 'true or false' })
   @IsBoolean()
   boolean: boolean;
+}
+
+export class ChatParticipantProfile extends UserProfileDto {
+  @ApiProperty({ description: '뮤트 여부' })
+  isMuted: boolean;
+
+  @ApiProperty({ description: '채팅 참여자 역할' })
+  role: 'owner' | 'manager' | 'guest';
 }

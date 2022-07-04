@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChatRoomDto, ChatRoomUserDto } from 'src/chat/dto/chat.dto';
+import {
+  ChatParticipantProfile,
+  ChatRoomDto,
+  ChatRoomUserDto,
+} from 'src/chat/dto/chat.dto';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { DataSource, Repository } from 'typeorm';
@@ -502,5 +506,38 @@ export class ChatService {
       .map((chatContent) => {
         return chatContent.toCreateChatContentDto(roomId, userId);
       });
+  }
+
+  async getChatParticipantProfile(
+    roomId: number,
+    myId: number,
+    targetId: number,
+  ): Promise<ChatParticipantProfile> {
+    const myUser = await this.chatParticipantRepo.findOneBy({
+      chatRoomId: roomId,
+      userId: myId,
+    });
+    const targetUser = await this.chatParticipantRepo.findOneBy({
+      chatRoomId: roomId,
+      userId: targetId,
+    });
+    if (!myUser || !targetUser) {
+      throw new BadRequestException('채팅방에 유저가 존재하지 않습니다.');
+    }
+
+    const foundChatParticipant = await this.chatParticipantRepo
+      .createQueryBuilder('chatParticipant')
+      .leftJoinAndSelect('chatParticipant.user', 'user')
+      .leftJoinAndSelect('user.follow', 'follow')
+      .leftJoinAndSelect('user.blocked', 'blocked')
+      .where('chatParticipant.chatRoomId = :roomId', { roomId })
+      .andWhere('chatParticipant.userId = :targetId', { targetId })
+      .getOneOrFail();
+
+    return {
+      ...foundChatParticipant.user.toUserProfileDto(myId),
+      isMuted: foundChatParticipant.isMuted,
+      role: foundChatParticipant.role,
+    };
   }
 }

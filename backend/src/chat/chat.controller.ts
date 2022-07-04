@@ -24,10 +24,12 @@ import {
   ParticipantRoleDto,
   ChatRoomDto,
   ChatRoomUserDto,
+  ChatParticipantProfile,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { AuthGuard } from '@nestjs/passport';
+import { TargetIdDto } from 'src/users/dto/users.dto';
 
 @ApiTags('chats')
 @Controller('chats')
@@ -178,5 +180,19 @@ export class ChatController {
   ): Promise<void> {
     this.chatService.submitChatContent(roomId, userId, createChatContentDto);
     // this.chatService.submitChatContent(roomId);
+  }
+
+  @ApiOperation({ summary: 'kankim✅ 채팅방에 있는 유저의 프로필 조회' })
+  @Get(':roomId/participants/:myId')
+  async getChatParticipantProfile(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Param('myId', ParseIntPipe) myId: number,
+    @Body() target: TargetIdDto,
+  ): Promise<ChatParticipantProfile> {
+    return await this.chatService.getChatParticipantProfile(
+      roomId,
+      myId,
+      target.targetId,
+    );
   }
 }

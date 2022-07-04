@@ -82,14 +82,14 @@ export class UsersService {
       throw new BadRequestException('유저가 존재하지 않습니다.');
     }
 
-    const myUserWithFollow = await this.userRepo
+    const targetUserWithFollowAndBlock = await this.userRepo
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.follower', 'follower')
-      .leftJoinAndSelect('user.blocker', 'blocker')
-      .where('user.id = :myId', { myId })
-      .getOne();
+      .leftJoinAndSelect('user.follow', 'follow')
+      .leftJoinAndSelect('user.blocked', 'blocked')
+      .where('user.id = :targetId', { targetId })
+      .getOneOrFail();
 
-    return myUserWithFollow.toUserProfileDto(targetId);
+    return targetUserWithFollowAndBlock.toUserProfileDto(myId);
   }
 
   async findByNicknameAndUpdateImg(

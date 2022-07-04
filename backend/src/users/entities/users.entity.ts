@@ -98,30 +98,33 @@ export class User extends BaseEntity {
     );
   }
 
-  getIsFriend(targetId: number): boolean {
-    const foundFollow = this.follower.find(
-      (follow) => follow.followId === targetId,
+  isWhoViewedMeFollowMe(whoViewedMeId: number): boolean {
+    const foundFollower = this.follow.find(
+      (f) => f.followerId === whoViewedMeId,
     );
-    if (foundFollow) {
+    if (foundFollower) {
       return true;
     }
     return false;
   }
 
-  getIsBlocked(targetId: number): boolean {
-    const foundBlocked = this.blocker.find((b) => b.blockedId === targetId);
-    if (foundBlocked) {
+  isWhoViewedMeBlockMe(whoViewedMeId: number): boolean {
+    const foundBlocker = this.blocked.find(
+      (b) => b.blockerId === whoViewedMeId,
+    );
+    if (foundBlocker) {
       return true;
     }
     return false;
   }
 
-  toUserProfileDto(targetId?: number) {
-    if (targetId) {
-      if (this.follower === undefined) {
+  toUserProfileDto(whoViewedMeId?: number) {
+    // whoViewedMeId: 나를 조회한 사람
+    if (whoViewedMeId) {
+      if (this.follow === undefined) {
         throw new Error('유저 테이블에 팔로우 테이블을 조인해야합니다.');
       }
-      if (this.blocker === undefined) {
+      if (this.blocked === undefined) {
         throw new Error('유저 테이블에 블록 테이블을 조인해야합니다.');
       }
     }
@@ -136,9 +139,9 @@ export class User extends BaseEntity {
     userProfileDto.ladderWinCount = this.ladderWinCount;
     userProfileDto.ladderLoseCount = this.ladderLoseCount;
     userProfileDto.ladderLevel = this.getLadderLevel();
-    if (targetId && this.id !== targetId) {
-      userProfileDto.isFriend = this.getIsFriend(targetId);
-      userProfileDto.isBlocked = this.getIsBlocked(targetId);
+    if (whoViewedMeId && this.id !== whoViewedMeId) {
+      userProfileDto.isFriend = this.isWhoViewedMeFollowMe(whoViewedMeId);
+      userProfileDto.isBlocked = this.isWhoViewedMeBlockMe(whoViewedMeId);
     } else {
       userProfileDto.isSecondAuthOn = this.isSecondAuthOn;
     }
