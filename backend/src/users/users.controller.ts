@@ -37,7 +37,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: 'seungyel✅ 이미지 업로드' })
-  @Post('/:id/uploadImage')
+  @Post('/:myId/uploadImage')
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -47,7 +47,7 @@ export class UsersController {
       fileFilter: imageFileFilter,
     }),
   )
-  async uploadedFile(@UploadedFile() file, @Param('id') id: number) {
+  async uploadedFile(@UploadedFile() file, @Param('myId') id: number) {
     const response = {
       originalname: file.originalname,
       filename: file.filename,
@@ -61,7 +61,7 @@ export class UsersController {
 
   // @ApiBearerAuth('access-token') //JWT 토큰 키 설정
   // @UseGuards(AuthGuard())
-  @ApiOperation({ summary: 'kankim✅ 모든 유저의 id, 닉네임 가져오기' })
+  @ApiOperation({ summary: 'kankim✅ 모든 유저의 id, 닉네임, 상태 가져오기' })
   @Get('')
   async getUsers(): Promise<SimpleUserDto[]> {
     const userInfo = await this.usersService.getUsers();
@@ -91,35 +91,35 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 추가' })
-  @Post(':id/friends')
+  @Post(':myId/friends')
   async addFriend(
-    @Param('id', ParseIntPipe) followerId: number,
+    @Param('myId', ParseIntPipe) followerId: number,
     @Body() followIdDto: FollowIdDto,
   ): Promise<void> {
     await this.usersService.addFriend(followerId, followIdDto.followId);
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 삭제' })
-  @Delete(':id/friends')
+  @Delete(':myId/friends')
   async removeFriend(
-    @Param('id', ParseIntPipe) followerId: number,
+    @Param('myId', ParseIntPipe) followerId: number,
     @Body() followIdDto: FollowIdDto,
   ): Promise<void> {
     await this.usersService.removeFriend(followerId, followIdDto.followId);
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 목록( id, 닉네임 ) 조회' })
-  @Get(':id/friends')
+  @Get(':myId/friends')
   async getFriends(
-    @Param('id', ParseIntPipe) userId: number,
+    @Param('myId', ParseIntPipe) userId: number,
   ): Promise<SimpleUserDto[]> {
     return await this.usersService.getFriends(userId);
   }
 
   @ApiOperation({ summary: 'kankim✅ 전적 조회' })
-  @Get(':id/gameRecords')
+  @Get(':userId/gameRecords')
   async getGameRecords(
-    @Param('id', ParseIntPipe) userId: number,
+    @Param('userId', ParseIntPipe) userId: number,
   ): Promise<GameRecordDto[]> {
     const gameRecords = this.usersService.getGameRecords(userId);
 
@@ -127,9 +127,9 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 닉네임 변경' })
-  @Put(':id/nickname')
+  @Put(':myId/nickname')
   async updateNickname(
-    @Param('id', ParseIntPipe) userId: number,
+    @Param('myId', ParseIntPipe) userId: number,
     @Body() nicknameDto: NicknameDto,
   ): Promise<UserProfileDto> {
     const user = await this.usersService.updateNickname(
@@ -141,9 +141,9 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 유저의 승,패 카운트 조회' })
-  @Get(':id/winLoseCount')
+  @Get(':userId/winLoseCount')
   async getWinLoseCount(
-    @Param('id', ParseIntPipe) userId: number,
+    @Param('userId', ParseIntPipe) userId: number,
   ): Promise<WinLoseCountDto> {
     return await this.usersService.getWinLoseCount(userId);
   }
