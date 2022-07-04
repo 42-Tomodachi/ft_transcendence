@@ -31,7 +31,11 @@ export class UsersService {
     const users = await this.userRepo.find();
 
     return users.map((user) => {
-      return { id: user.id, nickname: user.nickname, status: user.userStatus };
+      return {
+        userId: user.id,
+        nickname: user.nickname,
+        status: user.userStatus,
+      };
     });
   }
 
@@ -48,7 +52,7 @@ export class UsersService {
 
     return friends.map((friend) => {
       return {
-        id: friend.follow.id,
+        userId: friend.follow.id,
         nickname: friend.follow.nickname,
         status: friend.follow.userStatus,
       };

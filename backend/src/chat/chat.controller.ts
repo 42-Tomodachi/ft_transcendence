@@ -22,6 +22,7 @@ import {
   CreateChatContentDto,
   BooleanDto,
   ParticipantRoleDto,
+  ChatRoomDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -35,7 +36,7 @@ export class ChatController {
 
   @ApiOperation({ summary: 'kankim✅ 채팅방 목록 가져오기' })
   @Get('')
-  async getChatRooms(): Promise<ChatRoomDataDto[]> {
+  async getChatRooms(): Promise<ChatRoomDto[]> {
     const chatRooms = this.chatService.getChatRooms();
 
     return chatRooms;
@@ -45,7 +46,7 @@ export class ChatController {
   @Get('/users/:userId')
   async getParticipatingChatRooms(
     @Param('userId') userId: number,
-  ): Promise<ChatRoomDataDto[]> {
+  ): Promise<ChatRoomDto[]> {
     const chatRooms = this.chatService.getParticipatingChatRooms(userId);
 
     return chatRooms;
@@ -130,46 +131,6 @@ export class ChatController {
   ): Promise<CreateChatContentDto[]> {
     return await this.chatService.getChatContents(roomId, userId);
   }
-
-  // // 채팅방 유저 목록 가져오기
-  // @ApiOperation({ summary: '채팅방 유저 목록 가져오기' })
-  // @Get(':roomId/participants')
-  // async getChatParticipants(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  // ): Promise<ChatParticipant[]> {
-  //   return [];
-  // }
-
-  // // 채팅 내용 가져오기
-  // @ApiOperation({ summary: '채팅 내용 가져오기' })
-  // @Get(':roomId/contents')
-  // async getChatContents(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  // ): Promise<ChatContents[]> {
-  //   return [];
-  // }
-
-  // // 게스트를 관리자로 설정하기(오너, 관리자)
-  // @ApiOperation({
-  //   summary: '게스트를 관리자로 설정하기(오너, 관리자만 가능)',
-  // })
-  // @Patch(':roomId/giveManager')
-  // async giveManager(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  //   @Query('targetUserId', ParseIntPipe) targetUserId: number,
-  // ): Promise<void> {
-  //   const a = 'giveManager';
-  // }
-
-  // // 관리자를 게스트로 설정하기(오너만)
-  // @ApiOperation({ summary: '관리자를 게스트로 설정하기(오너만)' })
-  // @Patch(':roomId/revokeManager')
-  // async revokeManager(
-  //   @Param('roomId', ParseIntPipe) roomId: number,
-  //   @Query('targetUserId', ParseInt1Pipe) targetUserId: number,
-  // ): Promise<void> {
-  //   const a = 'revokeManager';
-  // }
 
   @ApiOperation({ summary: '✅ 관리자로 설정 토글: jihokim' })
   @Patch(':roomId/role_toggle')

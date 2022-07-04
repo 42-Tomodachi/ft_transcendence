@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ChatRoomUserDto } from 'src/users/dto/users.dto';
+import { ChatRoomUserDto } from 'src/chat/dto/chat.dto';
 import { User } from 'src/users/entities/users.entity';
 import {
   BaseEntity,
@@ -50,7 +50,7 @@ export class ChatContents extends BaseEntity {
     createChatContentDto.isBroadcast = this.isNotice;
     if (!this.isNotice) {
       const chatRoomUserDto = new ChatRoomUserDto();
-      chatRoomUserDto.id = this.user.id;
+      chatRoomUserDto.userId = this.user.id;
       chatRoomUserDto.nickname = this.user.nickname;
       chatRoomUserDto.role = this.user.chatParticipant.find(
         (person) => person.chatRoomId === roomId,

@@ -7,7 +7,6 @@ import {
   IsDateString,
   ValidateNested,
 } from 'class-validator';
-import { ChatRoomUserDto } from 'src/users/dto/users.dto';
 import { PrimaryColumnCannotBeNullableError } from 'typeorm';
 
 export class ChatRoomDto {
@@ -82,6 +81,17 @@ export class UpdateChatRoomDto extends PickType(ChatRoomDto, ['title']) {
   @IsString()
   @IsOptional()
   password: string | null;
+}
+
+export class ChatRoomUserDto {
+  @ApiProperty({ description: '유저 id' })
+  userId: number;
+
+  @ApiProperty({ description: '닉네임' })
+  nickname: string;
+
+  @ApiProperty({ description: '역할' })
+  role: 'owner' | 'manager' | 'guest';
 }
 
 export class CreateChatContentDto {
