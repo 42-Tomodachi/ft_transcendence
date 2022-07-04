@@ -13,12 +13,12 @@ export class GameService {
         private readonly userRepo: Repository<User>,
         private readonly gameGateway: GameGateway,
     ) { }
-    gameRoomIdList: number[] = new Array(100).fill(0);
+    gameRoomIdList: number[] = new Array(10000).fill(0);
 
     private gameRoomTable: GameRoomEntity[] = [];
 
     getGameRoomPrimaryId(): number {
-        let index: number = 0;
+        let index = 0;
         for (let x of this.gameRoomIdList) {
             if (x == 0) {
                 this.gameRoomIdList[index] = 1;
@@ -26,6 +26,7 @@ export class GameService {
             }
             index++;
         }
+        throw new BadRequestException('생성 가능한 방 개수를 초과하였습니다.');
     }
 
     getGameRooms(): GetGameRoomsDto[] {
@@ -44,6 +45,7 @@ export class GameService {
 
     createGameRoom(createGameRoomDto: CreateGameRoomDto): string {
         // 서버 저장용
+
         const gameRoomEntity = new GameRoomEntity();
         gameRoomEntity.gameId = this.getGameRoomPrimaryId();
         gameRoomEntity.firstPlayer = createGameRoomDto.ownerId;
