@@ -63,22 +63,22 @@ export class AuthController {
     @Param('id', ParseIntPipe) id: number,
     @Body() emailDto: EmailDto,
   ): Promise<boolean> {
-    return this.authService.startSecondAuth(id, emailDto.email);
+    return await this.authService.startSecondAuth(id, emailDto.email);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 번호 검증' })
   @Get('/second_auth_verify/:id')
   async verifySecondAuth(
     @Param('id', ParseIntPipe) id: number,
-    @Query('code', ParseIntPipe) code: number,
+    @Query('code') code: string,
   ): Promise<boolean> {
-    return this.authService.verifySecondAuth(id, code);
+    return await this.authService.verifySecondAuth(id, code);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 완료' })
   @Get('/second_auth_enroll/:id')
   async enrollSecondAuth(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    this.authService.enrollSecondAuth(id);
+    await this.authService.enrollSecondAuth(id);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 해제' })
@@ -86,13 +86,13 @@ export class AuthController {
   async disableSecondAuth(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void> {
-    this.authService.disableSecondAuth(id);
+    await this.authService.disableSecondAuth(id);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 수행' })
   @Get('/second_auth/:id')
-  @UseGuards(AuthGuard())
+  // @UseGuards(AuthGuard())
   async shootSecAuth(@Param('id', ParseIntPipe) id: number): Promise<boolean> {
-    return this.authService.shootSecondAuth(id);
+    return await this.authService.shootSecondAuth(id);
   }
 }

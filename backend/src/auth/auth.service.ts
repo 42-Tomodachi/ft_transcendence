@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { session } from 'passport';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -146,23 +147,25 @@ export class AuthService {
     }
 
     const code = Math.floor(Math.random() * 1000000);
+    const salt = await bcrypt.genSalt();
+    const hashedCode = await bcrypt.hash(code.toString(), salt);
     user.secondAuthEmail = email;
-    user.secondAuthCode = code;
+    user.secondAuthCode = hashedCode;
 
     await user.save();
     await this.emailService.sendEmail(email, code);
     return true;
   }
 
-  async verifySecondAuth(id: number, code: number): Promise<boolean> {
+  async verifySecondAuth(id: number, code: string): Promise<boolean> {
     const user = await this.usersService.getUserById(id);
 
     if (user === null) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
 
-    if (user.secondAuthCode === code) {
-      user.secondAuthCode = 7777777;
+    if (await bcrypt.compare(code, user.secondAuthCode)) {
+      user.secondAuthCode = '7777777';
       await user.save();
       return true;
     } else {
@@ -179,7 +182,7 @@ export class AuthService {
     if (user.isSecondAuthOn === true) {
       throw new BadRequestException('이미 등록된 유저입니다.');
     }
-    if (user.secondAuthCode !== 7777777) {
+    if (user.secondAuthCode !== '7777777') {
       throw new BadRequestException('인증되지 않은 유저입니다.');
     }
 
@@ -211,7 +214,9 @@ export class AuthService {
     }
 
     const code = Math.floor(Math.random() * 1000000);
-    user.secondAuthCode = code;
+    const salt = await bcrypt.genSalt();
+    const hashedCode = await bcrypt.hash(code.toString(), salt);
+    user.secondAuthCode = hashedCode;
     await user.save();
 
     await this.emailService.sendEmail(user.secondAuthEmail, code);
