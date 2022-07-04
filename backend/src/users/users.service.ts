@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsSignedUpDto } from 'src/auth/dto/auth.dto';
+import { IsDuplicateDto, IsSignedUpDto } from 'src/auth/dto/auth.dto';
 import { Repository } from 'typeorm';
 import { BlockResultDto } from './dto/blockedUser.dto';
 import { GameRecordDto } from './dto/gameRecord.dto';
@@ -110,13 +110,13 @@ export class UsersService {
     return await this.userRepo.save(user);
   }
 
-  async isDuplicateNickname(nickname: string): Promise<boolean> {
+  async isDuplicateNickname(nickname: string): Promise<IsDuplicateDto> {
     const found = await this.userRepo.findOne({ where: { nickname } });
 
     if (found) {
-      return true;
+      return { isDuplicate: true };
     }
-    return false;
+    return { isDuplicate: false };
   }
 
   async addFriend(followerId: number, followId: number): Promise<void> {
@@ -188,7 +188,7 @@ export class UsersService {
     if ((await this.userRepo.findOneBy({ id: userId })) === null) {
       throw new BadRequestException('존재하지 않는 유저 입니다.');
     }
-    if (await this.isDuplicateNickname(nicknameForUpdate)) {
+    if ((await this.isDuplicateNickname(nicknameForUpdate)).isDuplicate) {
       throw new BadRequestException('이미 존재하는 닉네임 입니다.');
     }
 

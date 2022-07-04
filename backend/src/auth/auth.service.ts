@@ -5,7 +5,7 @@ import { UpdateUserDto, UserProfileDto } from 'src/users/dto/users.dto';
 import { User } from 'src/users/entities/users.entity';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../emails/email.service';
-import { IsSignedUpDto } from './dto/auth.dto';
+import { IsDuplicateDto, IsSignedUpDto } from './dto/auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -131,7 +131,7 @@ export class AuthService {
   //   return await this.updateUser(updateUserDto);
   // }
 
-  async isDuplicateNickname(nickname: string): Promise<boolean> {
+  async isDuplicateNickname(nickname: string): Promise<IsDuplicateDto> {
     if (nickname.length < 2 || nickname.length > 8) {
       throw new BadRequestException('닉네임은 최소2자 최대 8자 입니다.');
     }

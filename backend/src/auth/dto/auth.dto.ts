@@ -40,3 +40,8 @@ export class CodeStringDto {
   @IsString()
   code: string;
 }
+
+export class IsDuplicateDto {
+  @ApiProperty({ description: '닉네임 중복 여부' })
+  isDuplicate: boolean;
+}

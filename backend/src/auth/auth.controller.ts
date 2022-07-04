@@ -12,7 +12,7 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EmailDto, NicknameDto } from '../users/dto/users.dto';
 import { AuthService } from './auth.service';
-import { IsSignedUpDto, CodeStringDto } from './dto/auth.dto';
+import { IsSignedUpDto, CodeStringDto, IsDuplicateDto } from './dto/auth.dto';
 import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('auth')
@@ -53,7 +53,7 @@ export class AuthController {
   @Post('isDuplicateNickname')
   async isDuplicateNickname(
     @Body() nicknameDto: NicknameDto,
-  ): Promise<boolean> {
+  ): Promise<IsDuplicateDto> {
     return await this.authService.isDuplicateNickname(nicknameDto.nickname);
   }
 
