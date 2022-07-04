@@ -22,6 +22,7 @@ import { TransformInterceptor } from './response.interceptor';
 import { UsersService } from './users/users.service';
 import { ChatModule } from './chat/chat.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { MulterModule } from '@nestjs/platform-express';
     }),
     AuthModule,
     ChatModule,
+    GameModule,
   ],
   controllers: [AppController],
   providers: [
