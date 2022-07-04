@@ -58,10 +58,25 @@ export class ChatService {
     });
   }
 
-  async getRoomParticipants(roomId: number): Promise<ChatParticipant[]> {
-    const chatRoom = await this.getChatRoomById(roomId);
+  async getRoomParticipants(roomId: number): Promise<ChatRoomUserDto[]> {
+    if (!(await this.chatRoomRepo.findOneBy({ id: roomId }))) {
+      throw new BadRequestException('존재하지 않는 채팅방 입니다.');
+    }
 
-    return chatRoom.chatParticipant;
+    const chatParticipants = await this.chatParticipantRepo
+      .createQueryBuilder('chatParticipant')
+      .leftJoinAndSelect('chatParticipant.user', 'user')
+      .where('chatParticipant.chatRoomId = :roomId', { roomId })
+      .getMany();
+
+    return chatParticipants.map((chatParticipant) => {
+      const chatRoomUserDto = new ChatRoomUserDto();
+      chatRoomUserDto.userId = chatParticipant.userId;
+      chatRoomUserDto.nickname = chatParticipant.user.nickname;
+      chatRoomUserDto.role = chatParticipant.role;
+
+      return chatRoomUserDto;
+    });
   }
 
   async banUser(
