@@ -7,10 +7,10 @@ const authPath = (path: string) => {
 
 export const authAPI = {
   // 로그인시
-  isSignedUp: async (body: { code: string }): Promise<IUserAuth | null> => {
+  isSignedUp: async (code: string): Promise<IUserAuth | null> => {
     try {
       const url = authPath(`/isSignedUp`);
-      const response = await instance.post(url, body);
+      const response = await instance.post(url, { code });
       return response.data;
     } catch (e) {
       if (e instanceof Error) {
