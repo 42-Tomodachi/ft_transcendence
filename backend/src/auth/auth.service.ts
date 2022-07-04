@@ -140,10 +140,9 @@ export class AuthService {
     return await this.usersService.isDuplicateNickname(nickname);
   }
 
-  // const user: User = await this.userRepo.findOneBy({ id: userId });
-
-  async logoutStatus(nickname: string): Promise<void> {
-    (await this.userRepo.findOneBy({ nickname : nickname })).userStatus = 'off';
+  async logoutStatus(userId: number): Promise<void> {
+    (await this.userRepo.findOneBy({ id: userId })).userStatus = 'off';
+    
   }
 
   async startSecondAuth(id: number, email: string): Promise<boolean> {

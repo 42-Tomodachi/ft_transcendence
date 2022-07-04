@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Delete,
   Query,
   Param,
@@ -59,9 +60,9 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '로그아웃' })
-  @Post('logout')
-  async logOut(@Param('nickname') nickname: string): Promise<void> {
-    return await this.authService.logoutStatus(nickname);
+  @Put('logout/:userId')
+  async logOut(@Param('userId', ParseIntPipe) userId: number): Promise<void> {
+    await this.authService.logoutStatus(userId);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 시작' })
