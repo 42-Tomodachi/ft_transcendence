@@ -17,7 +17,9 @@ const SecondAuthPage: React.FC = () => {
     setErrMsg('...');
     clearTimeout(timer);
     timer = setTimeout(async () => {
-      await authAPI.sendSecondAuthCode(5, jwt);
+      const userId = 5; // TODO: user.id
+      ...
+      await authAPI.sendSecondAuthCode(userId, jwt);
       setErrMsg('설정한 메일로 코드가 전송되었습니다.');
     }, 100);
   };
