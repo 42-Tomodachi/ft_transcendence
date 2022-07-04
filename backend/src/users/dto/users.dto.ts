@@ -1,5 +1,6 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEmail,
   IsNumber,
   IsString,
@@ -45,6 +46,24 @@ export class UserProfileDto {
   @ApiProperty({ description: '유저 래더 레벨' })
   @IsNumber()
   ladderLevel: number;
+
+  @ApiProperty({ description: '2차 이메일 인증 활성화 여부' })
+  @IsBoolean()
+  isSecondAuthOn?: boolean;
+
+  @ApiProperty({ description: '친구인지 여부' })
+  @IsBoolean()
+  isFriend?: boolean;
+
+  @ApiProperty({ description: '차단한 유저인지 여부' })
+  @IsBoolean()
+  isBlocked?: boolean;
+}
+
+export class TargetIdDto {
+  @ApiProperty({ description: '타겟 유저의 id' })
+  @IsNumber()
+  targetId: number;
 }
 
 export class NicknameDto extends PickType(UserProfileDto, ['nickname']) {}

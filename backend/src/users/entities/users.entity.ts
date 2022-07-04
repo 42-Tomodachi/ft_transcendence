@@ -98,7 +98,34 @@ export class User extends BaseEntity {
     );
   }
 
-  toUserProfileDto() {
+  getIsFriend(targetId: number): boolean {
+    const foundFollow = this.follower.find(
+      (follow) => follow.followId === targetId,
+    );
+    if (foundFollow) {
+      return true;
+    }
+    return false;
+  }
+
+  getIsBlocked(targetId: number): boolean {
+    const foundBlocked = this.blocker.find((b) => b.blockedId === targetId);
+    if (foundBlocked) {
+      return true;
+    }
+    return false;
+  }
+
+  toUserProfileDto(targetId?: number) {
+    if (targetId) {
+      if (this.follower === undefined) {
+        throw new Error('유저 테이블에 팔로우 테이블을 조인해야합니다.');
+      }
+      if (this.blocker === undefined) {
+        throw new Error('유저 테이블에 블록 테이블을 조인해야합니다.');
+      }
+    }
+
     const userProfileDto = new UserProfileDto();
     userProfileDto.userId = this.id;
     userProfileDto.nickname = this.nickname;
@@ -109,6 +136,12 @@ export class User extends BaseEntity {
     userProfileDto.ladderWinCount = this.ladderWinCount;
     userProfileDto.ladderLoseCount = this.ladderLoseCount;
     userProfileDto.ladderLevel = this.getLadderLevel();
+    if (targetId && this.id !== targetId) {
+      userProfileDto.isFriend = this.getIsFriend(targetId);
+      userProfileDto.isBlocked = this.getIsBlocked(targetId);
+    } else {
+      userProfileDto.isSecondAuthOn = this.isSecondAuthOn;
+    }
 
     return userProfileDto;
   }

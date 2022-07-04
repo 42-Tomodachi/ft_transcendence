@@ -72,13 +72,24 @@ export class UsersService {
     return user;
   }
 
-  async getUserProfile(userId: number): Promise<UserProfileDto> {
-    const user = await this.getUserById(userId);
-    if (!user) {
+  async getUserProfile(
+    myId: number,
+    targetId: number,
+  ): Promise<UserProfileDto> {
+    const myUser = await this.getUserById(myId);
+    const targetUser = await this.getUserById(targetId);
+    if (!myUser || !targetUser) {
       throw new BadRequestException('유저가 존재하지 않습니다.');
     }
 
-    return user.toUserProfileDto();
+    const myUserWithFollow = await this.userRepo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.follower', 'follower')
+      .leftJoinAndSelect('user.blocker', 'blocker')
+      .where('user.id = :myId', { myId })
+      .getOne();
+
+    return myUserWithFollow.toUserProfileDto(targetId);
   }
 
   async findByNicknameAndUpdateImg(

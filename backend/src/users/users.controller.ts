@@ -18,6 +18,7 @@ import { UsersService } from './users.service';
 import {
   NicknameDto,
   SimpleUserDto,
+  TargetIdDto,
   UserProfileDto,
   WinLoseCountDto,
 } from './dto/users.dto';
@@ -76,11 +77,15 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 특정 유저의 프로필 조회' })
-  @Get(':id')
+  @Get(':myId')
   async getUserProfile(
-    @Param('id', ParseIntPipe) userId: number,
+    @Param('myId', ParseIntPipe) myId: number,
+    @Body() target: TargetIdDto,
   ): Promise<UserProfileDto> {
-    const userProfile = await this.usersService.getUserProfile(userId);
+    const userProfile = await this.usersService.getUserProfile(
+      myId,
+      target.targetId,
+    );
 
     return userProfile;
   }
@@ -127,7 +132,10 @@ export class UsersController {
     @Param('id', ParseIntPipe) userId: number,
     @Body() nicknameDto: NicknameDto,
   ): Promise<UserProfileDto> {
-    const user = this.usersService.updateNickname(userId, nicknameDto.nickname);
+    const user = await this.usersService.updateNickname(
+      userId,
+      nicknameDto.nickname,
+    );
 
     return user;
   }
@@ -147,8 +155,8 @@ export class UsersController {
   @Put(':myId')
   async blockUserToggle(
     @Param('myId', ParseIntPipe) myId: number,
-    @Body('targetId', ParseIntPipe) targetId: number,
+    @Body() target: TargetIdDto,
   ): Promise<BlockResultDto> {
-    return await this.usersService.blockUserToggle(myId, targetId);
+    return await this.usersService.blockUserToggle(myId, target.targetId);
   }
 }
