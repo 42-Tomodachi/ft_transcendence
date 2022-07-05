@@ -136,7 +136,7 @@ export class ChatController {
   }
 
   @ApiOperation({ summary: '✅ 관리자로 설정 토글: jihokim' })
-  @Patch(':roomId/role_toggle')
+  @Put(':roomId/roleToggle')
   async toggleManager(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('callingUserId', ParseIntPipe) callingUserId: number,
@@ -150,7 +150,7 @@ export class ChatController {
   }
 
   @ApiOperation({ summary: 'seungyel✅ 강퇴 시키기' })
-  @Patch(':roomId/ban/:userId')
+  @Put(':roomId/ban/:userId')
   async banParticipant(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
@@ -160,7 +160,7 @@ export class ChatController {
   }
 
   @ApiOperation({ summary: '✅ 음소거 시키기 토글: jihokim' })
-  @Patch(':roomId/mute_toggle')
+  @Put(':roomId/muteToggle')
   async muteParticipant(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,

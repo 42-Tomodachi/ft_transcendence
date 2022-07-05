@@ -58,7 +58,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 시작' })
-  @Post('/second_auth/:userId')
+  @Post('/secondAuth/:userId')
   async startSecondAuth(
     @Param('userId', ParseIntPipe) id: number,
     @Body() emailDto: EmailDto,
@@ -67,7 +67,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 번호 검증' })
-  @Get('/second_auth_verify/:userId')
+  @Get('/secondAuthVerify/:userId')
   async verifySecondAuth(
     @Param('userId', ParseIntPipe) id: number,
     @Query('code') code: string,
@@ -76,7 +76,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 완료' })
-  @Get('/second_auth_enroll/:userId')
+  @Get('/secondAuthEnroll/:userId')
   async enrollSecondAuth(
     @Param('userId', ParseIntPipe) id: number,
   ): Promise<void> {
@@ -84,7 +84,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 해제' })
-  @Delete('/second_auth/:userId')
+  @Delete('/secondAuth/:userId')
   async disableSecondAuth(
     @Param('userId', ParseIntPipe) id: number,
   ): Promise<void> {
@@ -92,7 +92,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 수행' })
-  @Get('/second_auth/:userId')
+  @Get('/secondAuth/:userId')
   // @UseGuards(AuthGuard())
   async shootSecAuth(
     @Param('userId', ParseIntPipe) id: number,
