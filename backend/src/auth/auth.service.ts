@@ -139,9 +139,14 @@ export class AuthService {
     return await this.usersService.isDuplicateNickname(nickname);
   }
 
-  async startSecondAuth(id: number, email: string): Promise<boolean> {
-    const user = await this.usersService.getUserById(id);
-
+  async startSecondAuth(
+    user: User,
+    id: number,
+    email: string,
+  ): Promise<boolean> {
+    if (user.id !== id) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     if (user === null) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
@@ -157,9 +162,14 @@ export class AuthService {
     return true;
   }
 
-  async verifySecondAuth(id: number, code: string): Promise<boolean> {
-    const user = await this.usersService.getUserById(id);
-
+  async verifySecondAuth(
+    user: User,
+    id: number,
+    code: string,
+  ): Promise<boolean> {
+    if (user.id !== id) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     if (user === null) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
@@ -173,9 +183,10 @@ export class AuthService {
     }
   }
 
-  async enrollSecondAuth(id: number): Promise<void> {
-    const user = await this.usersService.getUserById(id);
-
+  async enrollSecondAuth(user: User, id: number): Promise<void> {
+    if (user.id !== id) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     if (user === undefined) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
@@ -190,9 +201,10 @@ export class AuthService {
     await user.save();
   }
 
-  async disableSecondAuth(id: number): Promise<void> {
-    const user = await this.usersService.getUserById(id);
-
+  async disableSecondAuth(user: User, id: number): Promise<void> {
+    if (user.id !== id) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     if (user === undefined) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }

@@ -48,7 +48,9 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'seungyel✅ 이미지 업로드' })
+  @ApiBearerAuth('access-token')
   @Post('/:myId/uploadImage')
+  @UseGuards(AuthGuard())
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -70,9 +72,9 @@ export class UsersController {
     return response;
   }
 
-  // @ApiBearerAuth('access-token') //JWT 토큰 키 설정
-  // @UseGuards(AuthGuard())
   @ApiOperation({ summary: 'kankim✅ 모든 유저의 id, 닉네임, 상태 가져오기' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Get('')
   async getUsers(): Promise<SimpleUserDto[]> {
     const userInfo = await this.usersService.getUsers();
@@ -81,6 +83,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: '✅ 본인 정보 가져오기' })
+  @ApiBearerAuth('access-token')
   @Get('/own')
   @UseGuards(AuthGuard())
   async getOwnInfo(@GetJwtUser() user: User): Promise<UserProfileDto> {
@@ -88,29 +91,25 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 특정 유저의 프로필 조회' })
+  @ApiBearerAuth('access-token')
   @Get(':myId')
   @UseGuards(AuthGuard())
   async getUserProfile(
     @Param('myId', ParseIntPipe) myId: number,
-<<<<<<< HEAD
     @Query('targetId', ParseIntPipe) targetId: number,
-  ): Promise<UserProfileDto> {
-    const userProfile = await this.usersService.getUserProfile(myId, targetId);
-=======
-    @Body() target: TargetIdDto,
     @GetJwtUser() user: User,
   ): Promise<UserProfileDto> {
     const userProfile = await this.usersService.getUserProfile(
       user,
       myId,
-      target.targetId,
+      targetId,
     );
->>>>>>> 77db0c2c ([BE] FEAT: authGuard added on User, Auth module -sy)
 
     return userProfile;
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 추가' })
+  @ApiBearerAuth('access-token')
   @Post(':myId/friends')
   @UseGuards(AuthGuard())
   async addFriend(
@@ -122,6 +121,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 삭제' })
+  @ApiBearerAuth('access-token')
   @Delete(':myId/friends')
   @UseGuards(AuthGuard())
   async removeFriend(
@@ -156,6 +156,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 닉네임 변경' })
+  @ApiBearerAuth('access-token')
   @Put(':myId/nickname')
   @UseGuards(AuthGuard())
   async updateNickname(
@@ -173,6 +174,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 유저의 승,패 카운트 조회' })
+  @ApiBearerAuth('access-token')
   @Get(':userId/winLoseCount')
   async getWinLoseCount(
     @Param('userId', ParseIntPipe) userId: number,
@@ -184,6 +186,7 @@ export class UsersController {
     summary:
       'kankim✅ 유저 차단하기 토글. target유저를 차단했으면 true, 차단 해제 했으면 false 리턴',
   })
+  @ApiBearerAuth('access-token')
   @Put(':myId')
   @UseGuards(AuthGuard())
   async blockUserToggle(
