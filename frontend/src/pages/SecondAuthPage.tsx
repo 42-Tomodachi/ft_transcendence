@@ -16,11 +16,13 @@ const SecondAuthPage: React.FC = () => {
   const sendCode = async () => {
     setErrMsg('...');
     clearTimeout(timer);
+
     timer = setTimeout(async () => {
-      const userId = 5; // TODO: user.id
-      ...
-      await authAPI.sendSecondAuthCode(userId, jwt);
-      setErrMsg('설정한 메일로 코드가 전송되었습니다.');
+      if (user) {
+        const userId = user.id; // TODO: user.id user가 null인 경우가 있다고 함
+        await authAPI.sendSecondAuthCode(userId, jwt);
+        setErrMsg('설정한 메일로 코드가 전송되었습니다.');
+      }
     }, 100);
   };
 
@@ -28,7 +30,6 @@ const SecondAuthPage: React.FC = () => {
     if (user) {
       sendCode();
     }
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -51,6 +52,11 @@ const SecondAuthPage: React.FC = () => {
     sendCode();
   };
 
+  const onUpdateAuthCode = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAuthcode(event.target.value);
+    setErrMsg('');
+  };
+
   return (
     <Wrap>
       <LoginBox>
@@ -60,10 +66,7 @@ const SecondAuthPage: React.FC = () => {
             className="input"
             placeholder="인증코드를 입력하세요"
             type="text"
-            onChange={event => {
-              setAuthcode(event.target.value);
-              setErrMsg('');
-            }}
+            onChange={onUpdateAuthCode}
             required
           />
           <SubText>{errMsg}</SubText>

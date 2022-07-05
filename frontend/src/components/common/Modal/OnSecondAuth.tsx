@@ -19,24 +19,27 @@ const OnSecondAuth: React.FC = () => {
   const [email, setEmail] = useState<string>('');
 
   const [authMsg, setAuthMsg] = useState<string>('');
-  const [authCode, setAuth] = useState<string>();
+  const [authCode, setAuth] = useState<string>('');
 
   const [activeEmail, setActiveEmail] = useState<boolean>(false);
   const [activeCode, setActiveCode] = useState<boolean>(true);
 
   const validEmailChecker = async () => {
     setEmailMsg('...');
-  if (!reg.test(email)) setEmailMsg('유효한 이메일이 아닙니다.');
-  else if (!user) setEmailMsg('유저 정보가 없습니다.');
-  else {
-    const res = await authAPI.setSecondAuth(user.id, email);
+    if (!reg.test(email)) {
+      setEmailMsg('유효한 이메일이 아닙니다.');
+    } else if (!user) {
+      setEmailMsg('유저 정보가 없습니다.');
+    } else {
+      const res = await authAPI.setSecondAuth(user.id, email);
 
-    if (!res) setEmailMsg('인증 코드가 전송에 실패하였습니다.');
-    else {
-      setEmailMsg('인증 코드가 전송되었습니다.');
-      setActiveCode(false);
+      if (!res) {
+        setEmailMsg('인증 코드가 전송에 실패하였습니다.');
+      } else {
+        setEmailMsg('인증 코드가 전송되었습니다.');
+        setActiveCode(false);
+      }
     }
-  }
   };
 
   const EmailhandleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {

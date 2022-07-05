@@ -92,8 +92,10 @@ const NicknamePage: React.FC = () => {
       const userId = 1;
       const formData = new FormData();
 
-      formData.append('image', convertImg);
-      usersAPI.uploadAvatarImg(userId, formData);
+      if (convertImg) {
+        formData.append('image', convertImg);
+        usersAPI.uploadAvatarImg(userId, formData);
+      }
       usersAPI.updateUserNickname(userId, nickName);
       setUserStatus(LOGIN);
     }

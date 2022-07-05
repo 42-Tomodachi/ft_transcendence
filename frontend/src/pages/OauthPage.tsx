@@ -16,8 +16,8 @@ const OauthPage: React.FC = () => {
   useEffect(() => {
     const getUser = async () => {
       if (code) {
-        const res = await authAPI.isSignedUp({ code });
-        console.log(res);
+        const res = await authAPI.isSignedUp(code);
+        // console.log(res);
         if (res) {
           setUser(LOGIN, {
             id: res.id,
