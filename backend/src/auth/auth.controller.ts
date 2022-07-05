@@ -9,7 +9,7 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EmailDto, NicknameDto } from '../users/dto/users.dto';
 import { AuthService } from './auth.service';
 import { IsSignedUpDto, CodeStringDto, IsDuplicateDto } from './dto/auth.dto';
@@ -29,11 +29,19 @@ export class AuthController {
     );
   }
 
-  // @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
-  // @Get('issueJwt/:id')
-  // async getJwt(@Param('id', ParseIntPipe) id: number): Promise<string> {
-  //   return this.authService.issueJwt(id);
-  // }
+  @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
+  @Get('issueJwt/:id')
+  async getJwt(@Param('id', ParseIntPipe) id: number): Promise<string> {
+    return this.authService.issueJwt(id);
+  }
+
+  @ApiOperation({ summary: '[test for backend] test JWT validity' })
+  @ApiBearerAuth('access-token')
+  @Get('testJwt')
+  @UseGuards(AuthGuard())
+  async testJwt(): Promise<string> {
+    return 'GOOD JWT';
+  }
 
   @ApiOperation({
     summary: 'kankim✅ 유저의 회원가입 여부 확인',
