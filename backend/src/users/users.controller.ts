@@ -10,7 +10,7 @@ import {
   UseInterceptors,
   UseGuards,
   Delete,
-  Res,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User } from './entities/users.entity';
@@ -80,12 +80,9 @@ export class UsersController {
   @Get(':myId')
   async getUserProfile(
     @Param('myId', ParseIntPipe) myId: number,
-    @Body() target: TargetIdDto,
+    @Query('targetId', ParseIntPipe) targetId: number,
   ): Promise<UserProfileDto> {
-    const userProfile = await this.usersService.getUserProfile(
-      myId,
-      target.targetId,
-    );
+    const userProfile = await this.usersService.getUserProfile(myId, targetId);
 
     return userProfile;
   }
