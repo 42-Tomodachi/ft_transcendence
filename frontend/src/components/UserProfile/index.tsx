@@ -1,58 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import axios from 'axios';
 import ProfileImage from '../common/ProfileImage';
+import { AllContext } from '../../store';
+import { OFF_SECOND_AUTH, ON_SECOND_AUTH } from '../../utils/interface';
 
 const ProfilePage: React.FC = () => {
-  const [user, setUser] = useState({
-    id: '',
-    user: '',
-    user_nick: '',
-    user_lv: '',
-    gen_win: '',
-    gen_lose: '',
-    lad_win: '',
-    lad_lose: '',
-    picture: '',
-  });
+  const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
 
-  // 리프레쉬할때 값이 조금 늦게 튀어나오는건 전역으로 데이터를 관리하면서
-  // 다시 한번 확인하기로 결정
   useEffect(() => {
-    axios.get(`http://localhost:4000/user_info`).then(res =>
-      setUser({
-        id: res.data.id,
-        user: res.data.user,
-        user_nick: res.data.user_nick,
-        user_lv: res.data.user_lv,
-        gen_win: res.data.gen_win,
-        gen_lose: res.data.gen_lose,
-        lad_win: res.data.lad_win,
-        lad_lose: res.data.lad_lose,
-        picture: res.data.picture,
-      }),
-    );
+    //
   }, []);
 
   return (
     <MainBlock>
       <MainText>내 프로필</MainText>
-      <ProfileBlock>
-        <PictureBlock>
-          <ProfileImage src={user.picture} size={100} />
-        </PictureBlock>
-        <UserInfo>
-          <UserName>{user.user_nick}</UserName>
-          <UserLevel>lv.{user.user_lv}</UserLevel>
-        </UserInfo>
-      </ProfileBlock>
+      {user && (
+        <ProfileBlock>
+          <PictureBlock>
+            <ProfileImage src={user.avatar} size={100} />
+          </PictureBlock>
+          <UserInfo>
+            <UserName>{user.nickname}</UserName>
+            {/* TODO: 나중에 레벨, 전적 받아오는 api로 받아와야함 */}
+            <UserLevel>lv.0</UserLevel>
+          </UserInfo>
+        </ProfileBlock>
+      )}
 
       <RecordText>전적/래더전적</RecordText>
 
       <RecordBlock>
         <Record>
-          {user.gen_win}승 {user.gen_lose}패/{user.lad_win}승 {user.lad_lose}패
+          {/* TODO: 나중에 레벨, 전적 받아오는 api로 받아와야함 */}
+          0승 0패/0승 0패
         </Record>
         <RecordBtn>
           <Button color="white2" text="전적 기록" width={97} height={30} />
@@ -61,7 +44,13 @@ const ProfilePage: React.FC = () => {
 
       <OtherBtnBlock>
         <Button color="gradient" text="닉네임 변경" width={120} height={30} />
-        <Button color="gradient" text="2차 인증 활성화" width={120} height={30} />
+        <Button
+          color="gradient"
+          text={user?.isSecondAuthOn ? '2차 인증 해제' : '2차 인증 활성화'}
+          width={120}
+          height={30}
+          onClick={() => setModal(user?.isSecondAuthOn ? OFF_SECOND_AUTH : ON_SECOND_AUTH)}
+        />
       </OtherBtnBlock>
     </MainBlock>
   );

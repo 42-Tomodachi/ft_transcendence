@@ -1,41 +1,88 @@
-import axios from 'axios';
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useState } from 'react';
+import styled from '@emotion/styled';
 import { AllContext } from '../store';
-import { LOGIN, LOGOUT, SET_NICKNAME, SECOND_AUTH } from '../utils/interface';
-import { useNavigate } from 'react-router-dom';
+import { LOGIN, SET_NICKNAME, SECOND_AUTH } from '../utils/interface';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { authAPI } from '../API';
 
 const OauthPage: React.FC = () => {
-  const { userStatus, setUserStatus } = useContext(AllContext).userStatus;
+  const { setUserStatus } = useContext(AllContext).userStatus;
   const { setUser } = useContext(AllContext).userData;
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const code = params.get('code');
+  const [dot, setDot] = useState('.');
 
   useEffect(() => {
-    // test 용 api
-    if (userStatus !== LOGOUT) {
-      return navigate('/');
-    }
     const getUser = async () => {
-      const { data } = await axios('http://localhost:4000/user');
-      setUser(LOGIN, {
-        id: data.id,
-        nickname: data.nickname,
-        email: data.email,
-        avatar: data.avatar,
-        isSecondAuthOn: data.isSecondAuthOn,
-        jwt: data.jwt,
-      });
-      if (!data.isSigned) {
-        setUserStatus(SET_NICKNAME);
-      } else if (data.isSecondAuthOn) {
-        setUserStatus(SECOND_AUTH);
-      } else {
-        setUserStatus(LOGIN);
+      if (code) {
+        const res = await authAPI.isSignedUp(code);
+        // console.log(res);
+        if (res) {
+          setUser(LOGIN, {
+            id: res.id,
+            nickname: res.nickname,
+            email: res.email,
+            avatar: res.avatar,
+            isSecondAuthOn: res.isSecondAuthOn,
+            jwt: res.jwt,
+          });
+          // NOTE: 임시로 LocalStorage에 jwt 저장
+          window.localStorage.setItem('jwt', res.jwt);
+          if (!res.nickname) {
+            setUserStatus(SET_NICKNAME);
+          } else if (res.isSecondAuthOn) {
+            setUserStatus(SECOND_AUTH);
+          } else {
+            setUserStatus(LOGIN);
+          }
+          navigate('/');
+        }
       }
     };
-    getUser();
-  }, [userStatus]);
+    // NOTE: 한번에 두번 요청되는것을 막기 위해 설정
+    const timer = setTimeout(() => {
+      getUser();
+      clearTimeout(timer);
+    }, 100);
 
-  return <></>;
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (dot === '...') setDot('.');
+      else setDot(dot + '.');
+    }, 500);
+
+    return () => clearInterval(timer);
+  });
+
+  return (
+    <Loading>
+      <LoadingMessage>Loading{dot}</LoadingMessage>
+    </Loading>
+  );
 };
+
+const Loading = styled.div`
+  width: 100vw;
+  height: 100vh;
+  background-color: ${({ theme }) => theme.colors.main};
+  position: relative;
+`;
+
+const LoadingMessage = styled.span`
+  display: block;
+  font-size: 50px;
+  color: white;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`;
 
 export default OauthPage;

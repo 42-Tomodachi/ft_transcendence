@@ -9,11 +9,12 @@ import EnterGameRoom from './EnterGameRoom';
 import EnterChatRoom from './EnterChatRoom';
 import ShowOwnerProfile from './ShowOwnerProfile';
 import ShowManagerProfile from './ShowManagerProfile';
-import HandleSecondAuth from './HandleSecondAuth';
+import OnSecondAuth from './OnSecondAuth';
 import EditNickName from './EditNickName';
 import SettingRoom from './SettingRoom';
 import FightResModal from './FightResModal';
 import FightReqModal from './FightReqModal';
+import OffSecondAuth from './OffSecondAuth';
 
 const ModalSet: React.FC = () => {
   const { modal } = useContext(AllContext).modalData;
@@ -25,7 +26,8 @@ const ModalSet: React.FC = () => {
           FIGHT_RES_MODAL: <FightResModal />, // 1:1 대전 응답 모달
           FIGHT_REQ_MODAL: <FightReqModal />, // 1:1 대전 요청 모달
           SHOW_PROFILE: <ShowProfile />, // 프로필 정보 보기
-          HANDLE_SECOND_AUTH: <HandleSecondAuth />, // 이메일 인증
+          ON_SECOND_AUTH: <OnSecondAuth />, // 2차 인증 켜기
+          OFF_SECOND_AUTH: <OffSecondAuth />, // 2차 인증 끄기
           EDIT_NICKNAME: <EditNickName />, // 닉네임 수정
           MAKE_GAME_ROOM: <MakeGameRoom />, // 게임방 만들기
           MAKE_CHAT_ROOM: <MakeChatRoom />, // 채팅방 만들기

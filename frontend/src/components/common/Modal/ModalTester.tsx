@@ -15,7 +15,7 @@ import { ENTER_CHAT_ROOM } from '../../../utils/interface';
 import { SHOW_OWNER_PROFILE } from '../../../utils/interface';
 import { SHOW_MANAGER_PROFILE } from '../../../utils/interface';
 
-import { HANDLE_SECOND_AUTH } from '../../../utils/interface';
+import { ON_SECOND_AUTH } from '../../../utils/interface';
 
 import { EDIT_NICKNAME } from '../../../utils/interface';
 import { EDIT_CHAT_ROOM } from '../../../utils/interface';
@@ -90,10 +90,10 @@ const ModalTester: React.FC = () => {
           />
           <Button
             color="gradient"
-            text="HandleSecondAuth"
+            text="OnSecondAuth"
             width={200}
             height={30}
-            onClick={() => setModal(HANDLE_SECOND_AUTH)}
+            onClick={() => setModal(ON_SECOND_AUTH)}
           />
           <Button
             color="gradient"

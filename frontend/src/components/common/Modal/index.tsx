@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useRef } from 'react';
 import styled from '@emotion/styled';
 import CloseImg from '../../../assets/close.png';
 import { AllContext } from '../../../store';
-import { keyboardKey } from '@testing-library/user-event';
 
 interface ModalProps {
   width: number;

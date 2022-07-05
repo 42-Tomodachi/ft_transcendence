@@ -1,20 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
+import { authAPI } from '../../../API';
+import { AllContext } from '../../../store';
+import { EDIT } from '../../../utils/interface';
 
-const HandleSecondAuth: React.FC = () => {
+const reg = new RegExp(
+  /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/,
+);
+const OnSecondAuth: React.FC = () => {
+  const { user, setUser } = useContext(AllContext).userData;
+  const { jwt } = useContext(AllContext).jwtData;
+  const { setModal } = useContext(AllContext).modalData;
+  const [errMsg, setErrMsg] = useState<string>('');
+
   const [emailMsg, setEmailMsg] = useState<string>('');
   const [email, setEmail] = useState<string>('');
 
   const [authMsg, setAuthMsg] = useState<string>('');
   const [authCode, setAuth] = useState<string>('');
 
-  const validEmailChecker = () => {
-    if (email === 'sgang@42.fr') {
-      setEmailMsg('');
-      alert(`정답ㅋ`);
-    } else setEmailMsg('유효한 이메일이 아닙니다.');
+  const [activeEmail, setActiveEmail] = useState<boolean>(false);
+  const [activeCode, setActiveCode] = useState<boolean>(true);
+
+  const validEmailChecker = async () => {
+    setEmailMsg('...');
+    if (!reg.test(email)) {
+      setEmailMsg('유효한 이메일이 아닙니다.');
+    } else if (!user) {
+      setEmailMsg('유저 정보가 없습니다.');
+    } else {
+      const res = await authAPI.setSecondAuth(user.id, email);
+
+      if (!res) {
+        setEmailMsg('인증 코드가 전송에 실패하였습니다.');
+      } else {
+        setEmailMsg('인증 코드가 전송되었습니다.');
+        setActiveCode(false);
+      }
+    }
   };
 
   const EmailhandleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -23,16 +48,34 @@ const HandleSecondAuth: React.FC = () => {
     }
   };
 
-  const authCodeChecker = () => {
-    if (authCode === '1234') {
-      setAuthMsg('');
-      alert(`정답ㅋ`);
-    } else setAuthMsg('코드가 일치하지 않습니다.');
+  const checkAuthCode = async () => {
+    if (user) {
+      if (authCode) {
+        const res = await authAPI.checkSecondAuthCode(user.id, Number(authCode), jwt);
+        if (res) {
+          setAuthMsg('인증에 성공하였습니다.');
+          setActiveEmail(true);
+        } else setAuthMsg('코드가 일치하지 않습니다.');
+      } else setAuthMsg('코드를 입력해주세요.');
+    } else setAuthMsg('새로고침 후 다시 진행해주세요.'); // user 정보 만료
   };
 
   const AuthhandleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      authCodeChecker();
+      checkAuthCode();
+    }
+  };
+
+  const activeSecondAuth = async () => {
+    if (activeEmail === true && user) {
+      const res = await authAPI.enrollSecondAuth(user.id);
+      if (res) {
+        setErrMsg('활성화에 성공하였습니다.');
+        setUser(EDIT, { ...user, isSecondAuthOn: true });
+        setModal(null);
+      } else {
+        setErrMsg('활성화에 실패했습니다.');
+      }
     }
   };
 
@@ -47,6 +90,7 @@ const HandleSecondAuth: React.FC = () => {
           }}
           value={email}
           onKeyPress={EmailhandleEnter}
+          disabled={activeEmail}
         />
         <ErrEmail>{emailMsg}</ErrEmail>
         <Button
@@ -65,11 +109,20 @@ const HandleSecondAuth: React.FC = () => {
             }}
             value={authCode}
             onKeyPress={AuthhandleEnter}
+            disabled={activeCode}
           />
-          <Button color="white" text="확인" width={70} height={35} onClick={authCodeChecker} />
+          <Button color="white" text="확인" width={70} height={35} onClick={checkAuthCode} />
         </AuthBlock>
         <ErrAuth>{authMsg}</ErrAuth>
-        <Button color="gradient" text="활성화" width={200} height={40} />
+        <Button
+          color="gradient"
+          text="활성화"
+          width={200}
+          height={40}
+          onClick={activeSecondAuth}
+          disabled={activeEmail === false ? true : false}
+        />
+        <ErrAuth>{errMsg}</ErrAuth>
       </MainBlock>
     </Modal>
   );
@@ -109,6 +162,9 @@ const InputEmail = styled.input`
   border: none;
   outline: none;
   border-bottom: 1px solid;
+  &:disabled {
+    background-color: ${({ theme }) => theme.colors.grey};
+  }
 `;
 
 const ErrEmail = styled.span`
@@ -149,6 +205,9 @@ const InputAuthCode = styled.input`
   border: none;
   outline: none;
   border-bottom: 1px solid;
+  &:disabled {
+    background-color: ${({ theme }) => theme.colors.grey};
+  }
 `;
 
 const ErrAuth = styled.span`
@@ -165,4 +224,4 @@ const ErrAuth = styled.span`
   color: #ff6363;
 `;
 //============================================
-export default HandleSecondAuth;
+export default OnSecondAuth;

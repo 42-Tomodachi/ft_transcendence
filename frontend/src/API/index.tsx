@@ -1,5 +1,5 @@
 import axios from 'axios';
-// import { authAPI } from './auth';
+import { authAPI } from './auth';
 
 const url = process.env.REACT_APP_BACK_API;
 
@@ -35,4 +35,4 @@ export const authAPI = {
 
 */
 
-// export { authAPI };
+export { authAPI };

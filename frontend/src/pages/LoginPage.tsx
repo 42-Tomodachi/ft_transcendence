@@ -1,9 +1,24 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Button from '../components/common/Button';
 import LogoImg from '../assets/logo.png';
+import { AllContext } from '../store';
+import { LOGIN } from '../utils/interface';
 
 const LoginPage: React.FC = () => {
+  const { setJwt } = useContext(AllContext).jwtData;
+  const { setUserStatus } = useContext(AllContext).userStatus;
+
+  useEffect(() => {
+    const jwt = window.localStorage.getItem('jwt');
+    if (jwt) {
+      setJwt('SET_JWT', jwt);
+      // TODO: jwt 를 이용하여 데이터 받아와 setUser 에 데이터 저장,
+      //  닉네임 없는경우 SET_NICNKNAME, 있는 경우 LOGIN 으로 setUserStatus 설정
+      setUserStatus(LOGIN);
+    }
+  }, []);
+
   return (
     <LoginContainer>
       <LoginBox>

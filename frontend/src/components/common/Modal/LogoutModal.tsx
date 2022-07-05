@@ -10,19 +10,20 @@ const LogoutModal: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { setUser } = useContext(AllContext).userData;
+  const { setJwt } = useContext(AllContext).jwtData;
   const navigater = useNavigate();
 
   const handleLogout = () => {
     setUserStatus(LOGOUT);
     setUser(LOGOUT);
+    setJwt('REMOVE_JWT');
     setModal(null); // 모달 끄기
     navigater('/'); // TODO: 초기화면으로 이동
     // TODO: 로그아웃 후 초기화면에서 뒤로가기를 못하게 막아야함
-    // TODO: 추후에 jwt 토큰 삭제 예정
   };
 
   return (
-    <Modal width={400} height={200}>
+    <Modal width={400} height={180}>
       <LogoutMsg>정말 로그아웃 하시겠습니까?</LogoutMsg>
       <CancelBtnWrap>
         <Button width={110} height={30} color="white" text="취소" onClick={() => setModal(null)} />
@@ -33,6 +34,7 @@ const LogoutModal: React.FC = () => {
 };
 
 const LogoutMsg = styled.h3`
+  margin-top: 20px;
   font-size: 20px;
   font-weight: bold;
   text-align: center;

@@ -3,6 +3,7 @@ import React, { useState, useRef, useContext } from 'react';
 import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
+import { authAPI } from '../API';
 import { LOGIN } from '../utils/interface';
 import imageCompression from 'browser-image-compression';
 import { usersAPI } from '../API/users';
@@ -60,23 +61,21 @@ const NicknamePage: React.FC = () => {
       if (e.nativeEvent.isComposing === false) onCheck();
     }
   };
-  const checkNickName = (resNickName: string): boolean => {
-    if (nickName === resNickName) {
+
+  const onCheck = async () => {
+    if (!regex.test(nickName)) {
+      setCheckNickMsg(`2자 ~ 8자의 한글, 영어, 숫자로 작성해주세요`);
+      setIsEnabled(false);
+      return;
+    }
+    const res = await authAPI.checkNickname(nickName);
+    if (res === null) {
+      setCheckNickMsg(`다시 시도해주세요.`);
+      setIsEnabled(false);
+    } else if (res) {
       setCheckNickMsg(`중복된 닉네임입니다.`);
       setIsEnabled(false);
-      return false;
-    }
-    return true;
-  };
-
-  // TODO: 입력된 닉네임만 서버에 요청해서 응답 받기
-  const onCheck = () => {
-    //  const result = await axios.get(`http://localhost:4000/profile/`);
-    // const userList = result.data;
-
-    // TODO: 닉네임 중복 API 사용
-    const resNickName = 'mike2ox';
-    if (checkNickName(resNickName)) {
+    } else {
       setCheckNickMsg(`사용 가능한 닉네임입니다.`);
       setIsEnabled(true);
     }
@@ -92,8 +91,10 @@ const NicknamePage: React.FC = () => {
       const userId = 1;
       const formData = new FormData();
 
-      formData.append('image', convertImg);
-      usersAPI.uploadAvatarImg(userId, formData);
+      if (convertImg) {
+        formData.append('image', convertImg);
+        usersAPI.uploadAvatarImg(userId, formData);
+      }
       usersAPI.updateUserNickname(userId, nickName);
       setUserStatus(LOGIN);
     }
