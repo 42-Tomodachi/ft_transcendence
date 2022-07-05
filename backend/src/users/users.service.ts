@@ -25,7 +25,7 @@ export class UsersService {
     private readonly blockedUserRepo: Repository<BlockedUser>,
     @InjectRepository(GameRecord)
     private readonly gameRecordRepo: Repository<GameRecord>,
-  ) {}
+  ) { }
 
   async getUsers(): Promise<SimpleUserDto[]> {
     const users = await this.userRepo.find();
@@ -39,7 +39,11 @@ export class UsersService {
     });
   }
 
-  async getFriends(userId: number): Promise<SimpleUserDto[]> {
+  async getFriends(user: User, userId: number): Promise<SimpleUserDto[]> {
+    if (user.id != userId) {
+      throw new BadRequestException('권한이 없는 유저입니다.');
+    }
+
     if ((await this.userRepo.findOneBy({ id: userId })) === null) {
       throw new BadRequestException('존재하지 않는 유저 입니다.');
     }
@@ -73,9 +77,12 @@ export class UsersService {
   }
 
   async getUserProfile(
+    user: User,
     myId: number,
     targetId: number,
   ): Promise<UserProfileDto> {
+    if (user.id != myId)
+      throw new BadRequestException('jwt error: 권한이 없습니다');
     const myUser = await this.getUserById(myId);
     const targetUser = await this.getUserById(targetId);
     if (!myUser || !targetUser) {
@@ -119,12 +126,19 @@ export class UsersService {
     return { isDuplicate: false };
   }
 
-  async addFriend(followerId: number, followId: number): Promise<void> {
+  async addFriend(
+    user: User,
+    followerId: number,
+    followId: number,
+  ): Promise<void> {
     const [followerUser, followUser] = await Promise.all([
       this.getUserById(followerId),
       this.getUserById(followId),
     ]);
 
+    if (user.id != followerId) {
+      throw new BadRequestException('jwt error: 권한이 없는 유저입니다.');
+    }
     if (!followerUser || !followUser) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
@@ -148,11 +162,15 @@ export class UsersService {
     await this.followRepo.save(follow);
   }
 
-  async removeFriend(followerId: number, followId: number) {
+  async removeFriend(user: User, followerId: number, followId: number) {
     const [followerUser, followUser] = await Promise.all([
       this.getUserById(followerId),
       this.getUserById(followId),
     ]);
+
+    if (user.id != followerId) {
+      throw new BadRequestException('권한이 없는 유저입니다.');
+    }
 
     if (!followerUser || !followUser) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
@@ -182,6 +200,7 @@ export class UsersService {
   }
 
   async updateNickname(
+    user: User,
     userId: number,
     nicknameForUpdate: string,
   ): Promise<UserProfileDto> {
@@ -192,8 +211,9 @@ export class UsersService {
       throw new BadRequestException('이미 존재하는 닉네임 입니다.');
     }
 
-    const user = await this.getUserById(userId);
-
+    if (user.id != userId) {
+      throw new BadRequestException('권한이 없는 유저입니다.');
+    }
     user.nickname = nicknameForUpdate;
     const updatedUser = await this.userRepo.save(user);
 
@@ -210,11 +230,16 @@ export class UsersService {
   }
 
   async blockUserToggle(
+    user: User,
     myId: number,
     targetId: number,
   ): Promise<BlockResultDto> {
     const myUser = await this.userRepo.findOneBy({ id: myId });
     const targetUser = await this.userRepo.findOneBy({ id: targetId });
+
+    if (user.id != myId) {
+      throw new BadRequestException('유저의 권한이 없습니다.');
+    }
 
     if (!myUser || !targetUser) {
       throw new BadRequestException('유저가 존재하지 않습니다.');

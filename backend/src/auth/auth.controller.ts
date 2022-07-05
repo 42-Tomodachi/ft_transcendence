@@ -100,11 +100,17 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 수행' })
+<<<<<<< HEAD
   @Get('/secondAuth/:userId')
   // @UseGuards(AuthGuard())
+=======
+  @Get('/second_auth/:userId')
+  @UseGuards(AuthGuard())
+>>>>>>> 77db0c2c ([BE] FEAT: authGuard added on User, Auth module -sy)
   async shootSecAuth(
+    @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
   ): Promise<boolean> {
-    return await this.authService.shootSecondAuth(id);
+    return await this.authService.shootSecondAuth(user, id);
   }
 }

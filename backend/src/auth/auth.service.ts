@@ -203,8 +203,10 @@ export class AuthService {
     await user.save();
   }
 
-  async shootSecondAuth(id: number): Promise<boolean> {
+  async shootSecondAuth(users: User, id: number): Promise<boolean> {
     const user = await this.usersService.getUserById(id);
+    if (users.id != user.id)
+      throw new BadRequestException('권한이 없는 유저입니다.');
 
     if (user === null) {
       throw new BadRequestException('존재하지 않는 유저입니다.');

@@ -89,39 +89,60 @@ export class UsersController {
 
   @ApiOperation({ summary: 'kankim✅ 특정 유저의 프로필 조회' })
   @Get(':myId')
+  @UseGuards(AuthGuard())
   async getUserProfile(
     @Param('myId', ParseIntPipe) myId: number,
+<<<<<<< HEAD
     @Query('targetId', ParseIntPipe) targetId: number,
   ): Promise<UserProfileDto> {
     const userProfile = await this.usersService.getUserProfile(myId, targetId);
+=======
+    @Body() target: TargetIdDto,
+    @GetJwtUser() user: User,
+  ): Promise<UserProfileDto> {
+    const userProfile = await this.usersService.getUserProfile(
+      user,
+      myId,
+      target.targetId,
+    );
+>>>>>>> 77db0c2c ([BE] FEAT: authGuard added on User, Auth module -sy)
 
     return userProfile;
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 추가' })
   @Post(':myId/friends')
+  @UseGuards(AuthGuard())
   async addFriend(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) followerId: number,
     @Body() followIdDto: FollowIdDto,
   ): Promise<void> {
-    await this.usersService.addFriend(followerId, followIdDto.followId);
+    await this.usersService.addFriend(user, followerId, followIdDto.followId);
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 삭제' })
   @Delete(':myId/friends')
+  @UseGuards(AuthGuard())
   async removeFriend(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) followerId: number,
     @Body() followIdDto: FollowIdDto,
   ): Promise<void> {
-    await this.usersService.removeFriend(followerId, followIdDto.followId);
+    await this.usersService.removeFriend(
+      user,
+      followerId,
+      followIdDto.followId,
+    );
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 목록( id, 닉네임 ) 조회' })
   @Get(':myId/friends')
   async getFriends(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) userId: number,
   ): Promise<SimpleUserDto[]> {
-    return await this.usersService.getFriends(userId);
+    return await this.usersService.getFriends(user, userId);
   }
 
   @ApiOperation({ summary: 'kankim✅ 전적 조회' })
@@ -136,16 +157,19 @@ export class UsersController {
 
   @ApiOperation({ summary: 'kankim✅ 닉네임 변경' })
   @Put(':myId/nickname')
+  @UseGuards(AuthGuard())
   async updateNickname(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) userId: number,
     @Body() nicknameDto: NicknameDto,
   ): Promise<UserProfileDto> {
-    const user = await this.usersService.updateNickname(
+    const users = await this.usersService.updateNickname(
+      user,
       userId,
       nicknameDto.nickname,
     );
 
-    return user;
+    return users;
   }
 
   @ApiOperation({ summary: 'kankim✅ 유저의 승,패 카운트 조회' })
@@ -161,10 +185,12 @@ export class UsersController {
       'kankim✅ 유저 차단하기 토글. target유저를 차단했으면 true, 차단 해제 했으면 false 리턴',
   })
   @Put(':myId')
+  @UseGuards(AuthGuard())
   async blockUserToggle(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) myId: number,
     @Body() target: TargetIdDto,
   ): Promise<BlockResultDto> {
-    return await this.usersService.blockUserToggle(myId, target.targetId);
+    return await this.usersService.blockUserToggle(user, myId, target.targetId);
   }
 }
