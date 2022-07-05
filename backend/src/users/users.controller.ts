@@ -36,6 +36,17 @@ import { BlockResultDto } from './dto/blockedUser.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiOperation({ summary: '[test for dev] 회원 닉네임/아바타 초기화' })
+  @Get('reset/:id')
+  async resetUser(@Param('id', ParseIntPipe) id: number): Promise<User> {
+    const user = await this.usersService.getUserById(id);
+
+    user.nickname = null;
+    user.avatar = null;
+    await user.save();
+    return user;
+  }
+
   @ApiOperation({ summary: 'seungyel✅ 이미지 업로드' })
   @Post('/:myId/uploadImage')
   @UseInterceptors(
