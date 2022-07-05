@@ -141,8 +141,13 @@ export class AuthService {
     return await this.usersService.isDuplicateNickname(nickname);
   }
 
-  async logoutStatus(userId: number): Promise<void> {
-    (await this.userRepo.findOneBy({ id: userId })).userStatus = 'off';
+  async logoutStatus(user: User, userId: number): Promise<void> {
+    if (user.id !== userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+
+    user.userStatus = 'off';
+    await user.save();
   }
 
   async startSecondAuth(
