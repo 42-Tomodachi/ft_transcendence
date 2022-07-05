@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsSignedUpDto } from 'src/auth/dto/auth.dto';
+import { IsDuplicateDto, IsSignedUpDto } from 'src/auth/dto/auth.dto';
 import { Repository } from 'typeorm';
 import { BlockResultDto } from './dto/blockedUser.dto';
 import { GameRecordDto } from './dto/gameRecord.dto';
@@ -31,7 +31,11 @@ export class UsersService {
     const users = await this.userRepo.find();
 
     return users.map((user) => {
-      return { id: user.id, nickname: user.nickname, status: user.userStatus };
+      return {
+        userId: user.id,
+        nickname: user.nickname,
+        status: user.userStatus,
+      };
     });
   }
 
@@ -48,7 +52,7 @@ export class UsersService {
 
     return friends.map((friend) => {
       return {
-        id: friend.follow.id,
+        userId: friend.follow.id,
         nickname: friend.follow.nickname,
         status: friend.follow.userStatus,
       };
@@ -68,13 +72,24 @@ export class UsersService {
     return user;
   }
 
-  async getUserProfile(userId: number): Promise<UserProfileDto> {
-    const user = await this.getUserById(userId);
-    if (!user) {
+  async getUserProfile(
+    myId: number,
+    targetId: number,
+  ): Promise<UserProfileDto> {
+    const myUser = await this.getUserById(myId);
+    const targetUser = await this.getUserById(targetId);
+    if (!myUser || !targetUser) {
       throw new BadRequestException('유저가 존재하지 않습니다.');
     }
 
-    return user.toUserProfileDto();
+    const targetUserWithFollowAndBlock = await this.userRepo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.follow', 'follow')
+      .leftJoinAndSelect('user.blocked', 'blocked')
+      .where('user.id = :targetId', { targetId })
+      .getOneOrFail();
+
+    return targetUserWithFollowAndBlock.toUserProfileDto(myId);
   }
 
   async findByNicknameAndUpdateImg(
@@ -82,7 +97,7 @@ export class UsersService {
     fileName: string,
   ): Promise<string> {
     const user = await this.userRepo.findOne({ where: { id } });
-    user.avatar = `${process.env.SERVER_ADDRESS}/users/${fileName}`;
+    user.avatar = `${process.env.SERVER_ADDRESS}/image/${fileName}`;
     await user.save();
 
     return user.avatar;
@@ -95,13 +110,13 @@ export class UsersService {
     return await this.userRepo.save(user);
   }
 
-  async isDuplicateNickname(nickname: string): Promise<boolean> {
+  async isDuplicateNickname(nickname: string): Promise<IsDuplicateDto> {
     const found = await this.userRepo.findOne({ where: { nickname } });
 
     if (found) {
-      return true;
+      return { isDuplicate: true };
     }
-    return false;
+    return { isDuplicate: false };
   }
 
   async addFriend(followerId: number, followId: number): Promise<void> {
@@ -173,7 +188,7 @@ export class UsersService {
     if ((await this.userRepo.findOneBy({ id: userId })) === null) {
       throw new BadRequestException('존재하지 않는 유저 입니다.');
     }
-    if (await this.isDuplicateNickname(nicknameForUpdate)) {
+    if ((await this.isDuplicateNickname(nicknameForUpdate)).isDuplicate) {
       throw new BadRequestException('이미 존재하는 닉네임 입니다.');
     }
 

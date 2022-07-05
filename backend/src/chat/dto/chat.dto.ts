@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsNumber,
@@ -7,23 +7,12 @@ import {
   IsDateString,
   ValidateNested,
 } from 'class-validator';
-import { ChatRoomUserDto } from 'src/users/dto/users.dto';
+import { UserProfileDto } from 'src/users/dto/users.dto';
 import { PrimaryColumnCannotBeNullableError } from 'typeorm';
-
-export class ChatRoomDataDto {
-  @ApiProperty({ description: '채팅방 id' })
-  id: number;
-
-  @ApiProperty({ description: '채팅방 제목' })
-  title: string;
-
-  @ApiProperty({ description: '채팅방 소유자' })
-  ownerId: number;
-}
 
 export class ChatRoomDto {
   @ApiProperty({ description: '채팅방 id' })
-  id: number;
+  roomId: number;
 
   @ApiProperty({ description: '채팅방 제목' })
   title: string;
@@ -41,42 +30,43 @@ export class ChatRoomDto {
   isDm: boolean;
 }
 
-export class CreateChatRoomDto {
-  @ApiProperty({ description: '채팅방 제목' })
-  @IsString()
-  title: string;
+export class ChatRoomDataDto extends PickType(ChatRoomDto, [
+  'roomId',
+  'title',
+  'ownerId',
+]) {}
 
+export class CreateChatRoomDto extends PickType(ChatRoomDto, [
+  'title',
+  'isDm',
+]) {
   @ApiProperty({ description: '채팅방 비밀번호' })
   @IsString()
   @IsOptional()
   password: string | null;
-
-  @ApiProperty({ description: 'dm방인지 여부' })
-  @IsBoolean()
-  isDm: boolean;
 }
 
-export class ChatRoomParticipantsDto {
-  @ApiProperty({ description: '유저id( DB key )' })
-  @IsNumber()
-  userId: number;
+// export class ChatRoomParticipantsDto {
+//   @ApiProperty({ description: '유저id( DB key )' })
+//   @IsNumber()
+//   userId: number;
 
-  @ApiProperty({ description: '유저 닉네임' })
-  @IsString()
-  nickname: string;
+//   @ApiProperty({ description: '유저 닉네임' })
+//   @IsString()
+//   nickname: string;
 
-  // @ApiProperty({ description: '온라인인지 여부' })
-  // @IsBoolean()
-  // isOnline: boolean;
+//   // @ApiProperty({ description: '온라인인지 여부' })
+//   // @IsBoolean()
+//   // isOnline: boolean;
 
-  // @ApiProperty({ description: '게임중인지 여부' })
-  // @IsBoolean()
-  // isGaming: boolean;
+//   // @ApiProperty({ description: '게임중인지 여부' })
+//   // @IsBoolean()
+//   // isGaming: boolean;
 
-  @ApiProperty({ description: '친구인지 여부' })
-  @IsBoolean()
-  isFriend: boolean;
-}
+//   @ApiProperty({ description: '친구인지 여부' })
+//   @IsBoolean()
+//   isFriend: boolean;
+// }
 
 export class RoomPasswordDto {
   @ApiProperty({ description: '채팅방 비밀번호' })
@@ -85,22 +75,24 @@ export class RoomPasswordDto {
   password: string | null;
 }
 
-export class ChatRoomIdDto {
-  @ApiProperty({ description: '채팅방 id' })
-  @IsNumber()
-  @IsOptional()
-  chatRoomId: number;
-}
+export class ChatRoomIdDto extends PickType(ChatRoomDto, ['roomId']) {}
 
-export class UpdateChatRoomDto {
-  @ApiProperty({ description: '채팅방 제목' })
-  @IsString()
-  title: string;
-
+export class UpdateChatRoomDto extends PickType(ChatRoomDto, ['title']) {
   @ApiProperty({ description: '채팅방 비밀번호' })
   @IsString()
   @IsOptional()
   password: string | null;
+}
+
+export class ChatRoomUserDto {
+  @ApiProperty({ description: '유저 id' })
+  userId: number;
+
+  @ApiProperty({ description: '닉네임' })
+  nickname: string;
+
+  @ApiProperty({ description: '역할' })
+  role: 'owner' | 'manager' | 'guest';
 }
 
 export class CreateChatContentDto {
@@ -138,4 +130,12 @@ export class BooleanDto {
   @ApiProperty({ description: 'true or false' })
   @IsBoolean()
   boolean: boolean;
+}
+
+export class ChatParticipantProfile extends UserProfileDto {
+  @ApiProperty({ description: '뮤트 여부' })
+  isMuted: boolean;
+
+  @ApiProperty({ description: '채팅 참여자 역할' })
+  role: 'owner' | 'manager' | 'guest';
 }

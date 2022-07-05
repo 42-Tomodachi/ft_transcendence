@@ -10,10 +10,10 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EmailDto, NicknameDto } from '../users/dto/users.dto';
 import { AuthService } from './auth.service';
-import { IsSignedUpDto, CodeStringDto } from './dto/auth.dto';
+import { IsSignedUpDto, CodeStringDto, IsDuplicateDto } from './dto/auth.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { query } from 'express';
 
@@ -31,11 +31,19 @@ export class AuthController {
     );
   }
 
-  // @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
-  // @Get('issueJwt/:id')
-  // async getJwt(@Param('id', ParseIntPipe) id: number): Promise<string> {
-  //   return this.authService.issueJwt(id);
-  // }
+  @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
+  @Get('issueJwt/:id')
+  async getJwt(@Param('id', ParseIntPipe) id: number): Promise<string> {
+    return this.authService.issueJwt(id);
+  }
+
+  @ApiOperation({ summary: '[test for backend] test JWT validity' })
+  @ApiBearerAuth('access-token')
+  @Get('testJwt')
+  @UseGuards(AuthGuard())
+  async testJwt(): Promise<string> {
+    return 'GOOD JWT';
+  }
 
   @ApiOperation({
     summary: 'kankim✅ 유저의 회원가입 여부 확인',
@@ -55,7 +63,7 @@ export class AuthController {
   @Post('isDuplicateNickname')
   async isDuplicateNickname(
     @Body() nicknameDto: NicknameDto,
-  ): Promise<boolean> {
+  ): Promise<IsDuplicateDto> {
     return await this.authService.isDuplicateNickname(nicknameDto.nickname);
   }
 
@@ -66,41 +74,45 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 시작' })
-  @Post('/second_auth/:id')
+  @Post('/secondAuth/:userId')
   async startSecondAuth(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) id: number,
     @Body() emailDto: EmailDto,
   ): Promise<boolean> {
-    return this.authService.startSecondAuth(id, emailDto.email);
+    return await this.authService.startSecondAuth(id, emailDto.email);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 번호 검증' })
-  @Get('/second_auth_verify/:id')
+  @Get('/secondAuthVerify/:userId')
   async verifySecondAuth(
-    @Param('id', ParseIntPipe) id: number,
-    @Query('code', ParseIntPipe) code: number,
+    @Param('userId', ParseIntPipe) id: number,
+    @Query('code') code: string,
   ): Promise<boolean> {
-    return this.authService.verifySecondAuth(id, code);
+    return await this.authService.verifySecondAuth(id, code);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 완료' })
-  @Get('/second_auth_enroll/:id')
-  async enrollSecondAuth(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    this.authService.enrollSecondAuth(id);
+  @Get('/secondAuthEnroll/:userId')
+  async enrollSecondAuth(
+    @Param('userId', ParseIntPipe) id: number,
+  ): Promise<void> {
+    await this.authService.enrollSecondAuth(id);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 해제' })
-  @Delete('/second_auth/:id')
+  @Delete('/secondAuth/:userId')
   async disableSecondAuth(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('userId', ParseIntPipe) id: number,
   ): Promise<void> {
-    this.authService.disableSecondAuth(id);
+    await this.authService.disableSecondAuth(id);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 수행' })
-  @Get('/second_auth/:id')
-  @UseGuards(AuthGuard())
-  async shootSecAuth(@Param('id', ParseIntPipe) id: number): Promise<boolean> {
-    return this.authService.shootSecondAuth(id);
+  @Get('/secondAuth/:userId')
+  // @UseGuards(AuthGuard())
+  async shootSecAuth(
+    @Param('userId', ParseIntPipe) id: number,
+  ): Promise<boolean> {
+    return await this.authService.shootSecondAuth(id);
   }
 }

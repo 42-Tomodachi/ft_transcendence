@@ -5,11 +5,12 @@ import { UpdateUserDto, UserProfileDto } from 'src/users/dto/users.dto';
 import { User } from 'src/users/entities/users.entity';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../emails/email.service';
-import { IsSignedUpDto } from './dto/auth.dto';
+import { IsDuplicateDto, IsSignedUpDto } from './dto/auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { session } from 'passport';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -21,14 +22,14 @@ export class AuthService {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
-  // async issueJwt(id: number): Promise<string> {
-  //   const user = await this.usersService.getUserById(id);
-  
-  //   return this.jwtService.sign({
-  //     id: user.id,
-  //     email: user.email,
-  //   });
-  // }
+  async issueJwt(id: number): Promise<string> {
+    const user = await this.usersService.getUserById(id);
+
+    return this.jwtService.sign({
+      id: user.id,
+      email: user.email,
+    });
+  }
 
   async getAccessToken(code: string): Promise<string> {
     const axiosResult = await axios({
@@ -132,7 +133,7 @@ export class AuthService {
   //   return await this.updateUser(updateUserDto);
   // }
 
-  async isDuplicateNickname(nickname: string): Promise<boolean> {
+  async isDuplicateNickname(nickname: string): Promise<IsDuplicateDto> {
     if (nickname.length < 2 || nickname.length > 8) {
       throw new BadRequestException('닉네임은 최소2자 최대 8자 입니다.');
     }
@@ -153,23 +154,25 @@ export class AuthService {
     }
 
     const code = Math.floor(Math.random() * 1000000);
+    const salt = await bcrypt.genSalt();
+    const hashedCode = await bcrypt.hash(code.toString(), salt);
     user.secondAuthEmail = email;
-    user.secondAuthCode = code;
+    user.secondAuthCode = hashedCode;
 
     await user.save();
     await this.emailService.sendEmail(email, code);
     return true;
   }
 
-  async verifySecondAuth(id: number, code: number): Promise<boolean> {
+  async verifySecondAuth(id: number, code: string): Promise<boolean> {
     const user = await this.usersService.getUserById(id);
 
     if (user === null) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
 
-    if (user.secondAuthCode === code) {
-      user.secondAuthCode = 7777777;
+    if (await bcrypt.compare(code, user.secondAuthCode)) {
+      user.secondAuthCode = '7777777';
       await user.save();
       return true;
     } else {
@@ -186,7 +189,7 @@ export class AuthService {
     if (user.isSecondAuthOn === true) {
       throw new BadRequestException('이미 등록된 유저입니다.');
     }
-    if (user.secondAuthCode !== 7777777) {
+    if (user.secondAuthCode !== '7777777') {
       throw new BadRequestException('인증되지 않은 유저입니다.');
     }
 
@@ -218,7 +221,9 @@ export class AuthService {
     }
 
     const code = Math.floor(Math.random() * 1000000);
-    user.secondAuthCode = code;
+    const salt = await bcrypt.genSalt();
+    const hashedCode = await bcrypt.hash(code.toString(), salt);
+    user.secondAuthCode = hashedCode;
     await user.save();
 
     await this.emailService.sendEmail(user.secondAuthEmail, code);

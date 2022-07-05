@@ -41,7 +41,7 @@ export class User extends BaseEntity {
 
   @ApiProperty({ description: '이메일로 보낸 코드와 비교할 2차 인증 코드' })
   @Column({ nullable: true, default: null })
-  secondAuthCode: number | null;
+  secondAuthCode: string | null;
 
   @ApiProperty({ description: '승리 횟수' })
   @Column({ default: 0 })
@@ -98,9 +98,39 @@ export class User extends BaseEntity {
     );
   }
 
-  toUserProfileDto() {
+  isWhoViewedMeFollowMe(whoViewedMeId: number): boolean {
+    const foundFollower = this.follow.find(
+      (f) => f.followerId === whoViewedMeId,
+    );
+    if (foundFollower) {
+      return true;
+    }
+    return false;
+  }
+
+  isWhoViewedMeBlockMe(whoViewedMeId: number): boolean {
+    const foundBlocker = this.blocked.find(
+      (b) => b.blockerId === whoViewedMeId,
+    );
+    if (foundBlocker) {
+      return true;
+    }
+    return false;
+  }
+
+  toUserProfileDto(whoViewedMeId?: number) {
+    // whoViewedMeId: 나를 조회한 사람
+    if (whoViewedMeId) {
+      if (this.follow === undefined) {
+        throw new Error('유저 테이블에 팔로우 테이블을 조인해야합니다.');
+      }
+      if (this.blocked === undefined) {
+        throw new Error('유저 테이블에 블록 테이블을 조인해야합니다.');
+      }
+    }
+
     const userProfileDto = new UserProfileDto();
-    userProfileDto.id = this.id;
+    userProfileDto.userId = this.id;
     userProfileDto.nickname = this.nickname;
     userProfileDto.avatar = this.avatar;
     userProfileDto.email = this.email;
@@ -109,13 +139,19 @@ export class User extends BaseEntity {
     userProfileDto.ladderWinCount = this.ladderWinCount;
     userProfileDto.ladderLoseCount = this.ladderLoseCount;
     userProfileDto.ladderLevel = this.getLadderLevel();
+    if (whoViewedMeId && this.id !== whoViewedMeId) {
+      userProfileDto.isFriend = this.isWhoViewedMeFollowMe(whoViewedMeId);
+      userProfileDto.isBlocked = this.isWhoViewedMeBlockMe(whoViewedMeId);
+    } else {
+      userProfileDto.isSecondAuthOn = this.isSecondAuthOn;
+    }
 
     return userProfileDto;
   }
 
   toWinLoseCount(): WinLoseCountDto {
     const winLoseCountDto = new WinLoseCountDto();
-    winLoseCountDto.id = this.id;
+    winLoseCountDto.userId = this.id;
     winLoseCountDto.winCount = this.winCount;
     winLoseCountDto.loseCount = this.loseCount;
     winLoseCountDto.ladderLoseCount = this.ladderLoseCount;
