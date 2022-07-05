@@ -92,6 +92,8 @@ export class AuthService {
     const userEmail = await this.getUserEmail(accessToken);
 
     const user = await this.usersService.getUserByEmail(userEmail);
+    user.userStatus = 'on';
+    await user.save();
 
     if (!user) {
       const createdUser = await this.usersService.createUser({
@@ -137,6 +139,15 @@ export class AuthService {
     }
 
     return await this.usersService.isDuplicateNickname(nickname);
+  }
+
+  async logoutStatus(user: User, userId: number): Promise<void> {
+    if (user.id !== userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+
+    user.userStatus = 'off';
+    await user.save();
   }
 
   async startSecondAuth(

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Delete,
   Query,
   Param,
@@ -66,6 +67,16 @@ export class AuthController {
     @Body() nicknameDto: NicknameDto,
   ): Promise<IsDuplicateDto> {
     return await this.authService.isDuplicateNickname(nicknameDto.nickname);
+  }
+
+  @ApiOperation({ summary: '로그아웃' })
+  @ApiBearerAuth('access-token')
+  @Put('logout/:userId')
+  async logOut(
+    @GetJwtUser() user: User,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<void> {
+    await this.authService.logoutStatus(user, userId);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 시작' })
