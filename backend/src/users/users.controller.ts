@@ -48,7 +48,9 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'seungyel✅ 이미지 업로드' })
+  @ApiBearerAuth('access-token')
   @Post('/:myId/uploadImage')
+  @UseGuards(AuthGuard())
   @UseInterceptors(
     FileInterceptor('image', {
       storage: diskStorage({
@@ -70,9 +72,9 @@ export class UsersController {
     return response;
   }
 
-  // @ApiBearerAuth('access-token') //JWT 토큰 키 설정
-  // @UseGuards(AuthGuard())
   @ApiOperation({ summary: 'kankim✅ 모든 유저의 id, 닉네임, 상태 가져오기' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Get('')
   async getUsers(): Promise<SimpleUserDto[]> {
     const userInfo = await this.usersService.getUsers();
@@ -81,6 +83,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: '✅ 본인 정보 가져오기' })
+  @ApiBearerAuth('access-token')
   @Get('/own')
   @UseGuards(AuthGuard())
   async getOwnInfo(@GetJwtUser() user: User): Promise<UserProfileDto> {
@@ -88,40 +91,58 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 특정 유저의 프로필 조회' })
+  @ApiBearerAuth('access-token')
   @Get(':myId')
+  @UseGuards(AuthGuard())
   async getUserProfile(
     @Param('myId', ParseIntPipe) myId: number,
     @Query('targetId', ParseIntPipe) targetId: number,
+    @GetJwtUser() user: User,
   ): Promise<UserProfileDto> {
-    const userProfile = await this.usersService.getUserProfile(myId, targetId);
+    const userProfile = await this.usersService.getUserProfile(
+      user,
+      myId,
+      targetId,
+    );
 
     return userProfile;
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 추가' })
+  @ApiBearerAuth('access-token')
   @Post(':myId/friends')
+  @UseGuards(AuthGuard())
   async addFriend(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) followerId: number,
     @Body() followIdDto: FollowIdDto,
   ): Promise<void> {
-    await this.usersService.addFriend(followerId, followIdDto.followId);
+    await this.usersService.addFriend(user, followerId, followIdDto.followId);
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 삭제' })
+  @ApiBearerAuth('access-token')
   @Delete(':myId/friends')
+  @UseGuards(AuthGuard())
   async removeFriend(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) followerId: number,
     @Body() followIdDto: FollowIdDto,
   ): Promise<void> {
-    await this.usersService.removeFriend(followerId, followIdDto.followId);
+    await this.usersService.removeFriend(
+      user,
+      followerId,
+      followIdDto.followId,
+    );
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 목록( id, 닉네임 ) 조회' })
   @Get(':myId/friends')
   async getFriends(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) userId: number,
   ): Promise<SimpleUserDto[]> {
-    return await this.usersService.getFriends(userId);
+    return await this.usersService.getFriends(user, userId);
   }
 
   @ApiOperation({ summary: 'kankim✅ 전적 조회' })
@@ -135,20 +156,25 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 닉네임 변경' })
+  @ApiBearerAuth('access-token')
   @Put(':myId/nickname')
+  @UseGuards(AuthGuard())
   async updateNickname(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) userId: number,
     @Body() nicknameDto: NicknameDto,
   ): Promise<UserProfileDto> {
-    const user = await this.usersService.updateNickname(
+    const users = await this.usersService.updateNickname(
+      user,
       userId,
       nicknameDto.nickname,
     );
 
-    return user;
+    return users;
   }
 
   @ApiOperation({ summary: 'kankim✅ 유저의 승,패 카운트 조회' })
+  @ApiBearerAuth('access-token')
   @Get(':userId/winLoseCount')
   async getWinLoseCount(
     @Param('userId', ParseIntPipe) userId: number,
@@ -160,11 +186,14 @@ export class UsersController {
     summary:
       'kankim✅ 유저 차단하기 토글. target유저를 차단했으면 true, 차단 해제 했으면 false 리턴',
   })
+  @ApiBearerAuth('access-token')
   @Put(':myId')
+  @UseGuards(AuthGuard())
   async blockUserToggle(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) myId: number,
     @Body() target: TargetIdDto,
   ): Promise<BlockResultDto> {
-    return await this.usersService.blockUserToggle(myId, target.targetId);
+    return await this.usersService.blockUserToggle(user, myId, target.targetId);
   }
 }

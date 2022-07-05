@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Delete,
   Query,
   Param,
@@ -14,6 +15,8 @@ import { EmailDto, NicknameDto } from '../users/dto/users.dto';
 import { AuthService } from './auth.service';
 import { IsSignedUpDto, CodeStringDto, IsDuplicateDto } from './dto/auth.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { GetJwtUser } from './jwt.strategy';
+import { User } from 'src/users/entities/users.entity';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -58,6 +61,7 @@ export class AuthController {
   // }
 
   @ApiOperation({ summary: 'kankim✅ 닉네임 중복 확인' })
+  @ApiBearerAuth('access-token')
   @Post('isDuplicateNickname')
   async isDuplicateNickname(
     @Body() nicknameDto: NicknameDto,
@@ -65,46 +69,66 @@ export class AuthController {
     return await this.authService.isDuplicateNickname(nicknameDto.nickname);
   }
 
+  @ApiOperation({ summary: '로그아웃' })
+  @ApiBearerAuth('access-token')
+  @Put('logout/:userId')
+  async logOut(
+    @GetJwtUser() user: User,
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<void> {
+    await this.authService.logoutStatus(user, userId);
+  }
+
   @ApiOperation({ summary: '✅ 2차 인증 등록 시작' })
+  @ApiBearerAuth('access-token')
   @Post('/secondAuth/:userId')
   async startSecondAuth(
+    @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
     @Body() emailDto: EmailDto,
   ): Promise<boolean> {
-    return await this.authService.startSecondAuth(id, emailDto.email);
+    return await this.authService.startSecondAuth(user, id, emailDto.email);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 번호 검증' })
+  @ApiBearerAuth('access-token')
   @Get('/secondAuthVerify/:userId')
   async verifySecondAuth(
+    @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
     @Query('code') code: string,
   ): Promise<boolean> {
-    return await this.authService.verifySecondAuth(id, code);
+    return await this.authService.verifySecondAuth(user, id, code);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 완료' })
+  @ApiBearerAuth('access-token')
   @Get('/secondAuthEnroll/:userId')
   async enrollSecondAuth(
+    @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
   ): Promise<void> {
-    await this.authService.enrollSecondAuth(id);
+    await this.authService.enrollSecondAuth(user, id);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 해제' })
+  @ApiBearerAuth('access-token')
   @Delete('/secondAuth/:userId')
   async disableSecondAuth(
+    @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
   ): Promise<void> {
-    await this.authService.disableSecondAuth(id);
+    await this.authService.disableSecondAuth(user, id);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 수행' })
+  @ApiBearerAuth('access-token')
   @Get('/secondAuth/:userId')
-  // @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard())
   async shootSecAuth(
+    @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
   ): Promise<boolean> {
-    return await this.authService.shootSecondAuth(id);
+    return await this.authService.shootSecondAuth(user, id);
   }
 }

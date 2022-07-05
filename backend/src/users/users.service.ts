@@ -39,7 +39,11 @@ export class UsersService {
     });
   }
 
-  async getFriends(userId: number): Promise<SimpleUserDto[]> {
+  async getFriends(user: User, userId: number): Promise<SimpleUserDto[]> {
+    if (user.id != userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+
     if ((await this.userRepo.findOneBy({ id: userId })) === null) {
       throw new BadRequestException('존재하지 않는 유저 입니다.');
     }
@@ -73,9 +77,13 @@ export class UsersService {
   }
 
   async getUserProfile(
+    user: User,
     myId: number,
     targetId: number,
   ): Promise<UserProfileDto> {
+    if (user.id != myId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     const myUser = await this.getUserById(myId);
     const targetUser = await this.getUserById(targetId);
     if (!myUser || !targetUser) {
@@ -119,7 +127,15 @@ export class UsersService {
     return { isDuplicate: false };
   }
 
-  async addFriend(followerId: number, followId: number): Promise<void> {
+  async addFriend(
+    user: User,
+    followerId: number,
+    followId: number,
+  ): Promise<void> {
+    if (user.id != followerId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+
     const [followerUser, followUser] = await Promise.all([
       this.getUserById(followerId),
       this.getUserById(followId),
@@ -148,7 +164,11 @@ export class UsersService {
     await this.followRepo.save(follow);
   }
 
-  async removeFriend(followerId: number, followId: number) {
+  async removeFriend(user: User, followerId: number, followId: number) {
+    if (user.id != followerId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+
     const [followerUser, followUser] = await Promise.all([
       this.getUserById(followerId),
       this.getUserById(followId),
@@ -182,17 +202,19 @@ export class UsersService {
   }
 
   async updateNickname(
+    user: User,
     userId: number,
     nicknameForUpdate: string,
   ): Promise<UserProfileDto> {
+    if (user.id != userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     if ((await this.userRepo.findOneBy({ id: userId })) === null) {
       throw new BadRequestException('존재하지 않는 유저 입니다.');
     }
     if ((await this.isDuplicateNickname(nicknameForUpdate)).isDuplicate) {
       throw new BadRequestException('이미 존재하는 닉네임 입니다.');
     }
-
-    const user = await this.getUserById(userId);
 
     user.nickname = nicknameForUpdate;
     const updatedUser = await this.userRepo.save(user);
@@ -210,13 +232,17 @@ export class UsersService {
   }
 
   async blockUserToggle(
+    user: User,
     myId: number,
     targetId: number,
   ): Promise<BlockResultDto> {
-    const myUser = await this.userRepo.findOneBy({ id: myId });
+    if (user.id != myId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+
     const targetUser = await this.userRepo.findOneBy({ id: targetId });
 
-    if (!myUser || !targetUser) {
+    if (!user || !targetUser) {
       throw new BadRequestException('유저가 존재하지 않습니다.');
     }
 
