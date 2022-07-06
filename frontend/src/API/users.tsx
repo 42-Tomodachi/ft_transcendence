@@ -13,11 +13,11 @@ const usersPath = (path: string) => {
 
 const usersAPI = {
   // 이미지 업로드
-  uploadAvatarImg: async (id: number, body: FormData): Promise<IUserAvatar | null> => {
+  uploadAvatarImg: async (id: number, body: FormData, jwt: string): Promise<IUserAvatar | null> => {
     try {
       const url = usersPath(`/${id}/uploadImage`);
       const res = await instance.post(url, body, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { ContentType: 'multipart/form-data', Authorization: `Bearer ${jwt}` },
       });
       return res.data;
     } catch (e) {
@@ -27,10 +27,10 @@ const usersAPI = {
     }
   },
   // 모든 유저의 id, 닉네임, 상태
-  getAllUsersIdNickName: async (): Promise<IUserKey[] | []> => {
+  getAllUsersIdNickName: async (jwt: string): Promise<IUserKey[] | []> => {
     try {
       const url = usersPath(``);
-      const res = await instance.get(url);
+      const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -59,10 +59,10 @@ const usersAPI = {
     }
   },
   // 특정 유저의 프로필 조회
-  getUserProfile: async (id: number): Promise<IUserProfile | null> => {
+  getUserProfile: async (id: number, jwt: string): Promise<IUserProfile | null> => {
     try {
       const url = usersPath(`/${id}`);
-      const res = await instance.get(url);
+      const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -71,10 +71,14 @@ const usersAPI = {
     }
   },
   // 친구 추가
-  makeFriend: async (id: number, followId: number): Promise<string | null> => {
+  makeFriend: async (id: number, followId: number, jwt: string): Promise<string | null> => {
     try {
       const url = usersPath(`/${id}/friends`);
-      const res = await instance.post(url, { followId });
+      const res = await instance.post(
+        url,
+        { followId },
+        { headers: { Authorization: `Bearer ${jwt}` } },
+      );
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -107,10 +111,14 @@ const usersAPI = {
     }
   },
   // 닉네임 변경
-  updateUserNickname: async (id: number, nickname: string): Promise<string | null> => {
+  updateUserNickname: async (id: number, nickname: string, jwt: string): Promise<string | null> => {
     try {
       const url = usersPath(`/${id}/nickname`);
-      const res = await instance.put(url, { nickname });
+      const res = await instance.put(
+        url,
+        { nickname },
+        { headers: { Authorization: `Bearer ${jwt}` } },
+      );
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -119,10 +127,10 @@ const usersAPI = {
     }
   },
   // 유저의 승패 카운트 조회
-  getUserWinLoseCount: async (id: number): Promise<IUserWinLoseCount | null> => {
+  getUserWinLoseCount: async (id: number, jwt: string): Promise<IUserWinLoseCount | null> => {
     try {
       const url = usersPath(`/${id}/winLoseCount`);
-      const res = await instance.get(url);
+      const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -131,10 +139,13 @@ const usersAPI = {
     }
   },
   // 친구 삭제
-  deleteFriend: async (id: number, followId: number): Promise<string | null> => {
+  deleteFriend: async (id: number, followId: number, jwt: string): Promise<string | null> => {
     try {
       const url = usersPath(`/${id}/friends`);
-      const res = await instance.delete(url, { data: followId });
+      const res = await instance.delete(url, {
+        data: followId,
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);

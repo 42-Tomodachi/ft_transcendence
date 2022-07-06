@@ -21,7 +21,7 @@ const NicknamePage: React.FC = () => {
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
-  const { setJwt } = useContext(AllContext).jwtData; // TODO: JWT 유지를 위해 사용
+  const { jwt, setJwt } = useContext(AllContext).jwtData; // TODO: JWT 유지를 위해 사용
   const [convertImg, setConvertImg] = useState<File | string>(''); // TODO: File or string ?
   const [userProfile, setUserProfile] = useState<any>(); // TODO: profile에 맞는 interface 제작
 
@@ -71,7 +71,7 @@ const NicknamePage: React.FC = () => {
       setIsEnabled(false);
       return;
     }
-    const res = await authAPI.checkNickname(nickName);
+    const res = await authAPI.checkNickname(nickName, jwt);
     if (res === null) {
       setCheckNickMsg(`다시 시도해주세요.`);
       setIsEnabled(false);
@@ -93,9 +93,9 @@ const NicknamePage: React.FC = () => {
 
       if (convertImg) {
         formData.append('image', convertImg);
-        usersAPI.uploadAvatarImg(userId, formData);
+        usersAPI.uploadAvatarImg(userId, formData, jwt);
       }
-      usersAPI.updateUserNickname(userId, nickName);
+      usersAPI.updateUserNickname(userId, nickName, jwt);
       setUserStatus(LOGIN);
     } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
   };
