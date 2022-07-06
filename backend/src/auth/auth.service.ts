@@ -92,8 +92,6 @@ export class AuthService {
     const userEmail = await this.getUserEmail(accessToken);
 
     const user = await this.usersService.getUserByEmail(userEmail);
-    user.userStatus = 'on';
-    await user.save();
 
     if (!user) {
       const createdUser = await this.usersService.createUser({
@@ -102,6 +100,8 @@ export class AuthService {
 
       return this.userToIsSignedUpDto(createdUser);
     }
+    user.userStatus = 'on';
+    await user.save();
 
     return this.userToIsSignedUpDto(user);
   }

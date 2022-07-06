@@ -114,6 +114,7 @@ export class UsersService {
   async createUser(emailDto: EmailDto): Promise<User> {
     const user = new User();
     user.email = emailDto.email;
+    user.userStatus = 'on';
 
     return await this.userRepo.save(user);
   }
