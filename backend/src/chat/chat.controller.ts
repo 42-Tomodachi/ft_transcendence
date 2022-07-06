@@ -30,6 +30,7 @@ import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { TargetIdDto } from 'src/users/dto/users.dto';
+import { User } from 'src/users/entities/users.entity';
 
 @ApiTags('chats')
 @Controller('chats')
@@ -184,6 +185,7 @@ export class ChatController {
 
   @ApiOperation({ summary: 'kankim✅ 채팅방에 있는 유저의 프로필 조회' })
   @Get(':roomId/participants/:myId')
+  @UseGuards(AuthGuard())
   async getChatParticipantProfile(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('myId', ParseIntPipe) myId: number,
