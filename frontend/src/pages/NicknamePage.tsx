@@ -1,10 +1,10 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 // import axios from 'axios';
 import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
 import { authAPI } from '../API';
-import { LOGIN } from '../utils/interface';
+import { LOGIN, SET_NICKNAME } from '../utils/interface';
 import imageCompression from 'browser-image-compression';
 import { usersAPI } from '../API/users';
 import DefaultProfile from '../assets/default-image.png';
@@ -20,7 +20,10 @@ const NicknamePage: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
+  const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
+  const { setJwt } = useContext(AllContext).jwtData; // TODO: JWT 유지를 위해 사용
   const [convertImg, setConvertImg] = useState<File | string>(''); // TODO: File or string ?
+  const [userProfile, setUserProfile] = useState<any>(); // TODO: profile에 맞는 interface 제작
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     //  NOTE : 정규식 적용
@@ -84,12 +87,9 @@ const NicknamePage: React.FC = () => {
   const onClickSubmit = () => {
     if (!isEnabled) {
       setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
-    } else if (!convertImg) {
-      setCheckNickMsg(`프로필 이미지를 등록해주세요`);
-    } else {
-      // TODO: 서버, 닉네임도 id에 맞게 전송
-      const userId = 1;
+    } else if (user) {
       const formData = new FormData();
+      const userId = user.id;
 
       if (convertImg) {
         formData.append('image', convertImg);
@@ -97,8 +97,25 @@ const NicknamePage: React.FC = () => {
       }
       usersAPI.updateUserNickname(userId, nickName);
       setUserStatus(LOGIN);
-    }
+    } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
   };
+
+  const getUserProfile = async (jwt: string) => {
+    setUserProfile(await usersAPI.getLoginUserProfile(jwt)); // user/own
+    setUser(userProfile);
+  };
+
+  // TODO: 리렌더링 방지용 전역 데이터 갱신 시켜줘야함
+  useEffect(() => {
+    const jwt = window.localStorage.getItem('jwt');
+    setUserStatus(SET_NICKNAME);
+    if (jwt) {
+      setJwt('SET_JWT', jwt);
+      getUserProfile(jwt);
+      return;
+    }
+  }, []);
+
   return (
     <NickTemplate>
       <NickForm>
