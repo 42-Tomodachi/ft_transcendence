@@ -137,7 +137,9 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 친구 목록( id, 닉네임 ) 조회' })
+  @ApiBearerAuth('access-token')
   @Get(':myId/friends')
+  @UseGuards(AuthGuard())
   async getFriends(
     @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) userId: number,
@@ -146,7 +148,9 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'kankim✅ 전적 조회' })
+  @ApiBearerAuth('access-token')
   @Get(':userId/gameRecords')
+  @UseGuards(AuthGuard())
   async getGameRecords(
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<GameRecordDto[]> {
