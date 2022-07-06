@@ -9,10 +9,11 @@ import { authAPI } from '../../../API';
 const OffSecondAuth: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const { user, setUser } = useContext(AllContext).userData;
+  const { jwt } = useContext(AllContext).jwtData;
 
   const offSecondAuth = async () => {
     if (user) {
-      const res = await authAPI.unsetSecondAuth(user.id);
+      const res = await authAPI.unsetSecondAuth(user.id, jwt);
       if (res) {
         setUser(EDIT, { ...user, isSecondAuthOn: false });
         setModal(null);

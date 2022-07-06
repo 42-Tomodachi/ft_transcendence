@@ -6,7 +6,7 @@ const authPath = (path: string) => {
 };
 
 export const authAPI = {
-  // 로그인시
+  // 로그인시(유저의 회원 가입 여부 확인)
   isSignedUp: async (code: string): Promise<IUserAuth | null> => {
     try {
       const url = authPath(`/isSignedUp`);
@@ -23,10 +23,18 @@ export const authAPI = {
   },
 
   // 2차 인증 등록시 이메일 등록 + 코드 발송
-  setSecondAuth: async (id: number, email: string): Promise<boolean | null> => {
+  setSecondAuth: async (id: number, email: string, jwt: string): Promise<boolean | null> => {
     try {
       const url = authPath(`/second_auth/${id}`);
-      const response = await instance.post(url, { email });
+      const response = await instance.post(
+        url,
+        { email },
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        },
+      );
       return response.data;
     } catch (e) {
       if (e instanceof Error) {
@@ -39,10 +47,14 @@ export const authAPI = {
   },
 
   // 2차 인증 등록 완료
-  enrollSecondAuth: async (id: number): Promise<boolean> => {
+  enrollSecondAuth: async (id: number, jwt: string): Promise<boolean> => {
     try {
       const url = authPath(`/second_auth_enroll/${id}`);
-      await instance.get(url);
+      await instance.get(url, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
       return true;
     } catch (e) {
       if (e instanceof Error) {
@@ -54,7 +66,7 @@ export const authAPI = {
     }
   },
 
-  // 2차 인증 코드 발송
+  // 2차 인증 코드 발송(수행)
   sendSecondAuthCode: async (id: number, jwt: string): Promise<boolean | null> => {
     try {
       const url = authPath(`/second_auth/${id}`);
@@ -75,10 +87,14 @@ export const authAPI = {
   },
 
   // 2차 인증 해제
-  unsetSecondAuth: async (id: number): Promise<boolean> => {
+  unsetSecondAuth: async (id: number, jwt: string): Promise<boolean> => {
     try {
       const url = authPath(`/second_auth/${id}`);
-      await instance.delete(url);
+      await instance.delete(url, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
       return true;
     } catch (e) {
       if (e instanceof Error) {
@@ -90,7 +106,7 @@ export const authAPI = {
     }
   },
 
-  // 2차 인증 코드 체크
+  // 2차 인증 코드 체크(검증)
   checkSecondAuthCode: async (id: number, code: number, jwt: string): Promise<boolean | null> => {
     try {
       const url = authPath(`/second_auth_verify/${id}?code=${code}`);
@@ -111,10 +127,18 @@ export const authAPI = {
   },
 
   // 닉네임 중복 체크
-  checkNickname: async (nickname: string): Promise<boolean | null> => {
+  checkNickname: async (nickname: string, jwt: string): Promise<boolean | null> => {
     try {
       const url = authPath(`/isDuplicateNickname`);
-      const response = await instance.post(url, { nickname });
+      const response = await instance.post(
+        url,
+        { nickname },
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        },
+      );
       return response.data.data;
     } catch (e) {
       if (e instanceof Error) {
