@@ -129,3 +129,8 @@ export type ModalType =
   | 'CHECK_LOGOUT' // 로그아웃 확인
   | 'FIGHT_RES_MODAL' // 1:1 대전 응답 모달
   | 'FIGHT_REQ_MODAL'; // 1:1 대전 요청 모달
+
+export interface IModalData {
+  modal: ModalType | null;
+  id: number;
+}

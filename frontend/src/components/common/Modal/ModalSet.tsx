@@ -20,12 +20,12 @@ const ModalSet: React.FC = () => {
   const { modal } = useContext(AllContext).modalData;
   return (
     <>
-      {modal &&
+      {modal.modal &&
         {
           LOADING_LADDER_GAME: <LadderModal />, // 레더 게임 매칭
-          FIGHT_RES_MODAL: <FightResModal />, // 1:1 대전 응답 모달
-          FIGHT_REQ_MODAL: <FightReqModal />, // 1:1 대전 요청 모달
-          SHOW_PROFILE: <ShowProfile />, // 프로필 정보 보기
+          FIGHT_RES_MODAL: <FightResModal id={modal.id} />, // 1:1 대전 응답 모달
+          FIGHT_REQ_MODAL: <FightReqModal id={modal.id} />, // 1:1 대전 요청 모달
+          SHOW_PROFILE: <ShowProfile id={modal.id} />, // 프로필 정보 보기
           ON_SECOND_AUTH: <OnSecondAuth />, // 2차 인증 켜기
           OFF_SECOND_AUTH: <OffSecondAuth />, // 2차 인증 끄기
           EDIT_NICKNAME: <EditNickName />, // 닉네임 수정
@@ -35,10 +35,10 @@ const ModalSet: React.FC = () => {
           ENTER_CHAT_ROOM: <EnterChatRoom />, // 비밀 채팅방 입장
           CHECK_SCORE: <></>, // 전적 확인 (TODO junselee)
           EDIT_CHAT_ROOM: <SettingRoom />, // 채팅방 수정
-          SHOW_OWNER_PROFILE: <ShowOwnerProfile />, // 채팅방 소유자 프로필
-          SHOW_MANAGER_PROFILE: <ShowManagerProfile />, // 채팅방 관리자 프로필
+          SHOW_OWNER_PROFILE: <ShowOwnerProfile id={modal.id} />, // 채팅방 소유자 프로필
+          SHOW_MANAGER_PROFILE: <ShowManagerProfile id={modal.id} />, // 채팅방 관리자 프로필
           CHECK_LOGOUT: <LogoutModal />, // 로그아웃 확인
-        }[modal]}
+        }[modal.modal]}
     </>
   );
 };

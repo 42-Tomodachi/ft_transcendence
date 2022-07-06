@@ -4,6 +4,7 @@ import {
   LOGOUT,
   EDIT,
   ModalType,
+  IModalData,
   SECOND_AUTH,
   SET_NICKNAME,
   IUserAuth,
@@ -13,7 +14,10 @@ import {
 
 export const AllContext = createContext<stateType>({
   modalData: {
-    modal: null,
+    modal: {
+      modal: null,
+      id: -1,
+    },
     setModal: () => null,
   },
   userData: {
@@ -32,7 +36,7 @@ export const AllContext = createContext<stateType>({
 
 type stateType = {
   modalData: {
-    modal: ModalType | null;
+    modal: IModalData;
     setModal: (type: ModalType | null) => void;
   };
   userData: {
@@ -54,7 +58,10 @@ interface AllContextApiProps {
 }
 
 const AllContextApi = ({ children }: AllContextApiProps) => {
-  const [modal, setModal] = useState<ModalType | null>(null);
+  const [modal, setModal] = useState<IModalData>({
+    modal: null,
+    id: -1,
+  });
   const [user, setUser] = useState<IUserAuth | null>(null);
   const [userStatus, setUserStatus] = useState<UserStatusType>(LOGOUT);
   const [jwt, setJwt] = useState<string>('');
@@ -76,8 +83,11 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     }
   };
 
-  const handleModal = (type: ModalType | null) => {
-    setModal(type);
+  const handleModal = (type: ModalType | null, id?: number) => {
+    setModal({
+      modal: type,
+      id: id || -1,
+    });
   };
 
   const handleUser = (type: HandleUserType, user?: IUserAuth) => {

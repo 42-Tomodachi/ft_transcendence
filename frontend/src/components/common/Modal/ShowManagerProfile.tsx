@@ -4,7 +4,7 @@ import Button from '../Button';
 import axios from 'axios';
 import Modal from '.';
 
-const ShowManagerProfile: React.FC = () => {
+const ShowManagerProfile: React.FC<{ id: number }> = ({ id }) => {
   const [user, setUser] = useState({
     id: '',
     user: '',

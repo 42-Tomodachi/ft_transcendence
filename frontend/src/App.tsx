@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@emotion/react';
 import { theme } from './utils/styles/mixin';
 import LoginPage from './pages/LoginPage';
@@ -36,6 +36,7 @@ function App() {
             {/* Tester */}
             <Route path="/modaltester" element={<ModalTester />} />
             {/* ====== */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>
