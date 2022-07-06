@@ -4,7 +4,7 @@ import Modal from '.';
 import Button from '../Button';
 import { AllContext } from '../../../store';
 
-const FightResModal: React.FC = () => {
+const FightResModal: React.FC<{ id: number }> = ({ id }) => {
   const { setModal } = useContext(AllContext).modalData;
 
   const cancelFight = () => {

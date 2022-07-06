@@ -5,7 +5,7 @@ import axios from 'axios';
 import Modal from '.';
 import ProfileImage from '../ProfileImage';
 
-const ShowProfile: React.FC = () => {
+const ShowProfile: React.FC<{ id: number }> = ({ id }) => {
   const [user, setUser] = useState({
     id: '',
     user: '',
