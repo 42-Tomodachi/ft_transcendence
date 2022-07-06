@@ -21,7 +21,7 @@ const EditNickName: React.FC = () => {
   };
 
   return (
-    <Modal width={570} height={400} title={'닉네임 변경'}>
+    <Modal width={570} height={360} title={'닉네임 변경'}>
       <MainBlock>
         <NickNameText>새로운 닉네임을 입력해주세요.</NickNameText>
         <NicknameBlock>

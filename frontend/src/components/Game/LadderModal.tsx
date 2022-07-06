@@ -29,14 +29,11 @@ const LadderMsg = styled.h3`
   font-size: 20px;
   font-weight: bold;
   text-align: center;
+  display: block;
+  margin-top: 30px;
 `;
 
-const ModalWrap = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-`;
+const ModalWrap = styled.div``;
 
 const CancelBtnWrap = styled.div`
   margin-top: 30px;
