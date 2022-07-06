@@ -60,7 +60,10 @@ export class UsersController {
       fileFilter: imageFileFilter,
     }),
   )
-  async uploadedFile(@UploadedFile() file, @Param('myId') id: number) {
+  async uploadedFile(
+    @UploadedFile() file,
+    @Param('myId', ParseIntPipe) id: number,
+  ) {
     const response = {
       originalname: file.originalname,
       filename: file.filename,

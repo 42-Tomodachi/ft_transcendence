@@ -48,7 +48,7 @@ export class ChatController {
   @ApiOperation({ summary: 'kankim✅ 참여중인 채팅방 목록 가져오기' })
   @Get('/users/:userId')
   async getParticipatingChatRooms(
-    @Param('userId') userId: number,
+    @Param('userId', ParseIntPipe) userId: number,
   ): Promise<ChatRoomDto[]> {
     const chatRooms = this.chatService.getParticipatingChatRooms(userId);
 
@@ -58,7 +58,7 @@ export class ChatController {
   @ApiOperation({ summary: 'kankim✅ 채팅방 만들기' })
   @Post(':userId')
   async createChatRoom(
-    @Param('userId') userId: number,
+    @Param('userId', ParseIntPipe) userId: number,
     @Body() createChatRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
     const chatRoom = await this.chatService.createChatRoom(
