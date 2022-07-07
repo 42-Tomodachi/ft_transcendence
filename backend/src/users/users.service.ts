@@ -246,6 +246,9 @@ export class UsersService {
     if (!user || !targetUser) {
       throw new BadRequestException('유저가 존재하지 않습니다.');
     }
+    if (myId === targetId) {
+      throw new BadRequestException('자신을 차단할 수 없습니다.');
+    }
 
     const block = await this.blockedUserRepo.findOneBy({
       blockerId: myId,
@@ -257,6 +260,14 @@ export class UsersService {
 
       return { isBlocked: false };
     } else {
+      const friend = await this.followRepo.findOneBy({
+        followerId: myId,
+        followId: targetId,
+      });
+      if (friend) {
+        await this.followRepo.remove(friend);
+      }
+
       const blockedUserForCreate = new BlockedUser();
       blockedUserForCreate.blockerId = myId;
       blockedUserForCreate.blockedId = targetId;
