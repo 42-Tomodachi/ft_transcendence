@@ -84,10 +84,14 @@ export class ChatService {
   }
 
   async banUser(
+    user: User,
     roomId: number,
     callingUserId: number,
     targetUserId: number,
   ): Promise<void> {
+    if (user.id !== callingUserId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     const room = await this.chatRoomRepo.findOneBy({ id: roomId });
     if (!room) {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
@@ -113,7 +117,13 @@ export class ChatService {
     await chatParticipant.save();
   }
 
-  async getParticipatingChatRooms(userId: number): Promise<ChatRoomDto[]> {
+  async getParticipatingChatRooms(
+    user: User,
+    userId: number,
+  ): Promise<ChatRoomDto[]> {
+    if (user.id !== userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     const chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chatRoom')
       .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
@@ -139,9 +149,13 @@ export class ChatService {
   }
 
   async createChatRoom(
+    user: User,
     userId: number,
     createChatRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
+    if (user.id !== userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(createChatRoomDto.password, salt);
 
@@ -202,6 +216,7 @@ export class ChatService {
   }
 
   async enterChatRoom(
+    user: User,
     roomId: number,
     userId: number,
     roomPassword: string | null,
@@ -209,9 +224,8 @@ export class ChatService {
     if (!(await this.isCorrectPasswordOfChatRoom(roomId, roomPassword))) {
       throw new BadRequestException('채팅방의 비밀번호가 일치하지 않습니다.');
     }
-    const user: User = await this.userRepo.findOneBy({ id: userId });
-    if (!user) {
-      throw new BadRequestException('유저가 존재하지 않습니다.');
+    if (user.id !== userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
 
     if (!(await this.isExistMember(roomId, userId))) {
@@ -393,10 +407,14 @@ export class ChatService {
   }
 
   async submitChatContent(
+    user: User,
     roomId: number,
     userId: number,
     createChatContentDto: CreateChatContentDto,
   ): Promise<BooleanDto> {
+    if (user.id !== userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     if (
       !(await this.chatParticipantRepo.findOneBy({
         chatRoomId: roomId,
@@ -422,7 +440,14 @@ export class ChatService {
     return result;
   }
 
-  async enterDmRoom(myId: number, partnerId: number): Promise<ChatRoomDataDto> {
+  async enterDmRoom(
+    user: User,
+    myId: number,
+    partnerId: number,
+  ): Promise<ChatRoomDataDto> {
+    if (user.id !== myId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     const chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chatRoom')
       .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
@@ -483,9 +508,13 @@ export class ChatService {
   }
 
   async getChatContents(
+    user: User,
     roomId: number,
     userId: number,
   ): Promise<CreateChatContentDto[]> {
+    if (user.id !== userId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     const participant = await this.chatParticipantRepo.findOneBy({
       chatRoomId: roomId,
       userId,
@@ -530,10 +559,14 @@ export class ChatService {
   }
 
   async getChatParticipantProfile(
+    user: User,
     roomId: number,
     myId: number,
     targetId: number,
   ): Promise<ChatParticipantProfile> {
+    if (user.id !== myId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
     const myUser = await this.chatParticipantRepo.findOneBy({
       chatRoomId: roomId,
       userId: myId,

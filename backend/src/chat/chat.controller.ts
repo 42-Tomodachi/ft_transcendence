@@ -55,9 +55,10 @@ export class ChatController {
   @ApiOperation({ summary: 'kankim✅ 참여중인 채팅방 목록 가져오기' })
   @Get('/users/:userId')
   async getParticipatingChatRooms(
+    @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<ChatRoomDto[]> {
-    const chatRooms = this.chatService.getParticipatingChatRooms(userId);
+    const chatRooms = this.chatService.getParticipatingChatRooms(user, userId);
 
     return chatRooms;
   }
@@ -65,10 +66,12 @@ export class ChatController {
   @ApiOperation({ summary: 'kankim✅ 채팅방 만들기' })
   @Post(':userId')
   async createChatRoom(
+    @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() createChatRoomDto: CreateChatRoomDto,
   ): Promise<ChatRoomDataDto> {
     const chatRoom = await this.chatService.createChatRoom(
+      user,
       userId,
       createChatRoomDto,
     );
@@ -87,11 +90,13 @@ export class ChatController {
   @ApiOperation({ summary: 'kankim✅ 채팅방 입장하기' })
   @Post(':roomId/users/:userId')
   async enterChatRoom(
+    @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() roomPasswordDto: RoomPasswordDto,
   ): Promise<ChatRoomIdDto> {
     return await this.chatService.enterChatRoom(
+      user,
       roomId,
       userId,
       roomPasswordDto.password,
@@ -125,10 +130,11 @@ export class ChatController {
   @ApiOperation({ summary: 'kankim✅ dm방 입장하기' })
   @Post(':myId/dmRooms')
   async enterDmRoom(
+    @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) myId: number,
     @Query('partnerId', ParseIntPipe) partnerId: number,
   ): Promise<ChatRoomDataDto> {
-    return await this.chatService.enterDmRoom(myId, partnerId);
+    return await this.chatService.enterDmRoom(user, myId, partnerId);
   }
 
   @ApiOperation({
@@ -137,10 +143,11 @@ export class ChatController {
   })
   @Get(':roomId/chatContents/:userId')
   async getChatContents(
+    @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<CreateChatContentDto[]> {
-    return await this.chatService.getChatContents(roomId, userId);
+    return await this.chatService.getChatContents(user, roomId, userId);
   }
 
   @ApiOperation({ summary: '✅ 관리자로 설정 토글: jihokim' })
@@ -160,11 +167,12 @@ export class ChatController {
   @ApiOperation({ summary: 'seungyel✅ 강퇴 시키기' })
   @Put(':roomId/ban/:userId')
   async banParticipant(
+    @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
   ): Promise<void> {
-    return this.chatService.banUser(roomId, userId, targetUserId);
+    return this.chatService.banUser(user, roomId, userId, targetUserId);
   }
 
   @ApiOperation({ summary: '✅ 음소거 시키기 토글: jihokim' })
@@ -182,11 +190,13 @@ export class ChatController {
   @ApiOperation({ summary: '채팅 등록' })
   @Post(':roomId/users/:userId/messages')
   async submitChatContent(
+    @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() createChatContentDto: CreateChatContentDto,
   ): Promise<BooleanDto> {
     return this.chatService.submitChatContent(
+      user,
       roomId,
       userId,
       createChatContentDto,
@@ -197,11 +207,13 @@ export class ChatController {
   @Get(':roomId/participants/:myId')
   @UseGuards(AuthGuard())
   async getChatParticipantProfile(
+    @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('myId', ParseIntPipe) myId: number,
     @Body() target: TargetIdDto,
   ): Promise<ChatParticipantProfile> {
     return await this.chatService.getChatParticipantProfile(
+      user,
       roomId,
       myId,
       target.targetId,

@@ -40,7 +40,7 @@ export class UsersService {
   }
 
   async getFriends(user: User, userId: number): Promise<SimpleUserDto[]> {
-    if (user.id != userId) {
+    if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
 
@@ -81,7 +81,7 @@ export class UsersService {
     myId: number,
     targetId: number,
   ): Promise<UserProfileDto> {
-    if (user.id != myId) {
+    if (user.id !== myId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
     const myUser = await this.getUserById(myId);
@@ -133,7 +133,7 @@ export class UsersService {
     followerId: number,
     followId: number,
   ): Promise<void> {
-    if (user.id != followerId) {
+    if (user.id !== followerId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
 
@@ -166,7 +166,7 @@ export class UsersService {
   }
 
   async removeFriend(user: User, followerId: number, followId: number) {
-    if (user.id != followerId) {
+    if (user.id !== followerId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
 
@@ -207,7 +207,7 @@ export class UsersService {
     userId: number,
     nicknameForUpdate: string,
   ): Promise<UserProfileDto> {
-    if (user.id != userId) {
+    if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
     if ((await this.userRepo.findOneBy({ id: userId })) === null) {
@@ -237,7 +237,7 @@ export class UsersService {
     myId: number,
     targetId: number,
   ): Promise<BlockResultDto> {
-    if (user.id != myId) {
+    if (user.id !== myId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
 
