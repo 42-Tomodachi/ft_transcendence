@@ -21,7 +21,7 @@ export class UserProfileDto {
 
   @ApiProperty({ description: '유저 아바타' })
   @IsString()
-  avatar: string;
+  avatar: string | null;
 
   @ApiProperty({ description: '유저 이메일' })
   @IsEmail()

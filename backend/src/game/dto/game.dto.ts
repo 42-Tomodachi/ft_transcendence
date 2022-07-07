@@ -44,7 +44,7 @@ export class GetGameUsersDto {
 
   @ApiProperty({ description: '유저 프로필 이미지' })
   @IsString()
-  avatar: string;
+  avatar: string | null;
 
   @ApiProperty({ description: '게임방 유저의 승리 전적' })
   @IsNumber()
@@ -58,4 +58,3 @@ export class GetGameUsersDto {
   // @IsNumber()
   // isFirstPlayer: number;
 }
-

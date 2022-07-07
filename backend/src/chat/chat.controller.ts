@@ -5,13 +5,17 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Post,
   Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import {
   ChatRoomDataDto,
@@ -30,10 +34,13 @@ import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { TargetIdDto } from 'src/users/dto/users.dto';
+import { User } from 'src/users/entities/users.entity';
+import { GetJwtUser } from 'src/auth/jwt.strategy';
 
 @ApiTags('chats')
+@ApiBearerAuth('access-token')
 @Controller('chats')
-// @UseGuards(AuthGuard()) // todo: 모든 api 구현 후 조건별로 api 적용할 것
+@UseGuards(AuthGuard())
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
@@ -108,10 +115,11 @@ export class ChatController {
   @ApiOperation({ summary: 'kankim✅ 채팅방 나가기' })
   @Delete(':roomId/users/:userId')
   async exitRoom(
+    @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<void> {
-    await this.chatService.exitRoom(roomId, userId);
+    await this.chatService.exitRoom(user, roomId, userId);
   }
 
   @ApiOperation({ summary: 'kankim✅ dm방 입장하기' })
@@ -177,13 +185,17 @@ export class ChatController {
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() createChatContentDto: CreateChatContentDto,
-  ): Promise<void> {
-    this.chatService.submitChatContent(roomId, userId, createChatContentDto);
-    // this.chatService.submitChatContent(roomId);
+  ): Promise<BooleanDto> {
+    return this.chatService.submitChatContent(
+      roomId,
+      userId,
+      createChatContentDto,
+    );
   }
 
   @ApiOperation({ summary: 'kankim✅ 채팅방에 있는 유저의 프로필 조회' })
   @Get(':roomId/participants/:myId')
+  @UseGuards(AuthGuard())
   async getChatParticipantProfile(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('myId', ParseIntPipe) myId: number,
