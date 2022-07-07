@@ -60,7 +60,7 @@ export class ChatContents extends BaseEntity {
     }
     createChatContentDto.message = this.content;
     createChatContentDto.fromUser = this.userId === userId ? true : false;
-    createChatContentDto.createdTime = this.createdTime;
+    createChatContentDto.createdTime = this.createdTime.toLocaleTimeString();
 
     return createChatContentDto;
   }

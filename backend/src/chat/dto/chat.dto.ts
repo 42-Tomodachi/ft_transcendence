@@ -115,9 +115,12 @@ export class CreateChatContentDto {
   @IsBoolean()
   fromUser: boolean;
 
-  @ApiProperty({ description: '만들어진 시간' })
+  @ApiProperty({
+    description:
+      '만들어진 시간, 요청 시 보낼 필요 없음, 리스폰스로 줄 때만 넘어갈 예정',
+  })
   @IsDateString()
-  createdTime: Date;
+  createdTime?: string;
 }
 
 export class ParticipantRoleDto {
