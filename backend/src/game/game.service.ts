@@ -128,7 +128,7 @@ export class GameService {
         firstPalyerDto.loseCount = firstPlayerInfo.loseCount;
         GameUsers.push(firstPalyerDto);
 
-        if (gameRoom.secondPlayer != null) {
+        if (gameRoom.secondPlayer !== null) {
             const secondPlayer = gameRoom.secondPlayer;
             const secondPlayerInfo = await this.userRepo.findOneBy({ id: secondPlayer });
             const secondPalyerDto = new GetGameUsersDto();

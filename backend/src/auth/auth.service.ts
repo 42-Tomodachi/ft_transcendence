@@ -228,7 +228,7 @@ export class AuthService {
 
   async shootSecondAuth(users: User, id: number): Promise<boolean> {
     const user = await this.usersService.getUserById(id);
-    if (users.id != user.id)
+    if (users.id !== user.id)
       throw new BadRequestException('권한이 없는 유저입니다.');
 
     if (user === null) {
