@@ -249,7 +249,7 @@ export class ChatService {
       const createChatContentDto = new CreateChatContentDto();
       createChatContentDto.isBroadcast = true;
       createChatContentDto.message = `${user.nickname} 님이 입장하셨습니다.`;
-      this.submitChatContent(roomId, userId, createChatContentDto);
+      this.submitChatContent(user, roomId, userId, createChatContentDto);
     }
 
     return { roomId: roomId };
