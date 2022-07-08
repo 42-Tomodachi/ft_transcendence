@@ -44,44 +44,44 @@
   ],
   "record": [
     {
-      "type": "general",
-      "status": "win",
-      "winner": "sgang"
+      "isLadder": false,
+      "isWin": true,
+      "opponentNickname": "sgang"
     },
     {
-      "type": "general",
-      "status": "lose",
-      "winner": "sgang"
+      "isLadder": false,
+      "isWin": false,
+      "opponentNickname": "sgang"
     },
     {
-      "type": "ladder",
-      "status": "win",
-      "winner": "sgang"
+      "isLadder": true,
+      "isWin": true,
+      "opponentNickname": "sgang"
     },
     {
-      "type": "ladder",
-      "status": "lose",
-      "winner": "sgang"
+      "isLadder": true,
+      "isWin": false,
+      "opponentNickname": "sgang"
     },
     {
-      "type": "general",
-      "status": "win",
-      "winner": "mosong"
+      "isLadder": false,
+      "isWin": true,
+      "opponentNickname": "mosong"
     },
     {
-      "type": "general",
-      "status": "lose",
-      "winner": "mosong"
+      "isLadder": false,
+      "isWin": false,
+      "opponentNickname": "mosong"
     },
     {
-      "type": "ladder",
-      "status": "win",
-      "winner": "mosong"
+      "isLadder": true,
+      "isWin": true,
+      "opponentNickname": "mosong"
     },
     {
-      "type": "ladder",
-      "status": "lose",
-      "winner": "mosong"
+      "isLadder": true,
+      "isWin": false,
+      "opponentNickname": "mosong"
     }
   ],
   "user": {

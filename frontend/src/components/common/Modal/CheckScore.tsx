@@ -1,16 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../Button';
 import axios from 'axios';
 import Modal from '.';
 import ProfileImage from '../ProfileImage';
+import { AllContext } from '../../../store';
 import { IGameRecord } from '../../../utils/interface';
 
 const CheckScore: React.FC = () => {
-  const [record, setRecord] = useState<IGameRecord[] | []>([]);
+  const [recordList, setRecord] = useState<IGameRecord[] | []>([]);
+  const { setModal } = useContext(AllContext).modalData;
 
   useEffect(() => {
-    axios.get('http://localhost:4000/userlist').then(({ data }) => {
+    axios.get('http://localhost:4000/record').then(({ data }) => {
+      console.log(data);
       setRecord(data);
     });
   }, []);
@@ -19,10 +22,21 @@ const CheckScore: React.FC = () => {
     <Modal width={450} height={450} title={'전적 확인'}>
       <MainBlock>
         <RecordList>
-          {record.map((record: IGameRecord, index: number) => (
-            <RecordContainer key={index}></RecordContainer>
+          {recordList.map((record: IGameRecord, index: number) => (
+            <RecordItem key={index} isWin={record.isWin}>
+              <RecordisLadder>{record.isLadder ? '래더 게임' : '일반 게임'}</RecordisLadder>
+              <RecordisWin>{record.isWin ? '승' : '패'}</RecordisWin>
+              <RecordNickName>{record.opponentNickname}</RecordNickName>
+            </RecordItem>
           ))}
         </RecordList>
+        <Button
+          color="gradient"
+          text="확인"
+          width={200}
+          height={40}
+          onClick={() => setModal(null)}
+        />
       </MainBlock>
     </Modal>
   );
@@ -30,53 +44,55 @@ const CheckScore: React.FC = () => {
 
 // Main Block
 const MainBlock = styled.div`
+  margin: 0 auto;
   padding: 13px;
-  margin-top: 50px;
-  width: 100%;
+  width: 340px;
+  & Button {
+    margin-top: 25px;
+  }
 `;
 
-const RecordContainer = styled.div`
-  ::-webkit-scrollbar {
-    display: none;
+const RecordItem = styled.div<{ isWin: boolean }>`
+  margin: 0 auto;
+  margin-top: 5px;
+  width: 100%;
+  height: 60px;
+
+  background-color: ${props => (props.isWin ? '#c5dcff' : '#FFC5C5')};
+
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 10px;
+
+  border-radius: 5px;
+
+  & span {
+    display: inline-block;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 60px;
   }
-  :hover {
-    ::-webkit-scrollbar {
-      display: block;
-      width: 4px;
-      background-color: ${props => props.theme.colors.grey};
-    }
-  }
-  // 내눈이 편안하기위한 마진탑 임. 반박시 니말이맞음
-  margin-top: 12px;
-  overflow-y: scroll;
-  height: calc(100% - 52px);
-  width: 270px;
 `;
 
 const RecordList = styled.ul`
-  ::-webkit-scrollbar {
-    display: none;
-  }
-  :hover {
-    ::-webkit-scrollbar {
-      display: block;
-      width: 4px;
-      background-color: ${props => props.theme.colors.grey};
-    }
-    ::-webkit-scrollbar-thumb {
-      background-color: ${props => props.theme.colors.main};
-      border-radius: 10px;
-    }
-  }
-  // 내눈이 편안하기위한 마진탑 임. 반박시 니말이맞음
-  margin-top: 12px;
-  overflow-y: scroll;
-  height: calc(100% - 52px);
-  width: 270px;
+  height: 260px;
+  overflow: auto;
+  overflow-y: auto;
 `;
 
-//============================================
-
-//=============================================
+const RecordisLadder = styled.span`
+  width: 100%;
+  text-align: center;
+`;
+const RecordisWin = styled.span`
+  width: 100%;
+  text-align: left;
+  color: #ffffff;
+`;
+const RecordNickName = styled.span`
+  width: 80%;
+  text-align: right;
+`;
 
 export default CheckScore;
