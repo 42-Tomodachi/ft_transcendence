@@ -15,6 +15,8 @@ import SettingRoom from './SettingRoom';
 import FightResModal from './FightResModal';
 import FightReqModal from './FightReqModal';
 import OffSecondAuth from './OffSecondAuth';
+import EditMyProfile from './EditMyProfile';
+import CheckScore from './CheckScore';
 
 const ModalSet: React.FC = () => {
   const { modal } = useContext(AllContext).modalData;
@@ -33,10 +35,11 @@ const ModalSet: React.FC = () => {
           MAKE_CHAT_ROOM: <MakeChatRoom />, // 채팅방 만들기
           ENTER_GAME_ROOM: <EnterGameRoom />, // 비밀 게임방 입장
           ENTER_CHAT_ROOM: <EnterChatRoom />, // 비밀 채팅방 입장
-          CHECK_SCORE: <></>, // 전적 확인 (TODO junselee)
+          CHECK_SCORE: <CheckScore />, // 전적 확인
           EDIT_CHAT_ROOM: <SettingRoom />, // 채팅방 수정
           SHOW_OWNER_PROFILE: <ShowOwnerProfile id={modal.id} />, // 채팅방 소유자 프로필
           SHOW_MANAGER_PROFILE: <ShowManagerProfile id={modal.id} />, // 채팅방 관리자 프로필
+          EDIT_MY_PROFILE: <EditMyProfile />, // 채팅방 관리자 프로필
           CHECK_LOGOUT: <LogoutModal />, // 로그아웃 확인
         }[modal.modal]}
     </>

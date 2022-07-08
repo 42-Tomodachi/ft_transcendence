@@ -21,9 +21,8 @@ import { EDIT_NICKNAME } from '../../../utils/interface';
 import { EDIT_CHAT_ROOM } from '../../../utils/interface';
 import { LOADING_LADDER_GAME } from '../../../utils/interface';
 import { FIGHT_REQ_MODAL, FIGHT_RES_MODAL } from '../../../utils/interface';
-// CHECK_SCORE;
-
-// CHECK_LOGOUT;
+import { EDIT_MY_PROFILE } from '../../../utils/interface';
+import { CHECK_SCORE } from '../../../utils/interface';
 
 const ModalTester: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
@@ -122,6 +121,27 @@ const ModalTester: React.FC = () => {
             width={200}
             height={30}
             onClick={() => setModal(FIGHT_REQ_MODAL)} //
+          />
+          <Button
+            color="gradient"
+            text="FightReqModal"
+            width={200}
+            height={30}
+            onClick={() => setModal(FIGHT_REQ_MODAL)} //
+          />
+          <Button
+            color="gradient"
+            text="EditMyProfile"
+            width={200}
+            height={30}
+            onClick={() => setModal(EDIT_MY_PROFILE)} //
+          />
+          <Button
+            color="gradient"
+            text="CheckScore"
+            width={200}
+            height={30}
+            onClick={() => setModal(CHECK_SCORE)} //
           />
         </OtherBtnBlock>
       </MainBlock>
