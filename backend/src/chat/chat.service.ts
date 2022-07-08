@@ -156,12 +156,19 @@ export class ChatService {
     if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(createChatRoomDto.password, salt);
 
     const chatRoom = new ChatRoom();
     chatRoom.title = createChatRoomDto.title;
-    chatRoom.password = hashedPassword;
+    if (createChatRoomDto.password) {
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(
+        createChatRoomDto.password,
+        salt,
+      );
+      chatRoom.password = hashedPassword;
+    } else {
+      chatRoom.password = null;
+    }
     chatRoom.ownerId = userId;
     chatRoom.isDm = createChatRoomDto.isDm;
 
