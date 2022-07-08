@@ -42,6 +42,48 @@
       "nickName": "master"
     }
   ],
+  "record": [
+    {
+      "isLadder": false,
+      "isWin": true,
+      "opponentNickname": "sgang"
+    },
+    {
+      "isLadder": false,
+      "isWin": false,
+      "opponentNickname": "sgang"
+    },
+    {
+      "isLadder": true,
+      "isWin": true,
+      "opponentNickname": "sgang"
+    },
+    {
+      "isLadder": true,
+      "isWin": false,
+      "opponentNickname": "sgang"
+    },
+    {
+      "isLadder": false,
+      "isWin": true,
+      "opponentNickname": "mosong"
+    },
+    {
+      "isLadder": false,
+      "isWin": false,
+      "opponentNickname": "mosong"
+    },
+    {
+      "isLadder": true,
+      "isWin": true,
+      "opponentNickname": "mosong"
+    },
+    {
+      "isLadder": true,
+      "isWin": false,
+      "opponentNickname": "mosong"
+    }
+  ],
   "user": {
     "id": 1,
     "nickname": "asdf",
@@ -61,6 +103,10 @@
     "gen_lose": 1,
     "lad_win": 2,
     "lad_lose": 15,
+    "picture": "https://mblogthumb-phinf.pstatic.net/MjAyMDA3MTBfNCAg/MDAxNTk0Mzg5OTg3MDU4.H5oS7H39AZ29Z17P_ZUIKlEswGu3f95kFsBKfTe_Ei4g.MD8ucAVsBBG1q2XB7bNZB6NnKqKGIjHL0Sl_TxVDIkIg.JPEG.mahz3014/52.jpg?type=w800"
+  },
+
+  "user_info2": {
     "picture": "https://mblogthumb-phinf.pstatic.net/MjAyMDA3MTBfNCAg/MDAxNTk0Mzg5OTg3MDU4.H5oS7H39AZ29Z17P_ZUIKlEswGu3f95kFsBKfTe_Ei4g.MD8ucAVsBBG1q2XB7bNZB6NnKqKGIjHL0Sl_TxVDIkIg.JPEG.mahz3014/52.jpg?type=w800"
   },
   "gameList": [

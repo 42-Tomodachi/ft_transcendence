@@ -111,6 +111,7 @@ export const SHOW_MANAGER_PROFILE = 'SHOW_MANAGER_PROFILE' as const;
 export const CHECK_LOGOUT = 'CHECK_LOGOUT' as const;
 export const FIGHT_RES_MODAL = 'FIGHT_RES_MODAL' as const;
 export const FIGHT_REQ_MODAL = 'FIGHT_REQ_MODAL' as const;
+export const EDIT_MY_PROFILE = 'EDIT_MY_PROFILE' as const;
 
 export type ModalType =
   | 'SHOW_PROFILE' // 프로필 정보 보기
@@ -128,7 +129,8 @@ export type ModalType =
   | 'SHOW_MANAGER_PROFILE' // 채팅방 관리자 프로필
   | 'CHECK_LOGOUT' // 로그아웃 확인
   | 'FIGHT_RES_MODAL' // 1:1 대전 응답 모달
-  | 'FIGHT_REQ_MODAL'; // 1:1 대전 요청 모달
+  | 'FIGHT_REQ_MODAL' // 1:1 대전 요청 모달
+  | 'EDIT_MY_PROFILE'; // 내 프로필 수정하기
 
 export interface IModalData {
   modal: ModalType | null;
