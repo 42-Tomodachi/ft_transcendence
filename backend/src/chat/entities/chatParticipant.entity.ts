@@ -23,7 +23,9 @@ export class ChatParticipant extends BaseEntity {
   @Column()
   userId: number;
 
-  @ApiProperty({ description: '채팅방에서 유저의 역할' })
+  @ApiProperty({
+    description: "채팅방에서 유저의 역할 ['owner' | 'manager' | 'guest']",
+  })
   @Column({ default: 'guest' })
   role: 'owner' | 'manager' | 'guest';
 

@@ -91,7 +91,7 @@ export class ChatRoomUserDto {
   @ApiProperty({ description: '닉네임' })
   nickname: string;
 
-  @ApiProperty({ description: '역할' })
+  @ApiProperty({ description: "역할 ['owner' | 'manager' | 'guest']" })
   role: 'owner' | 'manager' | 'guest';
 }
 
