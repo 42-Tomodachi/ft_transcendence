@@ -10,7 +10,7 @@ import {
 export class IsSignedUpDto {
   @ApiProperty({ description: 'id( DB키 )' })
   @IsNumber()
-  id: number;
+  userId: number;
 
   @ApiProperty({ description: '닉네임' })
   @IsString()
