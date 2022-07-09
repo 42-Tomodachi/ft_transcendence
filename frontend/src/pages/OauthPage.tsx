@@ -17,10 +17,9 @@ const OauthPage: React.FC = () => {
     const getUser = async () => {
       if (code) {
         const res = await authAPI.isSignedUp(code);
-        // console.log(res);
         if (res) {
           setUser(LOGIN, {
-            id: res.id,
+            userId: res.userId,
             nickname: res.nickname,
             email: res.email,
             avatar: res.avatar,

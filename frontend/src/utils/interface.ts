@@ -1,5 +1,5 @@
 export interface IUserKey {
-  id: number;
+  userId: number;
   nickname: string;
 }
 

@@ -109,6 +109,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
           setUser(user);
         }
         return;
+
       case LOGOUT:
         setUser(null);
         return;

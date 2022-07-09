@@ -3,19 +3,30 @@ import styled from '@emotion/styled';
 import Button from '../components/common/Button';
 import LogoImg from '../assets/logo.png';
 import { AllContext } from '../store';
-import { LOGIN } from '../utils/interface';
+import { LOGIN, SET_NICKNAME, LOGOUT } from '../utils/interface';
+import { usersAPI } from '../API';
 
 const LoginPage: React.FC = () => {
   const { setJwt } = useContext(AllContext).jwtData;
   const { setUserStatus } = useContext(AllContext).userStatus;
+  const { setUser } = useContext(AllContext).userData;
 
   useEffect(() => {
     const jwt = window.localStorage.getItem('jwt');
     if (jwt) {
       setJwt('SET_JWT', jwt);
-      // TODO: jwt 를 이용하여 데이터 받아와 setUser 에 데이터 저장,
-      //  닉네임 없는경우 SET_NICNKNAME, 있는 경우 LOGIN 으로 setUserStatus 설정
-      setUserStatus(LOGIN);
+      const getUserData = async () => {
+        const res = await usersAPI.getLoginUserProfile(jwt);
+        setUser(LOGIN, res);
+        if (!res.nickname) {
+          setUserStatus(SET_NICKNAME);
+        } else {
+          setUserStatus(LOGIN);
+        }
+      };
+      getUserData();
+    } else {
+      setUserStatus(LOGOUT);
     }
   }, []);
 
@@ -31,11 +42,9 @@ const LoginPage: React.FC = () => {
           color="white"
           text="42 Login"
           onClick={() => {
-            console.log(process.env.REACT_APP_OAUTH_URL);
             if (process.env.REACT_APP_OAUTH_URL) {
               location.href = process.env.REACT_APP_OAUTH_URL;
             }
-            console.log('click');
           }}
         />
       </LoginBox>

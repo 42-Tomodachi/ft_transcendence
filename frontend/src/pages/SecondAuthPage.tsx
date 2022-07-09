@@ -19,7 +19,7 @@ const SecondAuthPage: React.FC = () => {
 
     timer = setTimeout(async () => {
       if (user) {
-        const userId = user.id; // TODO: user.id user가 null인 경우가 있다고 함
+        const userId = user.userId; // TODO: user.id user가 null인 경우가 있다고 함
         await authAPI.sendSecondAuthCode(userId, jwt);
         setErrMsg('설정한 메일로 코드가 전송되었습니다.');
       }
@@ -35,7 +35,7 @@ const SecondAuthPage: React.FC = () => {
 
   const onCheck = async () => {
     if (user) {
-      const res = await authAPI.checkSecondAuthCode(user.id, Number(authCode), jwt);
+      const res = await authAPI.checkSecondAuthCode(user.userId, Number(authCode), jwt);
       if (res) {
         setErrMsg('인증에 성공하였습니다.');
         timer = setTimeout(() => {

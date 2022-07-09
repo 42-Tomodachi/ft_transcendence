@@ -31,7 +31,7 @@ const OnSecondAuth: React.FC = () => {
     } else if (!user) {
       setEmailMsg('유저 정보가 없습니다.');
     } else {
-      const res = await authAPI.setSecondAuth(user.id, email, jwt);
+      const res = await authAPI.setSecondAuth(user.userId, email, jwt);
 
       if (!res) {
         setEmailMsg('인증 코드가 전송에 실패하였습니다.');
@@ -51,7 +51,7 @@ const OnSecondAuth: React.FC = () => {
   const checkAuthCode = async () => {
     if (user) {
       if (authCode) {
-        const res = await authAPI.checkSecondAuthCode(user.id, Number(authCode), jwt);
+        const res = await authAPI.checkSecondAuthCode(user.userId, Number(authCode), jwt);
         if (res) {
           setAuthMsg('인증에 성공하였습니다.');
           setActiveEmail(true);
@@ -68,7 +68,7 @@ const OnSecondAuth: React.FC = () => {
 
   const activeSecondAuth = async () => {
     if (activeEmail === true && user) {
-      const res = await authAPI.enrollSecondAuth(user.id, jwt);
+      const res = await authAPI.enrollSecondAuth(user.userId, jwt);
       if (res) {
         setErrMsg('활성화에 성공하였습니다.');
         setUser(EDIT, { ...user, isSecondAuthOn: true });

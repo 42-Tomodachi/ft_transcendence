@@ -13,7 +13,7 @@ const OffSecondAuth: React.FC = () => {
 
   const offSecondAuth = async () => {
     if (user) {
-      const res = await authAPI.unsetSecondAuth(user.id, jwt);
+      const res = await authAPI.unsetSecondAuth(user.userId, jwt);
       if (res) {
         setUser(EDIT, { ...user, isSecondAuthOn: false });
         setModal(null);

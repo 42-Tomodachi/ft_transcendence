@@ -15,6 +15,7 @@ import UserList from './components/UserList/index';
 import ProfilePage from './components/UserProfile';
 import { AllContextApi } from './store';
 import ModalTester from './components/common/Modal/ModalTester';
+import { GAME } from './utils/interface';
 
 function App() {
   return (
@@ -22,14 +23,14 @@ function App() {
       <ThemeProvider theme={theme}>
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<MainPage />} />
+            <Route path="/" element={<MainPage menu="GAME" />} />
             <Route path="/callback" element={<OauthPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/nickname" element={<NicknamePage />} />
             <Route path="/secondAuth" element={<SecondAuthPage />} />
             <Route path="/profilePage" element={<ProfilePage />} />
-            <Route path="/game" element={<HomePage />} />
-            <Route path="/chat" element={<HomePage menu="CHAT" />} />
+            <Route path="/game" element={<MainPage menu="GAME" />} />
+            <Route path="/chat" element={<MainPage menu="CHAT" />} />
             <Route path="/chatroom" element={<ChatPage />} />
             <Route path="/userlist" element={<UserList />} />
 

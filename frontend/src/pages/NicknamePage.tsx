@@ -89,13 +89,14 @@ const NicknamePage: React.FC = () => {
       setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
     } else if (user) {
       const formData = new FormData();
-      const userId = user.id;
+      const userId = user.userId;
 
       if (convertImg) {
         formData.append('image', convertImg);
         usersAPI.uploadAvatarImg(userId, formData, jwt);
       }
       usersAPI.updateUserNickname(userId, nickName, jwt);
+      setUser(LOGIN, { ...user, nickname: nickName });
       setUserStatus(LOGIN);
     } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
   };
