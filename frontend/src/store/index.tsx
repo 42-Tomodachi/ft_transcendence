@@ -2,14 +2,16 @@ import React, { createContext, useState } from 'react';
 import {
   LOGIN,
   LOGOUT,
-  EDIT,
+  UPDATE_USER,
+  UPDATE_RECORD,
   ModalType,
   IModalData,
+  IUserData,
   SECOND_AUTH,
   SET_NICKNAME,
-  IUserAuth,
   UserStatusType,
   HandleUserType,
+  IWinLoseCount,
 } from '../utils/interface';
 
 export const AllContext = createContext<stateType>({
@@ -40,8 +42,8 @@ type stateType = {
     setModal: (type: ModalType | null) => void;
   };
   userData: {
-    user: IUserAuth | null;
-    setUser: (type: HandleUserType, user?: IUserAuth) => void;
+    user: IUserData | null;
+    setUser: (type: HandleUserType, user?: IUserData, record?: IWinLoseCount) => void;
   };
   userStatus: {
     userStatus: UserStatusType;
@@ -62,7 +64,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     modal: null,
     id: -1,
   });
-  const [user, setUser] = useState<IUserAuth | null>(null);
+  const [user, setUser] = useState<IUserData | null>(null);
   const [userStatus, setUserStatus] = useState<UserStatusType>(LOGOUT);
   const [jwt, setJwt] = useState<string>('');
 
@@ -90,23 +92,28 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     });
   };
 
-  const handleUser = (type: HandleUserType, user?: IUserAuth) => {
+  const handleUser = (type: HandleUserType, data?: IUserData, record?: IWinLoseCount) => {
     switch (type) {
       case LOGIN:
-        if (user) {
-          setUser(user);
-          if (!user.nickname) {
+        if (data) {
+          setUser(data);
+          if (!data.nickname) {
             setUserStatus(SET_NICKNAME);
-          } else if (user.isSecondAuthOn) {
+          } else if (data.isSecondAuthOn) {
             setUserStatus(SECOND_AUTH);
           } else {
             setUserStatus(LOGIN);
           }
         }
         return;
-      case EDIT:
-        if (user) {
-          setUser(user);
+      case UPDATE_USER:
+        if (user && data) {
+          setUser({ ...data });
+        }
+        return;
+      case UPDATE_RECORD:
+        if (user && record) {
+          setUser({ ...user, ...record });
         }
         return;
 

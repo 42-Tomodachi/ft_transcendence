@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import Modal from '.';
 import Button from '../Button';
 import { AllContext } from '../../../store';
-import { EDIT } from '../../../utils/interface';
+import { UPDATE_USER } from '../../../utils/interface';
 import { authAPI } from '../../../API';
 
 const OffSecondAuth: React.FC = () => {
@@ -15,7 +15,7 @@ const OffSecondAuth: React.FC = () => {
     if (user) {
       const res = await authAPI.unsetSecondAuth(user.userId, jwt);
       if (res) {
-        setUser(EDIT, { ...user, isSecondAuthOn: false });
+        setUser(UPDATE_USER, { ...user, isSecondAuthOn: false });
         setModal(null);
       }
     }

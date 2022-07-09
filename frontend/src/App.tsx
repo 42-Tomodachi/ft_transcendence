@@ -8,14 +8,12 @@ import './utils/styles/common.css';
 import OauthPage from './pages/OauthPage';
 import NicknamePage from './pages/NicknamePage';
 import SecondAuthPage from './pages/SecondAuthPage';
-import HomePage from './pages/HomePage';
 import ChatPage from './pages/ChatPage';
 import UserList from './components/UserList/index';
 
 import ProfilePage from './components/UserProfile';
 import { AllContextApi } from './store';
 import ModalTester from './components/common/Modal/ModalTester';
-import { GAME } from './utils/interface';
 
 function App() {
   return (

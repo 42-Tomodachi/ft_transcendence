@@ -4,7 +4,7 @@ import Button from '../Button';
 import Modal from '.';
 import { authAPI } from '../../../API';
 import { AllContext } from '../../../store';
-import { EDIT } from '../../../utils/interface';
+import { UPDATE_USER } from '../../../utils/interface';
 
 const reg = new RegExp(
   /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*\.[a-zA-Z]{2,3}$/,
@@ -71,7 +71,7 @@ const OnSecondAuth: React.FC = () => {
       const res = await authAPI.enrollSecondAuth(user.userId, jwt);
       if (res) {
         setErrMsg('활성화에 성공하였습니다.');
-        setUser(EDIT, { ...user, isSecondAuthOn: true });
+        setUser(UPDATE_USER, { ...user, isSecondAuthOn: true });
         setModal(null);
       } else {
         setErrMsg('활성화에 실패했습니다.');

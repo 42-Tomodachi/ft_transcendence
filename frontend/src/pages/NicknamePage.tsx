@@ -1,10 +1,9 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-// import axios from 'axios';
 import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
 import { authAPI } from '../API';
-import { LOGIN, SET_NICKNAME } from '../utils/interface';
+import { IUserData, LOGIN, SET_NICKNAME, UPDATE_USER } from '../utils/interface';
 import imageCompression from 'browser-image-compression';
 import { usersAPI } from '../API/users';
 import DefaultProfile from '../assets/default-image.png';
@@ -23,7 +22,7 @@ const NicknamePage: React.FC = () => {
   const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
   const { jwt, setJwt } = useContext(AllContext).jwtData; // TODO: JWT 유지를 위해 사용
   const [convertImg, setConvertImg] = useState<File | string>(''); // TODO: File or string ?
-  const [userProfile, setUserProfile] = useState<any>(); // TODO: profile에 맞는 interface 제작
+  const [userProfile, setUserProfile] = useState<IUserData>(); // TODO: profile에 맞는 interface 제작
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     //  NOTE : 정규식 적용
@@ -102,8 +101,11 @@ const NicknamePage: React.FC = () => {
   };
 
   const getUserProfile = async (jwt: string) => {
-    setUserProfile(await usersAPI.getLoginUserProfile(jwt)); // user/own
-    setUser(userProfile);
+    const res = await usersAPI.getLoginUserProfile(jwt);
+    if (res) {
+      setUserProfile(res); // user/own
+      setUser(UPDATE_USER, userProfile);
+    }
   };
 
   // TODO: 리렌더링 방지용 전역 데이터 갱신 시켜줘야함

@@ -29,6 +29,14 @@ export interface IWinLoseCount {
   ladderLevel: number;
 }
 
+export interface IUserData extends IUserAuth {
+  winCount: number;
+  loseCount: number;
+  ladderWinCount: number;
+  ladderLoseCount: number;
+  ladderLevel: number;
+}
+
 export interface IUserWinLoseCount extends IWinLoseCount {
   id: number;
 }
@@ -82,12 +90,13 @@ export const PLAY = 'play' as const;
 
 export const LOGIN = 'LOGIN' as const;
 export const LOGOUT = 'LOGOUT' as const;
-export const EDIT = 'EDIT' as const;
+export const UPDATE_USER = 'UPDATE_USER' as const;
+export const UPDATE_RECORD = 'UPDATE_RECORD' as const;
 export const SET_NICKNAME = 'SET_NICKNAME' as const;
 export const SECOND_AUTH = 'SECOND_AUTH' as const;
 
 export type UserStatusType = 'LOGIN' | 'LOGOUT' | 'SET_NICKNAME' | 'SECOND_AUTH';
-export type HandleUserType = 'LOGIN' | 'LOGOUT' | 'EDIT';
+export type HandleUserType = 'LOGIN' | 'LOGOUT' | 'UPDATE_USER' | 'UPDATE_RECORD';
 
 export const GAME = 'GAME' as const;
 export const CHAT = 'CHAT' as const;

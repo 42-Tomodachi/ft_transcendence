@@ -5,6 +5,7 @@ import {
   IGameRecord,
   IUserWinLoseCount,
   IUserAvatar,
+  IUserData,
 } from '../utils/interface';
 
 const usersPath = (path: string) => {
@@ -43,7 +44,7 @@ const usersAPI = {
     }
   },
   // 본인 정보 가져오기
-  getLoginUserProfile: async (jwt: string): Promise<any> => {
+  getLoginUserProfile: async (jwt: string): Promise<IUserData | null> => {
     // TODO: own 프로필 포멧이 변경됨...
     try {
       const url = usersPath(`/own`);
@@ -166,7 +167,7 @@ const usersAPI = {
     }
   },
   // 유저 차단하기 토글
-  toggleBanUser: async (myId: number, targetId: number, jwt: string): Promise<any | null> => {
+  toggleBanUser: async (myId: number, targetId: number, jwt: string): Promise<boolean> => {
     // TODO: return type definine plz....
     try {
       const url = usersPath(`/${myId}`);
@@ -179,11 +180,11 @@ const usersAPI = {
           headers: { Authorization: `Bearer ${jwt}` },
         },
       );
-      return res.data;
+      return res.data.isBlocked;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
-      return null;
+      return false;
     }
   },
 };

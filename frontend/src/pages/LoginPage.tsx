@@ -17,11 +17,13 @@ const LoginPage: React.FC = () => {
       setJwt('SET_JWT', jwt);
       const getUserData = async () => {
         const res = await usersAPI.getLoginUserProfile(jwt);
-        setUser(LOGIN, res);
-        if (!res.nickname) {
-          setUserStatus(SET_NICKNAME);
-        } else {
-          setUserStatus(LOGIN);
+        if (res) {
+          setUser(LOGIN, res);
+          if (!res.nickname) {
+            setUserStatus(SET_NICKNAME);
+          } else {
+            setUserStatus(LOGIN);
+          }
         }
       };
       getUserData();

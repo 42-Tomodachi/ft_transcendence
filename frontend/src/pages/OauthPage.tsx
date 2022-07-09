@@ -19,12 +19,12 @@ const OauthPage: React.FC = () => {
         const res = await authAPI.isSignedUp(code);
         if (res) {
           setUser(LOGIN, {
-            userId: res.userId,
-            nickname: res.nickname,
-            email: res.email,
-            avatar: res.avatar,
-            isSecondAuthOn: res.isSecondAuthOn,
-            jwt: res.jwt,
+            ...res,
+            winCount: 0,
+            loseCount: 0,
+            ladderWinCount: 0,
+            ladderLoseCount: 0,
+            ladderLevel: 0,
           });
           // NOTE: 임시로 LocalStorage에 jwt 저장
           window.localStorage.setItem('jwt', res.jwt);

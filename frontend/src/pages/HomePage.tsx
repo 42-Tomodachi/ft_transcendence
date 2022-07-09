@@ -1,18 +1,34 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
 import UserList from '../components/UserList';
 import UserProfile from '../components/UserProfile';
 import Game from '../components/Game';
-import { HOME, MenuType } from '../utils/interface';
+import { HOME, MenuType, UPDATE_RECORD } from '../utils/interface';
 import Chat from '../components/Chat';
 import ModalSet from '../components/common/Modal/ModalSet';
+import { AllContext } from '../store';
+import { usersAPI } from '../API';
 
 interface HomePageProps {
   menu?: MenuType;
 }
 
 const HomePage: React.FC<HomePageProps> = ({ menu }) => {
+  const { setUser, user } = useContext(AllContext).userData;
+
+  useEffect(() => {
+    if (user) {
+      const getWinLoseCount = async () => {
+        const res = await usersAPI.getUserWinLoseCount(user.userId, user.jwt);
+        if (res) {
+          setUser(UPDATE_RECORD, undefined, res);
+        }
+      };
+      getWinLoseCount();
+    }
+  }, [menu]);
+
   return (
     <>
       <Background>

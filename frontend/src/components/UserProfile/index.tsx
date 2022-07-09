@@ -1,7 +1,6 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
-import axios from 'axios';
 import ProfileImage from '../common/ProfileImage';
 import { AllContext } from '../../store';
 import { OFF_SECOND_AUTH, ON_SECOND_AUTH } from '../../utils/interface';
