@@ -133,7 +133,7 @@ export class ChatController {
     @GetJwtUser() user: User,
     @Param('myId', ParseIntPipe) myId: number,
     @Query('partnerId', ParseIntPipe) partnerId: number,
-  ): Promise<ChatRoomDataDto> {
+  ): Promise<ChatRoomIdDto> {
     return await this.chatService.enterDmRoom(user, myId, partnerId);
   }
 

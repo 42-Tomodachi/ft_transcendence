@@ -448,7 +448,7 @@ export class ChatService {
     user: User,
     myId: number,
     partnerId: number,
-  ): Promise<ChatRoomDataDto> {
+  ): Promise<ChatRoomIdDto> {
     if (user.id !== myId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
@@ -479,7 +479,7 @@ export class ChatService {
     });
 
     if (chatRoom) {
-      return chatRoom.toChatRoomDataDto();
+      return { roomId: chatRoom.id };
     }
 
     const myUser = await this.userRepo.findOneBy({ id: myId });
@@ -508,7 +508,7 @@ export class ChatService {
       await t.save(chatParticipantForPartner);
     });
 
-    return chatRoomDataDto;
+    return { roomId: chatRoomDataDto.roomId };
   }
 
   async getChatContents(
