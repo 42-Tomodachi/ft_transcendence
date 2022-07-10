@@ -29,6 +29,7 @@ import {
   ChatRoomDto,
   ChatRoomUserDto,
   ChatParticipantProfile,
+  ChatContentDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -146,7 +147,7 @@ export class ChatController {
     @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
-  ): Promise<CreateChatContentDto[]> {
+  ): Promise<ChatContentDto[]> {
     return await this.chatService.getChatContents(user, roomId, userId);
   }
 

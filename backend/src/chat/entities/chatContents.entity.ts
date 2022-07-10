@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ChatRoomUserDto } from 'src/chat/dto/chat.dto';
+import { ChatContentDto, ChatRoomUserDto } from 'src/chat/dto/chat.dto';
 import { User } from 'src/users/entities/users.entity';
 import {
   BaseEntity,
@@ -45,9 +45,9 @@ export class ChatContents extends BaseEntity {
   @ManyToOne(() => User, (user) => user.sender)
   user: User;
 
-  toCreateChatContentDto(roomId: number, userId: number): CreateChatContentDto {
-    const createChatContentDto = new CreateChatContentDto();
-    createChatContentDto.isBroadcast = this.isNotice;
+  toChatContentDto(roomId: number, userId: number): ChatContentDto {
+    const chatContentDto = new ChatContentDto();
+    chatContentDto.isBroadcast = this.isNotice;
     if (!this.isNotice) {
       const chatRoomUserDto = new ChatRoomUserDto();
       chatRoomUserDto.userId = this.user.id;
@@ -56,12 +56,12 @@ export class ChatContents extends BaseEntity {
         (person) => person.chatRoomId === roomId,
       ).role;
 
-      createChatContentDto.from = chatRoomUserDto;
+      chatContentDto.from = { ...chatRoomUserDto, avatar: this.user.avatar };
     }
-    createChatContentDto.message = this.content;
-    createChatContentDto.fromUser = this.userId === userId ? true : false;
-    createChatContentDto.createdTime = this.createdTime.toLocaleTimeString();
+    chatContentDto.message = this.content;
+    chatContentDto.fromUser = this.userId === userId ? true : false;
+    chatContentDto.createdTime = this.createdTime.toLocaleTimeString();
 
-    return createChatContentDto;
+    return chatContentDto;
   }
 }

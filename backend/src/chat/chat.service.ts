@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  ChatContentDto,
   ChatParticipantProfile,
   ChatRoomDto,
   ChatRoomUserDto,
@@ -515,7 +516,7 @@ export class ChatService {
     user: User,
     roomId: number,
     userId: number,
-  ): Promise<CreateChatContentDto[]> {
+  ): Promise<ChatContentDto[]> {
     if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
@@ -558,7 +559,7 @@ export class ChatService {
         return true;
       })
       .map((chatContent) => {
-        return chatContent.toCreateChatContentDto(roomId, userId);
+        return chatContent.toChatContentDto(roomId, userId);
       });
   }
 

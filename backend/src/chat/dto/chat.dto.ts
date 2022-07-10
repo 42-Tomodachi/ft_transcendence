@@ -120,6 +120,20 @@ export class CreateChatContentDto {
   createdTime?: string;
 }
 
+export class ChatContentDto extends PickType(CreateChatContentDto, [
+  'isBroadcast',
+  'message',
+  'fromUser',
+  'createdTime',
+]) {
+  @ApiProperty({
+    description: '공지 메세지가 아닐 경우, 보낸이의 정보가 들어간다.',
+  })
+  @IsOptional()
+  @ValidateNested()
+  from?: ChatRoomUserDto & { avatar: string | null };
+}
+
 export class ParticipantRoleDto {
   @ApiProperty({ description: '채팅 참여자 역할' })
   @IsString()
