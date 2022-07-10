@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { CreateGameRoomDto, GetGameRoomsDto, GetGameUsersDto } from './dto/game.dto';
 import { GameRoomEntity, } from './entity/game.entity';
 import { GameGateway } from './game.gateway';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class GameService {
@@ -19,7 +20,7 @@ export class GameService {
 
     getGameRoomPrimaryId(): number {
         let index = 0;
-        for (let x of this.gameRoomIdList) {
+        for (const x of this.gameRoomIdList) {
             if (x == 0) {
                 this.gameRoomIdList[index] = 1;
                 return index;
@@ -31,7 +32,7 @@ export class GameService {
 
     getGameRooms(): GetGameRoomsDto[] {
         const getGameRoomsDtoArray = new Array<GetGameRoomsDto>;
-        for (let item of this.gameRoomTable) {
+        for (const item of this.gameRoomTable) {
             const getGameRoomsDto = new GetGameRoomsDto();
             getGameRoomsDto.gameId = item.gameId;
             getGameRoomsDto.roomTitle = item.roomTitle;
@@ -61,17 +62,24 @@ export class GameService {
     }
 
     getGameRoomIndex(gameId: number, array: any) {
-        for (let item of array) {
+        for (const item of array) {
             if (item.gameId == gameId)
                 return array.indexOf(item);
         }
         return null;
     }
 
-    async enterGameRoom(gameId: number, userId: number): Promise<string> {
-        const index = this.getGameRoomIndex(gameId, this.gameRoomTable);
+    async enterGameRoom(
+        gameId: number, 
+        userId: number, 
+        gamePassword: string | null,
+        ): Promise<string> {
+            const index = this.getGameRoomIndex(gameId, this.gameRoomTable);
         if (index == null)
             throw new BadRequestException('방 정보를 찾을 수 없습니다.');
+        if (await this.gameRoomTable[index].password != gamePassword) {
+            throw new BadRequestException('게임방의 비밀번호가 일치하지 않습니다.');
+        }
         // 2P 입장
         if (this.gameRoomTable[index].secondPlayer == null) {
             this.gameRoomTable[index].secondPlayer = userId;

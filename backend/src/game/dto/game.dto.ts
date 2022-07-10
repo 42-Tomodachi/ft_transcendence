@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { ApiProperty, PickType } from '@nestjs/swagger';
+import { IsBoolean, IsNumber, IsString, IsOptional } from 'class-validator';
 
 export class GetGameRoomsDto {
   @ApiProperty({ description: '게임방 id' })
@@ -34,8 +34,13 @@ export class CreateGameRoomDto {
 
   @ApiProperty({ description: '게임방 비밀번호' })
   @IsString()
-  password: string;
+  @IsOptional()
+  password: string | null;
 }
+
+export class GameRoomPasswordDto extends PickType(CreateGameRoomDto, [
+  'password',
+]) {}
 
 export class GetGameUsersDto {
   @ApiProperty({ description: '유저 닉네임' })
