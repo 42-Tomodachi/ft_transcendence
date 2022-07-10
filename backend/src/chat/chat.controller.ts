@@ -210,13 +210,13 @@ export class ChatController {
     @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('myId', ParseIntPipe) myId: number,
-    @Body() target: TargetIdDto,
+    @Query('targetId', ParseIntPipe) targetId: number,
   ): Promise<ChatParticipantProfile> {
     return await this.chatService.getChatParticipantProfile(
       user,
       roomId,
       myId,
-      target.targetId,
+      targetId,
     );
   }
 }
