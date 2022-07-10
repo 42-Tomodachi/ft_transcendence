@@ -36,10 +36,7 @@ export class ChatRoomDataDto extends PickType(ChatRoomDto, [
   'ownerId',
 ]) {}
 
-export class CreateChatRoomDto extends PickType(ChatRoomDto, [
-  'title',
-  'isDm',
-]) {
+export class CreateChatRoomDto extends PickType(ChatRoomDto, ['title']) {
   @ApiProperty({ description: '채팅방 비밀번호' })
   @IsString()
   @IsOptional()

@@ -166,11 +166,8 @@ export class ChatService {
         salt,
       );
       chatRoom.password = hashedPassword;
-    } else {
-      chatRoom.password = null;
     }
     chatRoom.ownerId = userId;
-    chatRoom.isDm = createChatRoomDto.isDm;
 
     const createdChatRoom = await this.chatRoomRepo.save(chatRoom);
 
