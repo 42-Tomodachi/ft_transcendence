@@ -34,7 +34,7 @@ export class ChatContents extends BaseEntity {
   isNotice: boolean;
 
   @ApiProperty({ description: '메세지 보낸 시간' })
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 
   @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.chatContents, {
