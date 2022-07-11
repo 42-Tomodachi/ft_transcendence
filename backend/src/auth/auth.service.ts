@@ -22,6 +22,8 @@ export class AuthService {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
+  private accessTokens: Map<number, string> = new Map<number, string>();
+
   async issueJwt(id: number): Promise<string> {
     const user = await this.usersService.getUserById(id);
 
@@ -29,6 +31,21 @@ export class AuthService {
       id: user.id,
       email: user.email,
     });
+  }
+
+  async setLogon(user: User): Promise<string> {
+    if (this.accessTokens[user.id]) {
+      return this.accessTokens[user.id];
+    }
+    const jwt = this.jwtService.sign({
+      id: user.id,
+      email: user.email,
+    });
+    this.accessTokens[user.id] = jwt;
+    user.userStatus = 'on';
+    await user.save();
+
+    return jwt;
   }
 
   async getAccessToken(code: string): Promise<string> {
@@ -71,7 +88,7 @@ export class AuthService {
     return email;
   }
 
-  userToIsSignedUpDto(user: User): IsSignedUpDto {
+  userToIsSignedUpDto(user: User, jwt: string): IsSignedUpDto {
     const isSignedUpDto = new IsSignedUpDto();
 
     isSignedUpDto.userId = user.id;
@@ -79,10 +96,7 @@ export class AuthService {
     isSignedUpDto.email = user.email;
     isSignedUpDto.avatar = user.avatar;
     isSignedUpDto.isSecondAuthOn = user.isSecondAuthOn;
-    isSignedUpDto.jwt = this.jwtService.sign({
-      id: user.id,
-      email: user.email,
-    });
+    isSignedUpDto.jwt = jwt;
 
     return isSignedUpDto;
   }
@@ -98,12 +112,13 @@ export class AuthService {
         email: userEmail,
       });
 
-      return this.userToIsSignedUpDto(createdUser);
+      return this.userToIsSignedUpDto(
+        createdUser,
+        await this.setLogon(createdUser),
+      );
     }
-    user.userStatus = 'on';
-    await user.save();
 
-    return this.userToIsSignedUpDto(user);
+    return this.userToIsSignedUpDto(user, await this.setLogon(user));
   }
 
   async updateUser(updateUserDto: UpdateUserDto): Promise<IsSignedUpDto> {
@@ -119,7 +134,7 @@ export class AuthService {
     user.avatar = updateUserDto.avatar || user.avatar;
     const updatedUser = await this.userRepo.save(user);
 
-    return this.userToIsSignedUpDto(updatedUser);
+    return this.userToIsSignedUpDto(updatedUser, this.accessTokens[user.id]);
   }
 
   // async signUp(updateUserDto: UpdateUserDto): Promise<IsSignedUpDto> {
@@ -148,6 +163,7 @@ export class AuthService {
 
     user.userStatus = 'off';
     await user.save();
+    this.accessTokens.delete(user.id);
   }
 
   async startSecondAuth(

@@ -9,6 +9,8 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  Request,
+  Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EmailDto, NicknameDto } from '../users/dto/users.dto';
