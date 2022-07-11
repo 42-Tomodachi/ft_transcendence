@@ -2,15 +2,32 @@ import React, { useEffect, useState, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import ChatList from '../RoomList';
-import { CHAT, IChatRooms, IGameRooms, MAKE_CHAT_ROOM } from '../../utils/interface';
+import {
+  CHAT,
+  ChatRoomType,
+  IChatRooms,
+  IGameRooms,
+  MAKE_CHAT_ROOM,
+  ALL,
+  JOINED,
+} from '../../utils/interface';
 import { AllContext } from '../../store';
 import { chatsAPI } from '../../API';
 
 const Chat: React.FC = () => {
   const [chatList, setChatList] = useState<IChatRooms[] | IGameRooms[]>([]);
+  const [roomType, setRoomType] = useState<ChatRoomType>(ALL);
   const { jwt, setJwt } = useContext(AllContext).jwtData;
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
+
+  useEffect(() => {
+    const jwtLocal = localStorage.getItem('jwt');
+    if (jwtLocal) {
+      setJwt('SET_JWT', jwtLocal);
+      getAllChatList(jwtLocal);
+    }
+  }, []);
 
   const onGetJoinedChatRooms = async () => {
     if (user) {
@@ -19,17 +36,20 @@ const Chat: React.FC = () => {
     } else console.error('not get user');
   };
 
-  useEffect(() => {
-    const jwtLocal = localStorage.getItem('jwt');
-    const getChatList = async (jwt: string) => {
-      const data = await chatsAPI.getChatRoom(jwt);
-      setChatList(data);
-    };
-    if (jwtLocal) {
-      setJwt('SET_JWT', jwtLocal);
-      getChatList(jwtLocal);
+  const getAllChatList = async (jwt: string) => {
+    const data = await chatsAPI.getChatRoom(jwt);
+    setChatList(data);
+  };
+
+  const handleRoomType = () => {
+    if (roomType === ALL) {
+      setRoomType(JOINED);
+      onGetJoinedChatRooms();
+    } else {
+      setRoomType(ALL);
+      getAllChatList(jwt);
     }
-  }, []);
+  };
 
   return (
     <>
@@ -45,8 +65,8 @@ const Chat: React.FC = () => {
           width={160}
           height={40}
           color="gradient"
-          text="참여중인 채팅방 보기"
-          onClick={onGetJoinedChatRooms}
+          text={roomType === ALL ? '참여중인 채팅방 보기' : '전체 방 보기'}
+          onClick={handleRoomType}
         />
       </EnteredRoomBtn>
       <ChatList list={chatList} type={CHAT} />

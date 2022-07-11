@@ -44,6 +44,11 @@ export interface IParticipants extends IUserKey {
   role: string;
 }
 
+export const ALL = 'ALL' as const;
+export const JOINED = 'JOINED' as const;
+
+export type ChatRoomType = 'ALL' | 'JOINED';
+
 // TODO: delete IRoomList
 // export interface IRoomList {
 //   id: number;
