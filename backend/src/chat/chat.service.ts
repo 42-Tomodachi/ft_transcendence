@@ -243,9 +243,8 @@ export class ChatService {
       const chatRoomUserDto = new ChatRoomUserDto();
       chatRoomUserDto.userId = userId;
       chatRoomUserDto.nickname = user.nickname;
-      chatRoomUserDto.role = user.chatParticipant.find(
-        (person) => person.chatRoomId === roomId,
-      ).role;
+      chatRoomUserDto.role = 'guest';
+
       this.ChatGateway.server
         .to(roomId.toString())
         .emit('updateUser', chatRoomUserDto);
