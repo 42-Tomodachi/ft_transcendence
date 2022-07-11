@@ -4,10 +4,10 @@ import styled from '@emotion/styled';
 import Button from '../common/Button';
 import GameList from '../RoomList';
 import { AllContext } from '../../store';
-import { LOADING_LADDER_GAME, IRoomList, MAKE_GAME_ROOM, GAME } from '../../utils/interface';
+import { LOADING_LADDER_GAME, IGameRooms, MAKE_GAME_ROOM, GAME } from '../../utils/interface';
 
 const Game: React.FC = () => {
-  const [gameList, setGameList] = useState<IRoomList[] | []>([]);
+  const [gameList, setGameList] = useState<IGameRooms[] | []>([]);
   const { setModal } = useContext(AllContext).modalData;
 
   useEffect(() => {
