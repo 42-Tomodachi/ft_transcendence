@@ -6,7 +6,10 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { ChatRoomDataDto, ChatRoomDto as ChatRoomDto } from '../dto/chat.dto';
+import {
+  ChatRoomDataDto,
+  ChatRoomDto as ChatRoomDto,
+} from '../dto/chatRoom.dto';
 import { ChatContents } from './chatContents.entity';
 import { ChatParticipant } from './chatParticipant.entity';
 
