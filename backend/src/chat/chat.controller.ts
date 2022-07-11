@@ -22,7 +22,6 @@ import {
   SetChatRoomDto,
   RoomPasswordDto,
   ChatRoomIdDto,
-  UpdateChatRoomDto,
   CreateChatContentDto,
   BooleanDto,
   ParticipantRoleDto,
