@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { session } from 'passport';
 import * as bcrypt from 'bcryptjs';
+import { JwtStrategy } from 'src/auth/jwt.strategy';
 
 @Injectable()
 export class AuthService {
@@ -19,10 +20,9 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
+    private readonly jwtStrategy: JwtStrategy,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
-
-  private accessTokens: Map<number, string> = new Map<number, string>();
 
   async issueJwt(id: number): Promise<string> {
     const user = await this.usersService.getUserById(id);
@@ -30,18 +30,21 @@ export class AuthService {
     return this.jwtService.sign({
       id: user.id,
       email: user.email,
+      accessToken: this.jwtStrategy.getJwtAccessToken(user.id),
     });
   }
 
   async setLogon(user: User): Promise<string> {
-    if (this.accessTokens[user.id]) {
-      return this.accessTokens[user.id];
+    if (this.jwtStrategy.getJwtAccessToken(user.id)) {
+      return this.jwtStrategy.getJwtAccessToken(user.id);
     }
+    const hashToken = await bcrypt.hash(this.makeRand6Num(), 10);
     const jwt = this.jwtService.sign({
       id: user.id,
       email: user.email,
+      accessToken: hashToken,
     });
-    this.accessTokens[user.id] = jwt;
+    this.jwtStrategy.setJwtAccessToken(user.id, hashToken);
     user.userStatus = 'on';
     await user.save();
 
@@ -121,33 +124,6 @@ export class AuthService {
     return this.userToIsSignedUpDto(user, await this.setLogon(user));
   }
 
-  async updateUser(updateUserDto: UpdateUserDto): Promise<IsSignedUpDto> {
-    const user = await this.userRepo.findOne({
-      where: { id: updateUserDto.userId },
-    });
-
-    if (!user) {
-      throw new BadRequestException('유저를 찾을 수 없습니다.');
-    }
-
-    user.nickname = updateUserDto.nickname || user.nickname;
-    user.avatar = updateUserDto.avatar || user.avatar;
-    const updatedUser = await this.userRepo.save(user);
-
-    return this.userToIsSignedUpDto(updatedUser, this.accessTokens[user.id]);
-  }
-
-  // async signUp(updateUserDto: UpdateUserDto): Promise<IsSignedUpDto> {
-  //   if (
-  //     updateUserDto.nickname &&
-  //     (await this.isDuplicateNickname(updateUserDto.nickname))
-  //   ) {
-  //     throw new BadRequestException('중복된 닉네임 입니다.');
-  //   }
-
-  //   return await this.updateUser(updateUserDto);
-  // }
-
   async isDuplicateNickname(nickname: string): Promise<IsDuplicateDto> {
     if (nickname.length < 2 || nickname.length > 8) {
       throw new BadRequestException('닉네임은 최소2자 최대 8자 입니다.');
@@ -163,7 +139,7 @@ export class AuthService {
 
     user.userStatus = 'off';
     await user.save();
-    this.accessTokens.delete(user.id);
+    this.jwtStrategy.deletejwtAccessToken(user.id);
   }
 
   async startSecondAuth(
