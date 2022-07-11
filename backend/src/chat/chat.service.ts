@@ -50,6 +50,17 @@ export class ChatService {
     return chatRoom;
   }
 
+  async getChatRoomData(roomId: number): Promise<ChatRoomDataDto> {
+    const chatRoom = await this.chatRoomRepo.findOne({ where: { id: roomId } });
+
+    const chatRoomData = new ChatRoomDataDto();
+    chatRoomData.roomId = roomId;
+    chatRoomData.title = chatRoom.title;
+    chatRoomData.ownerId = chatRoom.ownerId;
+
+    return chatRoomData;
+  }
+
   async getChatRooms(): Promise<ChatRoomDto[]> {
     let chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chatRoom')
