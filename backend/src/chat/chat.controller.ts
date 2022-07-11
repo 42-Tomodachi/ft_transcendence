@@ -48,9 +48,19 @@ export class ChatController {
   @ApiOperation({ summary: 'kankim✅ 채팅방 목록 가져오기' })
   @Get('')
   async getChatRooms(): Promise<ChatRoomDto[]> {
-    const chatRooms = this.chatService.getChatRooms();
+    const chatRooms = await this.chatService.getChatRooms();
 
     return chatRooms;
+  }
+
+  @ApiOperation({ summary: 'jihokim✅ 채팅방 정보' })
+  @Get('/:roomId')
+  async getChatRoomData(
+    @Param('roomId', ParseIntPipe) roomId: number,
+  ): Promise<ChatRoomDataDto> {
+    const chatRoomData = await this.chatService.getChatRoomData(roomId);
+
+    return chatRoomData;
   }
 
   @ApiOperation({ summary: 'kankim✅ 참여중인 채팅방 목록 가져오기' })
