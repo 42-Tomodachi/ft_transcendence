@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { authAPI } from './auth';
 import { usersAPI } from './users';
-
+import { chatsAPI } from './chats';
 const url = process.env.REACT_APP_BACK_API;
 
 export const instance = axios.create({
@@ -36,4 +36,4 @@ export const authAPI = {
 
 */
 
-export { authAPI, usersAPI };
+export { authAPI, usersAPI, chatsAPI };

@@ -13,14 +13,46 @@ export interface IUserAuth extends IUser {
 }
 export interface IUserProfile extends IUser, IWinLoseCount {}
 
-export interface IRoomList {
-  id: number;
+export interface IChatDMRoom {
+  roomId: number;
+  title: string;
+  ownerId: number;
+}
+export interface IChatRooms {
+  roomId: number;
   title: string;
   isPublic: boolean;
-  playerCount: number;
-  isLadder: boolean;
-  isGameStart?: boolean;
+  ownerId: number;
+  numberOfParticipants: number;
+  isDm: boolean;
 }
+export interface IGameRooms {
+  gameId: number;
+  roomTitle: string;
+  playerCount: number;
+  isPublic: boolean;
+  isStart: boolean;
+}
+
+export interface IRoomSetting {
+  title: string;
+  isDm?: boolean; // TODO: 수정될 예정
+  password: string;
+}
+
+export interface IParticipants extends IUserKey {
+  role: string;
+}
+
+// TODO: delete IRoomList
+// export interface IRoomList {
+//   id: number;
+//   title: string;
+//   isPublic: boolean;
+//   playerCount: number;
+//   isLadder: boolean;
+//   isGameStart?: boolean;
+// }
 export interface IWinLoseCount {
   winCount: number;
   loseCount: number;
@@ -28,7 +60,6 @@ export interface IWinLoseCount {
   ladderLoseCount: number;
   ladderLevel: number;
 }
-
 export interface IUserData extends IUserAuth {
   winCount: number;
   loseCount: number;
@@ -61,16 +92,16 @@ export interface IUserAvatar {
 }
 
 export interface IMessage {
-  id: number;
   isBroadcast: boolean;
   from?: {
-    id: number;
+    userId: number;
     nickname: string;
-    profileImage: string;
+    role: string;
+    avatar: string | null; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
   };
   message: string;
   fromUser: boolean;
-  createdAt: string | number;
+  createdTime: string;
 }
 
 export type ButtonColorType = 'white' | 'white2' | 'main' | 'gradient';
@@ -81,6 +112,7 @@ export interface IUserList {
   isfriend: boolean;
   status: 'on' | 'off' | 'play';
 }
+export type UserRole = 'owner' | 'manager' | 'guest';
 
 export type ActiveMenuType = 'ALL' | 'FRIEND';
 
