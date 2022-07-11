@@ -46,7 +46,6 @@ export class GameService {
 
     createGameRoom(createGameRoomDto: CreateGameRoomDto): string {
         // 서버 저장용
-
         const gameRoomEntity = new GameRoomEntity();
         gameRoomEntity.gameId = this.getGameRoomPrimaryId();
         gameRoomEntity.firstPlayer = createGameRoomDto.ownerId;
@@ -70,11 +69,14 @@ export class GameService {
     }
 
     async enterGameRoom(
-        gameId: number, 
-        userId: number, 
+        user: User,
+        gameId: number,
+        userId: number,
         gamePassword: string | null,
         ): Promise<string> {
             const index = this.getGameRoomIndex(gameId, this.gameRoomTable);
+        if (user.id != userId)
+            throw new BadRequestException('잘못된 유저의 접근입니다.');
         if (index == null)
             throw new BadRequestException('방 정보를 찾을 수 없습니다.');
         if (await this.gameRoomTable[index].password != gamePassword) {
@@ -94,8 +96,10 @@ export class GameService {
         return this.gameRoomTable[index].roomTitle;
     }
 
-    async exitGameRoom(gameId: number, userId: number): Promise<string> {
+    async exitGameRoom(user: User, gameId: number, userId: number): Promise<string> {
         const index = this.getGameRoomIndex(gameId, this.gameRoomTable);
+        if (user.id != userId)
+            throw new BadRequestException('잘못된 유저의 접근입니다.');
         if (index == null)
             throw new BadRequestException('방 정보를 찾을 수 없습니다.');
         if (userId == this.gameRoomTable[index].firstPlayer) {
