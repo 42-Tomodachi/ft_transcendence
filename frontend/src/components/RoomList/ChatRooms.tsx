@@ -1,9 +1,10 @@
-import React from 'react';
-import { IChatRooms } from '../../utils/interface';
+import React, { useContext } from 'react';
+import { ENTER_CHAT_ROOM, IChatRooms } from '../../utils/interface';
 import Button from '../common/Button';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
-import Chat from '../Chat';
+import { AllContext } from '../../store';
+import { chatsAPI } from '../../API';
 
 interface ChatRoomProps {
   item: IChatRooms;
@@ -11,6 +12,22 @@ interface ChatRoomProps {
 
 const ChatRooms: React.FC<ChatRoomProps> = ({ item }) => {
   const navigate = useNavigate();
+  const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
+
+  const handleEnterRoom = async () => {
+    if (user) {
+      if (!item.isPublic) {
+        setModal(ENTER_CHAT_ROOM, item.roomId);
+        // TODO: 모달 안에서도 enterChatRoom 넣기
+      } else {
+        const res = await chatsAPI.enterChatRoom(item.roomId, user.userId, '', user.jwt);
+        if (res !== -1) {
+          navigate(`/chatroom/${item.roomId}`);
+        }
+      }
+    }
+  };
 
   return (
     <ListItem>
@@ -24,7 +41,7 @@ const ChatRooms: React.FC<ChatRoomProps> = ({ item }) => {
             height={30}
             color="gradient"
             text="입장"
-            onClick={() => navigate(`/chat`)} // TODO: change /chat/{roomNumber}
+            onClick={handleEnterRoom} // TODO: change /chat/{roomNumber}
           />
         </EnterBtnWrap>
       </ListStatus>

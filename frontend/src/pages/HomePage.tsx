@@ -6,7 +6,6 @@ import UserProfile from '../components/UserProfile';
 import Game from '../components/Game';
 import { HOME, MenuType, UPDATE_RECORD } from '../utils/interface';
 import Chat from '../components/Chat';
-import ModalSet from '../components/common/Modal/ModalSet';
 import { AllContext } from '../store';
 import { usersAPI } from '../API';
 
@@ -43,7 +42,6 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
           </HomeContents>
         </HomeContainer>
       </Background>
-      <ModalSet />
     </>
   );
 };

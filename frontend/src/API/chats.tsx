@@ -40,7 +40,8 @@ const chatsAPI = {
     isDm: boolean,
     password: string,
     jwt: string,
-  ): Promise<IRoomSetting | null> => {
+    // TODO : interface 따로 빼기
+  ): Promise<{ roomId: number; title: string; ownerId: number } | null> => {
     try {
       const url = chatsPath(`/${userId}`);
       const res = await instance.post(
@@ -50,6 +51,23 @@ const chatsAPI = {
           headers: { Authorization: `Bearer ${jwt}` },
         },
       );
+      return res.data;
+    } catch (e) {
+      if (e instanceof Error) console.error(e.message);
+      else console.error(e);
+      return null;
+    }
+  },
+  getChatRoomStatus: async (
+    roomId: number,
+    jwt: string,
+    // TODO : interface 따로 빼기
+  ): Promise<{ roomId: number; title: string; ownerId: number } | null> => {
+    try {
+      const url = chatsPath(`/${roomId}`);
+      const res = await instance.get(url, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);

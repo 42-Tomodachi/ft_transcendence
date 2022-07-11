@@ -3,7 +3,6 @@ import { AllContext } from '../store';
 import LoginPage from './LoginPage';
 import NicknamePage from './NicknamePage';
 import SecondAuthPage from './SecondAuthPage';
-import ModalSet from '../components/common/Modal/ModalSet';
 import HomePage from './HomePage';
 import { MenuType } from '../utils/interface';
 interface MainPageProps {
@@ -23,7 +22,6 @@ const MainPage: React.FC<MainPageProps> = ({ menu }) => {
           LOGIN: menu ? <HomePage menu={menu} /> : <HomePage />,
         }[userStatus]
       }
-      <ModalSet />
     </>
   );
 };

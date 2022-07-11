@@ -39,7 +39,7 @@ export const AllContext = createContext<stateType>({
 type stateType = {
   modalData: {
     modal: IModalData;
-    setModal: (type: ModalType | null) => void;
+    setModal: (type: ModalType | null, id?: number) => void;
   };
   userData: {
     user: IUserData | null;

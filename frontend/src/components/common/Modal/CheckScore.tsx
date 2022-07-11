@@ -3,7 +3,6 @@ import styled from '@emotion/styled';
 import Button from '../Button';
 import axios from 'axios';
 import Modal from '.';
-import ProfileImage from '../ProfileImage';
 import { AllContext } from '../../../store';
 import { IGameRecord } from '../../../utils/interface';
 

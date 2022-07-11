@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
 import UserList from '../components/UserList';
@@ -7,6 +6,7 @@ import UserProfile from '../components/UserProfile';
 import MessageList from '../components/Chat/MessageList';
 import MessageInput from '../components/Chat/MessageInput';
 import { CHAT, IMessage } from '../utils/interface';
+import { useParams } from 'react-router-dom';
 import { AllContext } from '../store';
 import { chatsAPI } from '../API';
 
@@ -14,25 +14,38 @@ const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[] | []>([]);
   const { jwt, setJwt } = useContext(AllContext).jwtData;
   const { user } = useContext(AllContext).userData;
+  const { roomId } = useParams();
+  const [roomName, setRoomName] = useState<string>('');
 
   useEffect(() => {
-    const jwt = window.localStorage.getItem('jwt');
-    const roomId = 16; // TODO: get roomId, userId from URL??
-    const userId = 6;
-
-    if (jwt) {
-      setJwt('SET_JWT', jwt);
-
-      const getMessages = async (roomId: number, userId: number) => {
-        const data1 = await chatsAPI.getMsgHistoryInChatRoom(roomId, userId, jwt);
-        // const { data } = await axios.get('http://localhost:4000/messages');
-        // setMessages(data);
-        console.dir(data1);
-        setMessages(data1);
+    if (roomId && user) {
+      const getRoomData = async () => {
+        const res = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
+        if (res) {
+          setRoomName(res.title);
+        }
       };
-      getMessages(roomId, userId);
+      getRoomData();
     }
-  }, []);
+  }, [roomId]);
+  // useEffect(() => {
+  //   const jwt = window.localStorage.getItem('jwt');
+  //   const roomId = 16; // TODO: get roomId, userId from URL??
+  //   const userId = 6;
+
+  //   if (jwt) {
+  //     setJwt('SET_JWT', jwt);
+
+  //     const getMessages = async (roomId: number, userId: number) => {
+  //       const data1 = await chatsAPI.getMsgHistoryInChatRoom(roomId, userId, jwt);
+  //       // const { data } = await axios.get('http://localhost:4000/messages');
+  //       // setMessages(data);
+  //       console.dir(data1);
+  //       setMessages(data1);
+  //     };
+  //     getMessages(roomId, userId);
+  //   }
+  // }, []);
 
   return (
     <Background>
@@ -41,9 +54,8 @@ const ChatPage: React.FC = () => {
 
         <ChatRoomBody>
           <ChatArea>
-            {/* TODO: dhyeon -> 유저의 닉네임 */}
             {/* TODO: Figma 참고하여 Left Arrow 넣어 뒤로가기 버튼 추가 */}
-            <ChatTitle> 의 채팅방</ChatTitle>
+            <ChatTitle>{roomName}</ChatTitle>
             <MessageList messages={messages} />
             <MessageInput setMessages={setMessages} messages={messages} />
           </ChatArea>
