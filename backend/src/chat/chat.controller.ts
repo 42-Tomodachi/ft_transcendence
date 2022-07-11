@@ -19,7 +19,7 @@ import {
 import { ChatService } from './chat.service';
 import {
   ChatRoomDataDto,
-  CreateChatRoomDto,
+  SetChatRoomDto,
   RoomPasswordDto,
   ChatRoomIdDto,
   UpdateChatRoomDto,
@@ -30,6 +30,7 @@ import {
   ChatRoomUserDto,
   ChatParticipantProfile,
   ChatContentDto,
+  IsMutedDto,
 } from './dto/chat.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -69,7 +70,7 @@ export class ChatController {
   async createChatRoom(
     @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) userId: number,
-    @Body() createChatRoomDto: CreateChatRoomDto,
+    @Body() createChatRoomDto: SetChatRoomDto,
   ): Promise<ChatRoomDataDto> {
     const chatRoom = await this.chatService.createChatRoom(
       user,
@@ -109,7 +110,7 @@ export class ChatController {
   async updateRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('ownerId', ParseIntPipe) ownerId: number,
-    @Body() updateChatRoomDto: UpdateChatRoomDto,
+    @Body() updateChatRoomDto: SetChatRoomDto,
   ): Promise<ChatRoomDataDto> {
     return await this.chatService.updateRoom(
       roomId,
@@ -181,7 +182,7 @@ export class ChatController {
   async muteParticipant(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
-  ): Promise<BooleanDto> {
+  ): Promise<IsMutedDto> {
     return this.chatService.muteCertainParticipant(roomId, targetUserId);
   }
 

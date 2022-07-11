@@ -10,7 +10,7 @@ import {
 import { UserProfileDto } from 'src/users/dto/users.dto';
 import { PrimaryColumnCannotBeNullableError } from 'typeorm';
 
-export class ChatRoomDto {
+class ChatRoomBaseDto {
   @ApiProperty({ description: '채팅방 id' })
   roomId: number;
 
@@ -28,58 +28,36 @@ export class ChatRoomDto {
 
   @ApiProperty({ description: 'dm방 여부' })
   isDm: boolean;
+
+  @ApiProperty({ description: '채팅방 비밀번호' })
+  @IsString()
+  @IsOptional()
+  password: string | null;
 }
 
-export class ChatRoomDataDto extends PickType(ChatRoomDto, [
+export class ChatRoomDto extends PickType(ChatRoomBaseDto, [
+  'roomId',
+  'title',
+  'isPublic',
+  'ownerId',
+  'numberOfParticipants',
+  'isDm',
+]) {}
+
+export class ChatRoomDataDto extends PickType(ChatRoomBaseDto, [
   'roomId',
   'title',
   'ownerId',
 ]) {}
 
-export class CreateChatRoomDto extends PickType(ChatRoomDto, ['title']) {
-  @ApiProperty({ description: '채팅방 비밀번호' })
-  @IsString()
-  @IsOptional()
-  password: string | null;
-}
+export class SetChatRoomDto extends PickType(ChatRoomBaseDto, [
+  'title',
+  'password',
+]) {}
 
-// export class ChatRoomParticipantsDto {
-//   @ApiProperty({ description: '유저id( DB key )' })
-//   @IsNumber()
-//   userId: number;
+export class RoomPasswordDto extends PickType(ChatRoomBaseDto, ['password']) {}
 
-//   @ApiProperty({ description: '유저 닉네임' })
-//   @IsString()
-//   nickname: string;
-
-//   // @ApiProperty({ description: '온라인인지 여부' })
-//   // @IsBoolean()
-//   // isOnline: boolean;
-
-//   // @ApiProperty({ description: '게임중인지 여부' })
-//   // @IsBoolean()
-//   // isGaming: boolean;
-
-//   @ApiProperty({ description: '친구인지 여부' })
-//   @IsBoolean()
-//   isFriend: boolean;
-// }
-
-export class RoomPasswordDto {
-  @ApiProperty({ description: '채팅방 비밀번호' })
-  @IsString()
-  @IsOptional()
-  password: string | null;
-}
-
-export class ChatRoomIdDto extends PickType(ChatRoomDto, ['roomId']) {}
-
-export class UpdateChatRoomDto extends PickType(ChatRoomDto, ['title']) {
-  @ApiProperty({ description: '채팅방 비밀번호' })
-  @IsString()
-  @IsOptional()
-  password: string | null;
-}
+export class ChatRoomIdDto extends PickType(ChatRoomBaseDto, ['roomId']) {}
 
 export class ChatRoomUserDto {
   @ApiProperty({ description: '유저 id' })
@@ -144,6 +122,12 @@ export class BooleanDto {
   @ApiProperty({ description: 'true or false' })
   @IsBoolean()
   boolean: boolean;
+}
+
+export class IsMutedDto {
+  @ApiProperty({ description: 'Is he Muted?' })
+  @IsBoolean()
+  isMuted: boolean;
 }
 
 export class ChatParticipantProfile extends UserProfileDto {

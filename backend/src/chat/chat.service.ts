@@ -5,6 +5,7 @@ import {
   ChatParticipantProfile,
   ChatRoomDto,
   ChatRoomUserDto,
+  IsMutedDto,
 } from 'src/chat/dto/chat.dto';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
@@ -15,7 +16,7 @@ import {
   CreateChatContentDto,
   ChatRoomDataDto,
   ChatRoomIdDto,
-  CreateChatRoomDto,
+  SetChatRoomDto,
   UpdateChatRoomDto,
   RoomPasswordDto,
   BooleanDto,
@@ -152,7 +153,7 @@ export class ChatService {
   async createChatRoom(
     user: User,
     userId: number,
-    createChatRoomDto: CreateChatRoomDto,
+    createChatRoomDto: SetChatRoomDto,
   ): Promise<ChatRoomDataDto> {
     if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
@@ -263,7 +264,7 @@ export class ChatService {
   async updateRoom(
     roomId: number,
     ownerId: number,
-    updateChatRoomDto: UpdateChatRoomDto,
+    updateChatRoomDto: SetChatRoomDto,
   ): Promise<ChatRoomDataDto> {
     const room = await this.chatRoomRepo.findOneBy({ id: roomId });
     if (!room) {
@@ -375,7 +376,7 @@ export class ChatService {
   async muteCertainParticipant(
     roomId: number,
     userId: number,
-  ): Promise<BooleanDto> {
+  ): Promise<IsMutedDto> {
     const room = await this.chatRoomRepo.findOneBy({ id: roomId });
     if (!room) {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
@@ -406,8 +407,8 @@ export class ChatService {
       .to(roomId.toString())
       .emit('updateUserList', chatParticipant);
 
-    const result: BooleanDto = new BooleanDto();
-    result.boolean = chatParticipant.isMuted;
+    const result: IsMutedDto = new IsMutedDto();
+    result.isMuted = chatParticipant.isMuted;
     return result;
   }
 
