@@ -9,7 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { GetJwtUser } from 'src/auth/jwt.strategy';
+import { User } from 'src/users/entities/users.entity';
 import {
   CreateGameRoomDto,
   GameRoomPasswordDto,
@@ -21,7 +23,8 @@ import { GameService } from './game.service';
 
 @ApiTags('games')
 @Controller('games')
-// @UseGuards(AuthGuard())
+@ApiBearerAuth('access-token')
+@UseGuards(AuthGuard())
 export class GameController {
   constructor(private gameService: GameService) {}
 
@@ -48,11 +51,13 @@ export class GameController {
   @ApiOperation({ summary: 'seungyel✅ 게임방 입장하기' })
   @Post('/:gameId/users/:userId')
   async enterGameRoom(
+    @GetJwtUser() user: User,
     @Param('gameId', ParseIntPipe) gameId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() gamePasswordDto: GameRoomPasswordDto,
   ): Promise<string> {
     return this.gameService.enterGameRoom(
+      user,
       gameId,
       userId,
       gamePasswordDto.password,
@@ -62,9 +67,10 @@ export class GameController {
   @ApiOperation({ summary: 'seungyel✅ 게임방 퇴장하기' })
   @Delete('/:gameId/users/:userId')
   exitGameRoom(
+    @GetJwtUser() user: User,
     @Param('gameId', ParseIntPipe) gameId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<string> {
-    return this.gameService.exitGameRoom(gameId, userId);
+    return this.gameService.exitGameRoom(user, gameId, userId);
   }
 }
