@@ -22,9 +22,7 @@ const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
       <>
         {message.from && (
           <MessageItemContainer fromUser={message.fromUser}>
-            {!message.fromUser && (
-              <ProfileImage src={message.from.avatar ?? defaultImage} size={40} />
-            )}
+            {!message.fromUser && <ProfileImage src={message.from.avatar} size={40} />}
             <MessageWrapper fromUser={message.fromUser}>
               {!message.fromUser && <MessageName>{message.from.nickname}</MessageName>}
               <MessageContent>

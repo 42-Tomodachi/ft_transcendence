@@ -102,7 +102,7 @@ export interface IMessage {
     userId: number;
     nickname: string;
     role: string;
-    avatar: string | null; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
+    avatar: string; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
   };
   message: string;
   fromUser: boolean;
