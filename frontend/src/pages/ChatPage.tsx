@@ -9,6 +9,8 @@ import { CHAT, IMessage } from '../utils/interface';
 import { useParams } from 'react-router-dom';
 import { AllContext } from '../store';
 import { chatsAPI } from '../API';
+import backaway from '../assets/backaway.png';
+import { useNavigate } from 'react-router-dom';
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[] | []>([]);
@@ -16,6 +18,7 @@ const ChatPage: React.FC = () => {
   const { user } = useContext(AllContext).userData;
   const { roomId } = useParams();
   const [roomName, setRoomName] = useState<string>('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (roomId && user) {
@@ -51,11 +54,15 @@ const ChatPage: React.FC = () => {
     <Background>
       <ChatRoomContainer>
         <Header type={CHAT} />
-
         <ChatRoomBody>
           <ChatArea>
-            {/* TODO: Figma 참고하여 Left Arrow 넣어 뒤로가기 버튼 추가 */}
-            <ChatTitle>{roomName}</ChatTitle>
+            {/* TODO: 뒤로가기 클릭시 짧게나마 제일 첫 페이지가 렌더링됨 */}
+            <ChatTitle>
+              <BackawayWrap onClick={() => navigate(-1)}>
+                <Backaway src={backaway} alt="backaway" />
+              </BackawayWrap>
+              {roomName}
+            </ChatTitle>
             <MessageList messages={messages} />
             <MessageInput setMessages={setMessages} messages={messages} />
           </ChatArea>
@@ -93,9 +100,22 @@ const ChatArea = styled.div`
   padding: 20px;
 `;
 const ChatTitle = styled.h2`
+  display: flex;
   font-size: 20px;
   font-weight: bold;
   margin: 0 10px 20px;
+  align-items: center;
+`;
+const BackawayWrap = styled.div`
+  margin-right: 22px;
+  /* display: inline-block; */
+`;
+const Backaway = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  cursor: pointer;
 `;
 
 const ChatSideMenu = styled.div``;
