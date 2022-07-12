@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ChatContentDto, ChatRoomUserDto } from 'src/chat/dto/chat.dto';
-import { User } from 'src/users/entities/users.entity';
+import { User } from '../../users/entities/users.entity';
 import {
   BaseEntity,
   Column,
@@ -9,8 +8,9 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { CreateChatContentDto } from '../dto/chat.dto';
+import { ChatContentDto } from '../dto/chatContents.dto';
 import { ChatRoom } from './chatRoom.entity';
+import { ChatParticipant } from './chatParticipant.entity';
 
 @Entity()
 export class ChatContents extends BaseEntity {
@@ -42,6 +42,9 @@ export class ChatContents extends BaseEntity {
   })
   chatRoom: ChatRoom;
 
+  @ManyToOne(() => ChatParticipant, (participant) => participant.messages)
+  userAsParticipant: ChatParticipant;
+
   @ManyToOne(() => User, (user) => user.sender)
   user: User;
 
@@ -49,17 +52,29 @@ export class ChatContents extends BaseEntity {
     const chatContentDto = new ChatContentDto();
     chatContentDto.isBroadcast = this.isNotice;
     if (!this.isNotice) {
-      const chatRoomUserDto = new ChatRoomUserDto();
-      chatRoomUserDto.userId = this.user.id;
-      chatRoomUserDto.nickname = this.user.nickname;
-      chatRoomUserDto.role = this.user.chatParticipant.find(
-        (person) => person.chatRoomId === roomId,
-      ).role;
+      const user = User.createQueryBuilder('user')
+        .leftJoinAndSelect('user.sender', 'sender')
+        .where('sender.userId = :userId', { userId })
+        .getOne();
 
-      chatContentDto.from = { ...chatRoomUserDto, avatar: this.user.avatar };
+      chatContentDto.from.nickname = this.user.nickname;
+      chatContentDto.from.avatar = this.user.avatar;
+
+      // const chatUser = await ChatParticipant
+      // .createQueryBuilder('chatRoom')
+      // .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
+      // .where('chatParticipant.userId = :userId', { userId })
+      // .getOne();
+
+      chatContentDto.from.role = 'guest';
+      // chatContentDto.from.role = this.userAsParticipant.role;
+
+      // chatRoomUserDto.role = this.user.chatParticipant.find(
+      //   (person) => person.chatRoomId === roomId,
+      // ).role;
     }
     chatContentDto.message = this.content;
-    chatContentDto.fromUser = this.userId === userId ? true : false;
+    chatContentDto.isMyMessage = this.userId === userId ? true : false;
     chatContentDto.createdTime = this.createdTime.toLocaleTimeString();
 
     return chatContentDto;

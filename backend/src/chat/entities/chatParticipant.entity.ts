@@ -6,8 +6,10 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { ChatContents } from './chatContents.entity';
 import { ChatRoom } from './chatRoom.entity';
 
 @Entity()
@@ -38,13 +40,16 @@ export class ChatParticipant extends BaseEntity {
   isMuted: boolean;
 
   @ApiProperty({ description: '채팅방 입장 시간' })
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 
   @ManyToOne(() => ChatRoom, (chatRoom) => chatRoom.chatParticipant, {
     onDelete: 'CASCADE',
   })
   chatRoom: ChatRoom;
+
+  @OneToMany(() => ChatContents, (message) => message.userAsParticipant)
+  messages: ChatContents[];
 
   @ManyToOne(() => User, (user) => user.chatParticipant)
   user: User;

@@ -23,7 +23,7 @@ export class BlockedUser extends BaseEntity {
   blockedId: number;
 
   @ApiProperty({ description: '차단한 시간' })
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdTime: Date;
 
   @ManyToOne(() => User, (user) => user.blocker)

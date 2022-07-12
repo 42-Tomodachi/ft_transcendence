@@ -10,31 +10,24 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ChatService } from './chat.service';
 import {
   ChatRoomDataDto,
   SetChatRoomDto,
   RoomPasswordDto,
   ChatRoomIdDto,
-  CreateChatContentDto,
   BooleanDto,
-  ParticipantRoleDto,
   ChatRoomDto,
+} from './dto/chatRoom.dto';
+import {
+  ParticipantRoleDto,
   ChatRoomUserDto,
-  ChatParticipantProfile,
-  ChatContentDto,
   IsMutedDto,
-} from './dto/chat.dto';
-import { ChatContents } from './entities/chatContents.entity';
-import { ChatParticipant } from './entities/chatParticipant.entity';
+  ChatParticipantProfileDto,
+} from './dto/chatParticipant.dto';
+import { ChatContentDto, CreateChatContentDto } from './dto/chatContents.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { TargetIdDto } from 'src/users/dto/users.dto';
 import { User } from 'src/users/entities/users.entity';
 import { GetJwtUser } from 'src/auth/jwt.strategy';
 
@@ -222,7 +215,7 @@ export class ChatController {
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('myId', ParseIntPipe) myId: number,
     @Query('targetId', ParseIntPipe) targetId: number,
-  ): Promise<ChatParticipantProfile> {
+  ): Promise<ChatParticipantProfileDto> {
     return await this.chatService.getChatParticipantProfile(
       user,
       roomId,

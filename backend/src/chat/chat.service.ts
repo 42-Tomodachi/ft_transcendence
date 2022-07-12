@@ -1,26 +1,24 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  ChatContentDto,
-  ChatParticipantProfile,
-  ChatRoomDto,
-  ChatRoomUserDto,
-  IsMutedDto,
-} from 'src/chat/dto/chat.dto';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { DataSource, Repository } from 'typeorm';
 import { callbackify } from 'util';
 import { ChatGateway } from './chat.gateway';
 import {
-  CreateChatContentDto,
   ChatRoomDataDto,
-  ChatRoomIdDto,
   SetChatRoomDto,
-  RoomPasswordDto,
+  ChatRoomIdDto,
   BooleanDto,
+  ChatRoomDto,
+} from './dto/chatRoom.dto';
+import {
   ParticipantRoleDto,
-} from './dto/chat.dto';
+  ChatRoomUserDto,
+  IsMutedDto,
+  ChatParticipantProfileDto,
+} from './dto/chatParticipant.dto';
+import { ChatContentDto, CreateChatContentDto } from './dto/chatContents.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
@@ -318,7 +316,7 @@ export class ChatService {
     if (room.ownerId === userId) {
       // 방 폭파 + 방에서 다 내보내기
       await this.chatRoomRepo.delete({ id: roomId });
-      await this.ChatGateway.server.to(roomId.toString()).emit('deleteRoom');
+      this.ChatGateway.server.to(roomId.toString()).emit('deleteRoom');
     } else {
       await this.chatParticipantRepo.delete({ chatRoomId: roomId, userId });
 
@@ -552,7 +550,7 @@ export class ChatService {
       })
       .getMany();
 
-    return chatContents
+    const result = chatContents
       .filter((chatContent) => {
         if (!chatContent.userId) {
           return true;
@@ -571,6 +569,8 @@ export class ChatService {
       .map((chatContent) => {
         return chatContent.toChatContentDto(roomId, userId);
       });
+
+    return result;
   }
 
   async getChatParticipantProfile(
@@ -578,7 +578,7 @@ export class ChatService {
     roomId: number,
     myId: number,
     targetId: number,
-  ): Promise<ChatParticipantProfile> {
+  ): Promise<ChatParticipantProfileDto> {
     if (user.id !== myId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
