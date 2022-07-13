@@ -533,7 +533,7 @@ export class ChatService {
       userId,
     });
     if (!participant) {
-      throw new BadRequestException('해당하는 유저가 존재하지 않습니다.');
+      throw new BadRequestException('참여중인 채팅방이 아닙니다.');
     }
     const { createdTime: participatedTime } = participant;
     const blockedUsers = await this.blockedUserRepo.findBy({
@@ -567,7 +567,7 @@ export class ChatService {
         return true;
       })
       .map((chatContent) => {
-        return chatContent.toChatContentDto(roomId, userId);
+        return chatContent.toChatContentDto(userId);
       });
 
     return result;

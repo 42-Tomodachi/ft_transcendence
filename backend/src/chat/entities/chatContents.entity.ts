@@ -8,7 +8,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { ChatContentDto } from '../dto/chatContents.dto';
+import { ChatContentDto, FromWhomDto } from '../dto/chatContents.dto';
 import { ChatRoom } from './chatRoom.entity';
 import { ChatParticipant } from './chatParticipant.entity';
 
@@ -48,30 +48,16 @@ export class ChatContents extends BaseEntity {
   @ManyToOne(() => User, (user) => user.sender)
   user: User;
 
-  toChatContentDto(roomId: number, userId: number): ChatContentDto {
+  toChatContentDto(userId: number): ChatContentDto {
     const chatContentDto = new ChatContentDto();
     chatContentDto.isBroadcast = this.isNotice;
-    if (!this.isNotice) {
-      const user = User.createQueryBuilder('user')
-        .leftJoinAndSelect('user.sender', 'sender')
-        .where('sender.userId = :userId', { userId })
-        .getOne();
 
-      chatContentDto.from.nickname = this.user.nickname;
-      chatContentDto.from.avatar = this.user.avatar;
-
-      // const chatUser = await ChatParticipant
-      // .createQueryBuilder('chatRoom')
-      // .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
-      // .where('chatParticipant.userId = :userId', { userId })
-      // .getOne();
-
-      chatContentDto.from.role = 'guest';
-      // chatContentDto.from.role = this.userAsParticipant.role;
-
-      // chatRoomUserDto.role = this.user.chatParticipant.find(
-      //   (person) => person.chatRoomId === roomId,
-      // ).role;
+    console.log(this.isNotice, this.user.nickname, this.content);
+    if (!this.isNotice && this.user && this.user.nickname) {
+      const fromWhomDto = new FromWhomDto();
+      fromWhomDto.nickname = this.user.nickname;
+      fromWhomDto.avatar = this.user.avatar;
+      chatContentDto.from = fromWhomDto;
     }
     chatContentDto.message = this.content;
     chatContentDto.isMyMessage = this.userId === userId ? true : false;
