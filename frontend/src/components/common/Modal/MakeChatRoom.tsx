@@ -11,17 +11,22 @@ const MakeChatRoom: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const [roomName, setRoomName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [errMsg, setErrMsg] = useState<string>('');
   const navigate = useNavigate();
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.name === 'roomName') {
-      setRoomName(e.target.value);
+      if (roomName.length <= 10) setRoomName(e.target.value);
     } else if (e.target.name === 'password') {
-      setPassword(e.target.value);
+      if (password.length <= 10) setPassword(e.target.value.trim());
     }
   };
 
   const createRoom = async () => {
+    if (roomName.trim().length === 0) {
+      setErrMsg('방 제목은 최소 한 글자 이상 입력해주세요.');
+      return;
+    }
     if (user) {
       const res = await chatsAPI.makeChatRoom(user.userId, roomName, false, password, user.jwt);
       if (res?.roomId) {
@@ -40,6 +45,7 @@ const MakeChatRoom: React.FC = () => {
           <RoomNPwd>비밀번호</RoomNPwd>
           <InputPwd type="password" name="password" onChange={onChangeInput} value={password} />
         </TextGridBlock>
+        <ErrMsg>{errMsg}</ErrMsg>
         <BtnBlock>
           <Button color="gradient" text="만들기" width={200} height={40} onClick={createRoom} />
         </BtnBlock>
@@ -78,17 +84,28 @@ const InputRoomName = styled.input`
   border: none;
   outline: none;
   border-bottom: 1px solid;
+  text-align: center;
 `;
 
 const InputPwd = styled(InputRoomName)`
   &[type='password'] {
   }
 `;
+
+const ErrMsg = styled.span`
+  display: block;
+  height: 16px;
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.red};
+  text-align: center;
+  margin: 20px 0 10px;
+`;
+
 //============================================
 
 //BtnSection
 const BtnBlock = styled.div`
-  margin-top: 40px;
+  margin-top: 20px;
   & button {
     border-radius: 5px;
   }
