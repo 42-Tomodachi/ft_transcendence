@@ -198,8 +198,8 @@ export class ChatController {
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() messageDto: MessageDto,
-  ): Promise<BooleanDto> {
-    return this.chatService.submitChatContent(user, roomId, userId, messageDto);
+  ): Promise<void> {
+    await this.chatService.submitChatContent(user, roomId, userId, messageDto);
   }
 
   @ApiOperation({ summary: 'kankim✅ 채팅방에 있는 유저의 프로필 조회' })

@@ -266,7 +266,7 @@ export class ChatService {
       const createChatContentDto = new CreateChatContentDto();
       createChatContentDto.isBroadcast = true;
       createChatContentDto.message = `${user.nickname} 님이 입장하셨습니다.`;
-      this.submitChatContent(user, roomId, userId, createChatContentDto);
+      await this.submitChatContent(user, roomId, userId, createChatContentDto);
     }
 
     return { roomId: roomId };
@@ -428,7 +428,7 @@ export class ChatService {
     roomId: number,
     userId: number,
     messageDto: MessageDto,
-  ): Promise<BooleanDto> {
+  ): Promise<void> {
     if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
@@ -445,15 +445,11 @@ export class ChatService {
     chatContents.chatRoomId = roomId;
     chatContents.userId = userId;
     chatContents.content = messageDto.message;
-    this.chatContentsRepo.save(chatContents);
+    await this.chatContentsRepo.save(chatContents);
     //전체에 emit
     this.ChatGateway.server
       .to(roomId.toString())
       .emit('updateChat', messageDto);
-
-    const result = new BooleanDto();
-    result.boolean = true;
-    return result;
   }
 
   async enterDmRoom(
