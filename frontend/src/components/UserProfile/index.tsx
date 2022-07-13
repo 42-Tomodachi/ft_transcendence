@@ -23,8 +23,8 @@ const ProfilePage: React.FC = () => {
           </PictureBlock>
           <UserInfo>
             <UserName>{user.nickname}</UserName>
-            {/* TODO: 나중에 레벨, 전적 받아오는 api로 받아와야함 */}
-            <UserLevel>lv.0</UserLevel>
+            {/* TODO: 자동 갱신되는지 확인 필수 */}
+            <UserLevel>lv. {user.ladderLevel}</UserLevel>
           </UserInfo>
         </ProfileBlock>
       )}
@@ -33,8 +33,8 @@ const ProfilePage: React.FC = () => {
 
       <RecordBlock>
         <Record>
-          {/* TODO: 나중에 레벨, 전적 받아오는 api로 받아와야함 */}
-          0승 0패/0승 0패
+          {/* TODO: 자동 갱신되는지 확인 필수 */}
+          {`${user?.winCount}승 ${user?.loseCount}패/${user?.ladderWinCount}승 ${user?.ladderLoseCount}패`}
         </Record>
         <RecordBtn>
           <Button color="white2" text="전적 기록" width={97} height={30} />

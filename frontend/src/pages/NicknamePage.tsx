@@ -3,7 +3,7 @@ import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
 import { authAPI } from '../API';
-import { IUserData, LOGIN, SET_NICKNAME, UPDATE_USER } from '../utils/interface';
+import { IUserAvatar, IUserData, LOGIN, SET_NICKNAME, UPDATE_USER } from '../utils/interface';
 import imageCompression from 'browser-image-compression';
 import { usersAPI } from '../API/users';
 import DefaultProfile from '../assets/default-image.png';
@@ -20,12 +20,11 @@ const NicknamePage: React.FC = () => {
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
-  const { jwt, setJwt } = useContext(AllContext).jwtData; // TODO: JWT 유지를 위해 사용
-  const [convertImg, setConvertImg] = useState<File | string>(''); // TODO: File or string ?
+  const { jwt, setJwt } = useContext(AllContext).jwtData;
+  const [convertImg, setConvertImg] = useState<File | string>('');
   const [userProfile, setUserProfile] = useState<IUserData>(); // TODO: profile에 맞는 interface 제작
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //  NOTE : 정규식 적용
     const inputNickValue = e.target.value;
 
     if (!regex.test(inputNickValue)) {
@@ -95,7 +94,7 @@ const NicknamePage: React.FC = () => {
         usersAPI.uploadAvatarImg(userId, formData, jwt);
       }
       usersAPI.updateUserNickname(userId, nickName, jwt);
-      setUser(LOGIN, { ...user, nickname: nickName });
+      setUser(LOGIN, { ...user, nickname: nickName }); // TODO: update user avatar info
       setUserStatus(LOGIN);
     } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
   };
@@ -110,12 +109,9 @@ const NicknamePage: React.FC = () => {
 
   // TODO: 리렌더링 방지용 전역 데이터 갱신 시켜줘야함
   useEffect(() => {
-    const jwt = window.localStorage.getItem('jwt');
-    setUserStatus(SET_NICKNAME);
-    if (jwt) {
-      setJwt('SET_JWT', jwt);
-      getUserProfile(jwt);
-      return;
+    if (user) {
+      getUserProfile(user.jwt);
+      setUserStatus(SET_NICKNAME);
     }
   }, []);
 
