@@ -13,11 +13,12 @@ export interface IUserAuth extends IUser {
 }
 export interface IUserProfile extends IUser, IWinLoseCount {}
 
-export interface IChatDMRoom {
+export interface IChatRoomInfo {
   roomId: number;
   title: string;
   ownerId: number;
 }
+export interface IChatDMRoom extends IChatRoomInfo {}
 export interface IChatRooms {
   roomId: number;
   title: string;

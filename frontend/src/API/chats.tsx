@@ -1,5 +1,12 @@
 import { instance } from './index';
-import { IChatRooms, IRoomSetting, IParticipants, IChatDMRoom, IMessage } from '../utils/interface';
+import {
+  IChatRooms,
+  IRoomSetting,
+  IParticipants,
+  IChatDMRoom,
+  IMessage,
+  IChatRoomInfo,
+} from '../utils/interface';
 const chatsPath = (path: string) => {
   return `/chats${path}`;
 };
@@ -40,8 +47,7 @@ const chatsAPI = {
     isDm: boolean,
     password: string,
     jwt: string,
-    // TODO : interface 따로 빼기
-  ): Promise<{ roomId: number; title: string; ownerId: number } | null> => {
+  ): Promise<IChatRoomInfo | null> => {
     try {
       const url = chatsPath(`/${userId}`);
       const res = await instance.post(
@@ -58,11 +64,8 @@ const chatsAPI = {
       return null;
     }
   },
-  getChatRoomStatus: async (
-    roomId: number,
-    jwt: string,
-    // TODO : interface 따로 빼기
-  ): Promise<{ roomId: number; title: string; ownerId: number } | null> => {
+  // GET chats/{roomId} - getChatRoomStatus
+  getChatRoomStatus: async (roomId: number, jwt: string): Promise<IChatRoomInfo | null> => {
     try {
       const url = chatsPath(`/${roomId}`);
       const res = await instance.get(url, {
