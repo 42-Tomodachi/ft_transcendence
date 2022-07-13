@@ -12,7 +12,7 @@ import ChatPage from './pages/ChatPage';
 import UserList from './components/UserList/index';
 
 import ProfilePage from './components/UserProfile';
-import { AllContextApi, AllContext } from './store';
+import { AllContext } from './store';
 import ModalTester from './components/common/Modal/ModalTester';
 import ModalSet from './components/common/Modal/ModalSet';
 
@@ -21,7 +21,7 @@ import { usersAPI } from './API';
 
 function App() {
   const { setJwt } = useContext(AllContext).jwtData;
-  const { setUserStatus } = useContext(AllContext).userStatus;
+  const { setUserStatus, userStatus } = useContext(AllContext).userStatus;
   const { setUser } = useContext(AllContext).userData;
 
   useEffect(() => {
@@ -36,6 +36,7 @@ function App() {
             setUserStatus(SET_NICKNAME);
           } else {
             setUserStatus(LOGIN);
+            console.log('in', userStatus, LOGIN);
           }
         }
       };
@@ -44,31 +45,33 @@ function App() {
       setUserStatus(LOGOUT);
     }
   }, []);
-  return (
-    <AllContextApi>
-      <ThemeProvider theme={theme}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<MainPage menu="GAME" />} />
-            <Route path="/callback" element={<OauthPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/nickname" element={<NicknamePage />} />
-            <Route path="/secondAuth" element={<SecondAuthPage />} />
-            <Route path="/profilePage" element={<ProfilePage />} />
-            <Route path="/game" element={<MainPage menu="GAME" />} />
-            <Route path="/chat" element={<MainPage menu="CHAT" />} />
-            <Route path="/chatroom/:roomId" element={<ChatPage />} />
-            <Route path="/userlist" element={<UserList />} />
 
-            {/* Tester */}
-            <Route path="/modaltester" element={<ModalTester />} />
-            {/* ====== */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-          <ModalSet />
-        </BrowserRouter>
-      </ThemeProvider>
-    </AllContextApi>
+  useEffect(() => {
+    console.log(userStatus);
+  }, [userStatus]);
+  return (
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<MainPage menu="GAME" />} />
+          <Route path="/callback" element={<OauthPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/nickname" element={<NicknamePage />} />
+          <Route path="/secondAuth" element={<SecondAuthPage />} />
+          <Route path="/profilePage" element={<ProfilePage />} />
+          <Route path="/game" element={<MainPage menu="GAME" />} />
+          <Route path="/chat" element={<MainPage menu="CHAT" />} />
+          <Route path="/chatroom/:roomId" element={<ChatPage />} />
+          <Route path="/userlist" element={<UserList />} />
+
+          {/* Tester */}
+          <Route path="/modaltester" element={<ModalTester />} />
+          {/* ====== */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <ModalSet />
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

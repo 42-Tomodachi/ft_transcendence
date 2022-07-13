@@ -14,13 +14,13 @@ import { useNavigate } from 'react-router-dom';
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[] | []>([]);
-  const { jwt, setJwt } = useContext(AllContext).jwtData;
   const { user } = useContext(AllContext).userData;
   const { roomId } = useParams();
   const [roomName, setRoomName] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
+    // TODO : 채팅방 참여 인원 불러와서 있으면 그대로, 없으면 루트로 navigate
     if (roomId && user) {
       const getRoomData = async () => {
         const res = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
@@ -35,7 +35,7 @@ const ChatPage: React.FC = () => {
       getMessages(+roomId, user.userId);
       getRoomData();
     }
-  }, [roomId]);
+  }, [roomId, user]);
   // useEffect(() => {
   //   const jwt = window.localStorage.getItem('jwt');
   //   const roomId = 16; // TODO: get roomId, userId from URL??

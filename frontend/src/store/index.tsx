@@ -12,6 +12,7 @@ import {
   UserStatusType,
   HandleUserType,
   IWinLoseCount,
+  LOADING,
 } from '../utils/interface';
 
 export const AllContext = createContext<stateType>({
@@ -27,7 +28,7 @@ export const AllContext = createContext<stateType>({
     setUser: () => null,
   },
   userStatus: {
-    userStatus: LOGOUT,
+    userStatus: LOADING,
     setUserStatus: () => null,
   },
   jwtData: {
@@ -65,7 +66,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     id: -1,
   });
   const [user, setUser] = useState<IUserData | null>(null);
-  const [userStatus, setUserStatus] = useState<UserStatusType>(LOGOUT);
+  const [userStatus, setUserStatus] = useState<UserStatusType>(LOADING);
   const [jwt, setJwt] = useState<string>('');
 
   const handleJwt = (type: 'SET_JWT' | 'REMOVE_JWT', jwt?: string) => {
@@ -126,6 +127,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
   };
 
   const handleUserStatus = (type: UserStatusType) => {
+    console.log('store', type);
     setUserStatus(type);
   };
 

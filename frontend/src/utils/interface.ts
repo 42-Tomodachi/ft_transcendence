@@ -132,8 +132,9 @@ export const UPDATE_USER = 'UPDATE_USER' as const;
 export const UPDATE_RECORD = 'UPDATE_RECORD' as const;
 export const SET_NICKNAME = 'SET_NICKNAME' as const;
 export const SECOND_AUTH = 'SECOND_AUTH' as const;
+export const LOADING = 'LOADING' as const;
 
-export type UserStatusType = 'LOGIN' | 'LOGOUT' | 'SET_NICKNAME' | 'SECOND_AUTH';
+export type UserStatusType = 'LOGIN' | 'LOGOUT' | 'SET_NICKNAME' | 'SECOND_AUTH' | 'LOADING';
 export type HandleUserType = 'LOGIN' | 'LOGOUT' | 'UPDATE_USER' | 'UPDATE_RECORD';
 
 export const GAME = 'GAME' as const;
