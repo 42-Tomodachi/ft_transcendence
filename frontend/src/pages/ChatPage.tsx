@@ -28,6 +28,11 @@ const ChatPage: React.FC = () => {
           setRoomName(res.title);
         }
       };
+      const getMessages = async (roomId: number, userId: number) => {
+        const data = await chatsAPI.getMsgHistoryInChatRoom(roomId, userId, user.jwt);
+        setMessages(data);
+      };
+      getMessages(+roomId, user.userId);
       getRoomData();
     }
   }, [roomId]);
