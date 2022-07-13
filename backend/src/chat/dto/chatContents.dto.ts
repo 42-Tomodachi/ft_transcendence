@@ -45,3 +45,5 @@ export class CreateChatContentDto extends PickType(ChatContentDto, [
   'isBroadcast',
   'message',
 ]) {}
+
+export class MessageDto extends PickType(ChatContentDto, ['message']) {}

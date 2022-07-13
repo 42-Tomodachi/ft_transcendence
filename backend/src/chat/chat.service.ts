@@ -18,7 +18,11 @@ import {
   IsMutedDto,
   ChatParticipantProfileDto,
 } from './dto/chatParticipant.dto';
-import { ChatContentDto, CreateChatContentDto } from './dto/chatContents.dto';
+import {
+  ChatContentDto,
+  CreateChatContentDto,
+  MessageDto,
+} from './dto/chatContents.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
@@ -423,7 +427,7 @@ export class ChatService {
     user: User,
     roomId: number,
     userId: number,
-    createChatContentDto: CreateChatContentDto,
+    messageDto: MessageDto,
   ): Promise<BooleanDto> {
     if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
@@ -440,13 +444,12 @@ export class ChatService {
     const chatContents = new ChatContents();
     chatContents.chatRoomId = roomId;
     chatContents.userId = userId;
-    chatContents.content = createChatContentDto.message;
-    chatContents.isNotice = createChatContentDto.isBroadcast;
+    chatContents.content = messageDto.message;
     this.chatContentsRepo.save(chatContents);
     //전체에 emit
     this.ChatGateway.server
       .to(roomId.toString())
-      .emit('updateChat', createChatContentDto);
+      .emit('updateChat', messageDto);
 
     const result = new BooleanDto();
     result.boolean = true;
