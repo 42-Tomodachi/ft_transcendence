@@ -27,18 +27,11 @@ export class AuthService {
   async issueJwt(id: number): Promise<string> {
     const user = await this.usersService.getUserById(id);
 
-    return this.jwtService.sign({
-      id: user.id,
-      email: user.email,
-      accessToken: this.jwtStrategy.getJwtAccessToken(user.id),
-    });
+    return this.setLogon(user);
   }
 
   async setLogon(user: User): Promise<string> {
-    if (this.jwtStrategy.getJwtAccessToken(user.id)) {
-      return this.jwtStrategy.getJwtAccessToken(user.id);
-    }
-    const hashToken = await bcrypt.hash(this.makeRand6Num(), 10);
+    const hashToken = await bcrypt.hash(this.makeRand6Num().toString(), 10);
     const jwt = this.jwtService.sign({
       id: user.id,
       email: user.email,
