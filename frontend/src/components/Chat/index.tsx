@@ -22,10 +22,8 @@ const Chat: React.FC = () => {
   const { user } = useContext(AllContext).userData;
 
   useEffect(() => {
-    const jwtLocal = localStorage.getItem('jwt');
-    if (jwtLocal) {
-      setJwt('SET_JWT', jwtLocal);
-      getAllChatList(jwtLocal);
+    if (user) {
+      getAllChatList(user.jwt);
     }
   }, []);
 

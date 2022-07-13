@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useContext } from 'react';
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@emotion/react';
 import { theme } from './utils/styles/mixin';
@@ -12,11 +12,38 @@ import ChatPage from './pages/ChatPage';
 import UserList from './components/UserList/index';
 
 import ProfilePage from './components/UserProfile';
-import { AllContextApi } from './store';
+import { AllContextApi, AllContext } from './store';
 import ModalTester from './components/common/Modal/ModalTester';
 import ModalSet from './components/common/Modal/ModalSet';
 
+import { LOGIN, SET_NICKNAME, LOGOUT } from './utils/interface';
+import { usersAPI } from './API';
+
 function App() {
+  const { setJwt } = useContext(AllContext).jwtData;
+  const { setUserStatus } = useContext(AllContext).userStatus;
+  const { setUser } = useContext(AllContext).userData;
+
+  useEffect(() => {
+    const jwt = window.localStorage.getItem('jwt');
+    if (jwt) {
+      setJwt('SET_JWT', jwt);
+      const getUserData = async () => {
+        const res = await usersAPI.getLoginUserProfile(jwt);
+        if (res) {
+          setUser(LOGIN, { ...res, jwt });
+          if (!res.nickname) {
+            setUserStatus(SET_NICKNAME);
+          } else {
+            setUserStatus(LOGIN);
+          }
+        }
+      };
+      getUserData();
+    } else {
+      setUserStatus(LOGOUT);
+    }
+  }, []);
   return (
     <AllContextApi>
       <ThemeProvider theme={theme}>

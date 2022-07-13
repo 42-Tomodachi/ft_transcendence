@@ -18,7 +18,7 @@ const LoginPage: React.FC = () => {
       const getUserData = async () => {
         const res = await usersAPI.getLoginUserProfile(jwt);
         if (res) {
-          setUser(LOGIN, res);
+          setUser(LOGIN, { ...res, jwt });
           if (!res.nickname) {
             setUserStatus(SET_NICKNAME);
           } else {

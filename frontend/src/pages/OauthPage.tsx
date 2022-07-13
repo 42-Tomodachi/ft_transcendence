@@ -8,6 +8,7 @@ import { authAPI } from '../API';
 const OauthPage: React.FC = () => {
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { setUser } = useContext(AllContext).userData;
+  const { setJwt } = useContext(AllContext).jwtData;
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const code = params.get('code');
@@ -28,6 +29,7 @@ const OauthPage: React.FC = () => {
           });
           // NOTE: 임시로 LocalStorage에 jwt 저장
           window.localStorage.setItem('jwt', res.jwt);
+          setJwt('SET_JWT', res.jwt); // 전역 jwt에 저장
           if (!res.nickname) {
             setUserStatus(SET_NICKNAME);
           } else if (res.isSecondAuthOn) {
