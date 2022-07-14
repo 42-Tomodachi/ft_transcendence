@@ -20,13 +20,17 @@ import {
   GameRoomProfileDto,
 } from './dto/game.dto';
 import { GameService } from './game.service';
+import { GameGateway } from './game.gateway';
 
 @ApiTags('games')
 @Controller('games')
 @ApiBearerAuth('access-token')
 @UseGuards(AuthGuard())
 export class GameController {
-  constructor(private gameService: GameService) {}
+  constructor(
+    private gameService: GameService,
+    private gameGateway: GameGateway,
+  ) {}
 
   @ApiOperation({ summary: 'seungyel✅ 게임방 목록 가져오기' })
   @Get('/')
@@ -39,8 +43,8 @@ export class GameController {
   createGameRoom(
     @GetJwtUser() user: User,
     @Body() createGameRoomDto: CreateGameRoomDto,
-  ): string {
-    return this.gameService.createGameRoom(user, createGameRoomDto);
+  ) {
+    this.gameService.createGameRoom(this.gameGateway, user, createGameRoomDto);
   }
 
   @ApiOperation({ summary: 'seungyel✅ 게임방 참여자(플레이어) 정보 가져오기' })
@@ -60,6 +64,7 @@ export class GameController {
     @Body() gamePasswordDto: GameRoomPasswordDto,
   ): Promise<string> {
     return await this.gameService.enterGameRoom(
+      this.gameGateway,
       user,
       gameId,
       userId,
@@ -74,7 +79,7 @@ export class GameController {
     @Param('gameId', ParseIntPipe) gameId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<void> {
-    await this.gameService.exitGameRoom(user, gameId, userId);
+    await this.gameService.exitGameRoom(this.gameGateway, user, gameId, userId);
   }
 
   @ApiOperation({ summary: 'seungyel✅ 게임 전적 반영' })

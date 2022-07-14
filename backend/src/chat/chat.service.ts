@@ -3,13 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { DataSource, Repository } from 'typeorm';
-import { callbackify } from 'util';
 import { ChatGateway } from './chat.gateway';
 import {
   ChatRoomDataDto,
   SetChatRoomDto,
   ChatRoomIdDto,
-  BooleanDto,
   ChatRoomDto,
 } from './dto/chatRoom.dto';
 import {
@@ -27,7 +25,6 @@ import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
 import * as bcrypt from 'bcryptjs';
-import { EmailService } from 'src/emails/email.service';
 
 @Injectable()
 export class ChatService {
