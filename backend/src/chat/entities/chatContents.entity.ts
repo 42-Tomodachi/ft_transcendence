@@ -42,9 +42,6 @@ export class ChatContents extends BaseEntity {
   })
   chatRoom: ChatRoom;
 
-  @ManyToOne(() => ChatParticipant, (participant) => participant.messages)
-  userAsParticipant: ChatParticipant;
-
   @ManyToOne(() => User, (user) => user.sender)
   user: User;
 
