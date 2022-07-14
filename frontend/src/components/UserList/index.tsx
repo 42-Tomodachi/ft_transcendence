@@ -68,7 +68,7 @@ const UserList: React.FC = () => {
             <ul>
               {userList.map(
                 (targetUser: IGetUser, index: number) =>
-                  user.userId !== targetUser.id && <UserItem key={index} user={targetUser} />,
+                  user.userId !== targetUser.userId && <UserItem key={index} user={targetUser} />,
               )}
             </ul>
           </UserContainer>

@@ -10,13 +10,14 @@ interface UserItemProps {
 const UserItem: React.FC<UserItemProps> = ({ user }) => {
   const { setModal } = useContext(AllContext).modalData;
   const { setTargetId } = useContext(AllContext).targetItem;
+
   return (
     <>
       <UserItemContainer
         status={user.status}
         onClick={() => {
-          setTargetId(user.id);
-          setModal(SHOW_PROFILE, user.id);
+          setTargetId(user.userId);
+          setModal(SHOW_PROFILE, user.userId);
         }}
       >
         {user.nickname}

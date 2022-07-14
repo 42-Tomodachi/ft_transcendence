@@ -115,7 +115,7 @@ export interface IMessage {
 export type ButtonColorType = 'white' | 'white2' | 'main' | 'gradient';
 
 export interface IGetUser {
-  id: number;
+  userId: number;
   nickname: string;
   status: 'on' | 'off' | 'play';
 }

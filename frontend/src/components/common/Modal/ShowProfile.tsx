@@ -15,7 +15,7 @@ const ShowProfile: React.FC<{ id: number }> = ({ id }) => {
 
   useEffect(() => {
     const getUserInfo = async () => {
-      if (user && user.userId) {
+      if (user && user.jwt) {
         const data = await usersAPI.getUserProfile(user.userId, id, user.jwt);
         setTarget(data);
       }
@@ -41,7 +41,7 @@ const ShowProfile: React.FC<{ id: number }> = ({ id }) => {
     if (user && user.jwt && target) {
       await usersAPI.toggleBanUser(user.userId, target.userId, user.jwt);
       setTarget({
-        ...user,
+        ...target,
         isFriend: false,
         isBlocked: !target.isBlocked,
       });

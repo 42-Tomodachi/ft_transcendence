@@ -156,7 +156,7 @@ const usersAPI = {
     try {
       const url = usersPath(`/${myId}/friends`);
       const res = await instance.delete(url, {
-        data: followId,
+        data: { followId },
         headers: { Authorization: `Bearer ${jwt}` },
       });
       return res.data;

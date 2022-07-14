@@ -71,7 +71,7 @@ const NicknamePage: React.FC = () => {
     }
     if (user && user.jwt) {
       const res = await authAPI.checkNickname(nickName, user.jwt); // TODO: undefine
-      console.log(res);
+
       if (res === null) {
         setCheckNickMsg(`다시 시도해주세요.`);
         setIsEnabled(false);
