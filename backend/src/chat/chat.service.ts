@@ -4,7 +4,7 @@ import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { DataSource, Repository } from 'typeorm';
 import { callbackify } from 'util';
-import { ChatGateway } from './chat.gateway';
+import { ChatGateway, ChatToClientDto } from './chat.gateway';
 import {
   ChatRoomDataDto,
   SetChatRoomDto,
@@ -252,21 +252,21 @@ export class ChatService {
       chatParticipant.userId = userId;
       await this.chatParticipantRepo.save(chatParticipant);
 
-      // 채널 유저들의 유저목록 업데이트
-      const chatRoomUserDto = new ChatRoomUserDto();
-      chatRoomUserDto.userId = userId;
-      chatRoomUserDto.nickname = user.nickname;
-      chatRoomUserDto.role = 'guest';
-
-      this.ChatGateway.server
-        .to(roomId.toString())
-        .emit('updateUser', chatRoomUserDto);
+      // 입장 메세지 db에 저장
+      const createdChatContent = await this.chatContentsRepo.save({
+        chatRoomId: roomId,
+        userId: null,
+        content: `${user.nickname} 님이 입장 하셨습니다.`,
+        isNotice: true,
+      });
 
       // 채널 유저들에게 입장 메세지 전송
-      const createChatContentDto = new CreateChatContentDto();
-      createChatContentDto.isBroadcast = true;
-      createChatContentDto.message = `${user.nickname} 님이 입장하셨습니다.`;
-      await this.submitChatContent(user, roomId, userId, createChatContentDto);
+      const chatToClientDto = new ChatToClientDto();
+      chatToClientDto.msg = createdChatContent.content;
+      chatToClientDto.isBroadcast = createdChatContent.isNotice;
+      chatToClientDto.createdTime = createdChatContent.createdTime;
+
+      this.ChatGateway.sendNoticdMessage(roomId, chatToClientDto);
     }
 
     return { roomId: roomId };
@@ -319,19 +319,26 @@ export class ChatService {
 
     if (room.ownerId === userId) {
       // 방 폭파 + 방에서 다 내보내기
+      this.ChatGateway.wss.socketsLeave(roomId.toString());
       await this.chatRoomRepo.delete({ id: roomId });
-      this.ChatGateway.server.to(roomId.toString()).emit('deleteRoom');
     } else {
       await this.chatParticipantRepo.delete({ chatRoomId: roomId, userId });
 
-      // 방 유저들에게 유저목록 업데이트 지시하기
-      const chatParticipants: ChatParticipant[] =
-        await this.chatParticipantRepo.find({
-          where: [{ chatRoomId: roomId }],
-        });
-      this.ChatGateway.server
-        .to(roomId.toString())
-        .emit('updateUserList', chatParticipant);
+      // 퇴장 메세지 db에 저장
+      const createdChatContent = await this.chatContentsRepo.save({
+        chatRoomId: roomId,
+        userId: null,
+        content: `${user.nickname} 님이 퇴장 하셨습니다.`,
+        isNotice: true,
+      });
+
+      // 채널 유저들에게 퇴장 메세지 전송
+      const chatToClientDto = new ChatToClientDto();
+      chatToClientDto.msg = createdChatContent.content;
+      chatToClientDto.isBroadcast = createdChatContent.isNotice;
+      chatToClientDto.createdTime = createdChatContent.createdTime;
+
+      this.ChatGateway.sendNoticdMessage(roomId, chatToClientDto);
     }
   }
 
@@ -375,7 +382,7 @@ export class ChatService {
     }
     await targetParticipant.save();
 
-    this.ChatGateway.server
+    this.ChatGateway.wss
       .to(roomId.toString())
       .emit('updateUserList', targetParticipant);
 
@@ -414,13 +421,59 @@ export class ChatService {
 
     // timer 10 min.
 
-    this.ChatGateway.server
+    this.ChatGateway.wss
       .to(roomId.toString())
       .emit('updateUserList', chatParticipant);
 
     const result: IsMutedDto = new IsMutedDto();
     result.isMuted = chatParticipant.isMuted;
     return result;
+  }
+
+  async createChatContent(
+    userId: number,
+    roomId: number,
+    msg: string,
+  ): Promise<ChatToClientDto> {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user) {
+      throw new BadRequestException('존재하지 않는 유저입니다.');
+    }
+    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
+    if (!room) {
+      throw new BadRequestException('존재하지 않는 채팅방입니다.');
+    }
+
+    const { createdTime } = await this.chatContentsRepo.save({
+      chatRoomId: roomId,
+      userId,
+      content: msg,
+    });
+
+    const chatToClientDto = new ChatToClientDto();
+    chatToClientDto.userId = userId;
+    chatToClientDto.nickname = user.nickname;
+    chatToClientDto.avatar = user.avatar;
+    chatToClientDto.msg = msg;
+    chatToClientDto.isBroadcast = false;
+    chatToClientDto.createdTime = createdTime;
+
+    return chatToClientDto;
+  }
+
+  async isMessageFromBlockedUser(
+    blockerId: number,
+    blockedId: number,
+  ): Promise<boolean> {
+    const found = await this.blockedUserRepo.findOneBy({
+      blockerId,
+      blockedId,
+    });
+
+    if (found) {
+      return true;
+    }
+    return false;
   }
 
   async submitChatContent(
@@ -447,9 +500,7 @@ export class ChatService {
     chatContents.content = messageDto.message;
     await this.chatContentsRepo.save(chatContents);
     //전체에 emit
-    this.ChatGateway.server
-      .to(roomId.toString())
-      .emit('updateChat', messageDto);
+    // this.ChatGateway.wss.to(roomId.toString()).emit('updateChat', messageDto);
   }
 
   async enterDmRoom(
