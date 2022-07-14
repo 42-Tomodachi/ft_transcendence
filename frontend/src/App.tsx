@@ -36,7 +36,7 @@ function App() {
             setUserStatus(SET_NICKNAME);
           } else {
             setUserStatus(LOGIN);
-            console.log('in', userStatus, LOGIN);
+            // console.log('in', userStatus, LOGIN);
           }
         }
       };

@@ -20,7 +20,7 @@ const NicknamePage: React.FC = () => {
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
-  const { jwt, setJwt } = useContext(AllContext).jwtData;
+  const { jwt } = useContext(AllContext).jwtData;
   const [convertImg, setConvertImg] = useState<File | string>('');
   const [userProfile, setUserProfile] = useState<IUserData>(); // TODO: profile에 맞는 interface 제작
 
@@ -69,16 +69,19 @@ const NicknamePage: React.FC = () => {
       setIsEnabled(false);
       return;
     }
-    const res = await authAPI.checkNickname(nickName, jwt);
-    if (res === null) {
-      setCheckNickMsg(`다시 시도해주세요.`);
-      setIsEnabled(false);
-    } else if (res) {
-      setCheckNickMsg(`중복된 닉네임입니다.`);
-      setIsEnabled(false);
-    } else {
-      setCheckNickMsg(`사용 가능한 닉네임입니다.`);
-      setIsEnabled(true);
+    if (user && user.jwt) {
+      const res = await authAPI.checkNickname(nickName, user.jwt); // TODO: undefine
+      console.log(res);
+      if (res === null) {
+        setCheckNickMsg(`다시 시도해주세요.`);
+        setIsEnabled(false);
+      } else if (res) {
+        setCheckNickMsg(`중복된 닉네임입니다.`);
+        setIsEnabled(false);
+      } else {
+        setCheckNickMsg(`사용 가능한 닉네임입니다.`);
+        setIsEnabled(true);
+      }
     }
   };
 
@@ -94,6 +97,7 @@ const NicknamePage: React.FC = () => {
         usersAPI.uploadAvatarImg(userId, formData, jwt);
       }
       usersAPI.updateUserNickname(userId, nickName, jwt);
+      console.log(nickName);
       setUser(LOGIN, { ...user, nickname: nickName }); // TODO: update user avatar info
       setUserStatus(LOGIN);
     } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
@@ -137,6 +141,7 @@ const NicknamePage: React.FC = () => {
             type="text"
             onChange={onEditNick}
             onKeyDown={onKeyEnter}
+            spellCheck={false}
             defaultValue={nickName}
             required
           />
@@ -233,6 +238,7 @@ const NickInput = styled.input`
   height: 30px;
   margin: 1%;
   outline: none;
+  text-align: center;
 `;
 
 const CheckDuplicate = styled.button`

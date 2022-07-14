@@ -1,11 +1,11 @@
 import { instance } from './index';
 import {
   IUserKey,
-  IUserProfile,
   IGameRecord,
   IUserWinLoseCount,
   IUserAvatar,
   IUserData,
+  IGetUser,
 } from '../utils/interface';
 
 const usersPath = (path: string) => {
@@ -32,7 +32,7 @@ const usersAPI = {
     }
   },
   // 모든 유저의 id, 닉네임, 상태
-  getAllUsersIdNickName: async (jwt: string): Promise<IUserKey[] | []> => {
+  getAllUsersIdNickName: async (jwt: string): Promise<IGetUser[] | []> => {
     try {
       const url = usersPath(``);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
@@ -68,7 +68,7 @@ const usersAPI = {
     myId: number,
     targetId: number,
     jwt: string,
-  ): Promise<IUserProfile | null> => {
+  ): Promise<IUserData | null> => {
     try {
       const url = usersPath(`/${myId}?targetId=${targetId}`);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
@@ -96,10 +96,10 @@ const usersAPI = {
     }
   },
   // 친구 목록 조회
-  getFriendList: async (myId: number): Promise<IUserKey[] | []> => {
+  getFriendList: async (myId: number, jwt: string): Promise<IGetUser[] | []> => {
     try {
       const url = usersPath(`/${myId}/friends`);
-      const res = await instance.get(url);
+      const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -108,10 +108,10 @@ const usersAPI = {
     }
   },
   // 전적 조회
-  getUserGameRecords: async (userId: number): Promise<IGameRecord[] | []> => {
+  getUserGameRecords: async (userId: number, jwt: string): Promise<IGameRecord[] | []> => {
     try {
       const url = usersPath(`/${userId}/gameRecords`);
-      const res = await instance.get(url);
+      const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);

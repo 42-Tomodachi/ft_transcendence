@@ -11,8 +11,12 @@ export interface IUserAuth extends IUser {
   isSecondAuthOn: boolean;
   jwt: string;
 }
-export interface IUserProfile extends IUser, IWinLoseCount {}
 
+// export interface IGetUserProfile extends IUserProfile {
+//   isSecondAuthOn: boolean;
+//   isFriend: boolean;
+//   isBlocked: boolean;
+// }
 export interface IChatRoomInfo {
   roomId: number;
   title: string;
@@ -66,12 +70,10 @@ export interface IWinLoseCount {
   ladderLoseCount: number;
   ladderLevel: number;
 }
-export interface IUserData extends IUserAuth {
-  winCount: number;
-  loseCount: number;
-  ladderWinCount: number;
-  ladderLoseCount: number;
-  ladderLevel: number;
+export interface IUserData extends IUserAuth, IWinLoseCount {
+  isSecondAuthOn: boolean;
+  isFriend: boolean;
+  isBlocked: boolean;
 }
 
 export interface IUserWinLoseCount extends IWinLoseCount {
@@ -112,10 +114,9 @@ export interface IMessage {
 
 export type ButtonColorType = 'white' | 'white2' | 'main' | 'gradient';
 
-export interface IUserList {
+export interface IGetUser {
   id: number;
   nickname: string;
-  isfriend: boolean;
   status: 'on' | 'off' | 'play';
 }
 export type UserRole = 'owner' | 'manager' | 'guest';
