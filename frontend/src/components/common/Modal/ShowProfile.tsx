@@ -101,7 +101,7 @@ const ShowProfile: React.FC<{ id: number }> = ({ id }) => {
                 />
               </OtherBtnBlock>
             ) : (
-              <OtherBtnBlock>
+              <BanBtnBlock>
                 <Button
                   color="white"
                   text={target.isBlocked ? '차단해제' : '차단하기'}
@@ -109,7 +109,7 @@ const ShowProfile: React.FC<{ id: number }> = ({ id }) => {
                   height={40}
                   onClick={onClickBlock}
                 />
-              </OtherBtnBlock>
+              </BanBtnBlock>
             )}
           </MainBlock>
         </Modal>
@@ -187,6 +187,12 @@ const OtherBtnBlock = styled.div`
   grid-template-rows: 1fr 1fr;
   gap: 10px 20px;
 
+  margin-top: 11px;
+  & button {
+    border-radius: 5px;
+  }
+`;
+const BanBtnBlock = styled.div`
   margin-top: 11px;
   & button {
     border-radius: 5px;
