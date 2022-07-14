@@ -1,11 +1,11 @@
-version: '3'
+version: "3"
 services:
   db:
     image: postgres:10.4
     networks:
       - database
     ports:
-      - '5454:5432'
+      - "5454:5432"
     env_file:
       - ./database/.env
     volumes:
@@ -14,20 +14,19 @@ services:
     container_name: postgresql
     hostname: postgresql
 
-  # front:
-  #   build:
-  #     context: ./front
-  #     dockerfile: Dockerfile
-  #   depends_on:
-  #     - back
-  #   networks:
-  #     - webapp
-  #   ports:
-  #     - 8080:8080
-  #   restart: always
-  #   command: ['./wait-for-it.sh', 'back:5500', '--', 'nginx', '-g', 'pid /tmp/nginx.pid; daemon off;']
-  #   container_name: front
-  #   hostname: front
+  front:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    # depends_on:
+    #   - back
+    networks:
+      - webapp
+    ports:
+      - 3000:3000
+    restart: always
+    container_name: front
+    # hostname: front
 
   back:
     build:
@@ -41,7 +40,7 @@ services:
     depends_on:
       - db
     restart: always
-    command: ['./wait-for-it.sh', 'postgresql:5432', '--', 'npm', 'start']
+    command: ["./wait-for-it.sh", "postgresql:5432", "--", "npm", "start"]
     container_name: backend
     hostname: backend
 
