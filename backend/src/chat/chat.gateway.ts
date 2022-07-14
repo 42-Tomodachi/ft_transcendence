@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom } from './entities/chatRoom.entity';
 
-@WebSocketGateway()
+@WebSocketGateway({ namespace: '/chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @InjectRepository(ChatParticipant)
@@ -21,13 +21,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  async handleConnection(client: Socket, ...args: any[]) {
+  async handleConnection(client: Socket, data: any) {
     console.log('Socket Connected-Server');
+    client.join(data.roomId);
   }
 
-  async handleDisconnect(client: any) {}
-
-  @SubscribeMessage('enterChatRoom')
+  async handleDisconnect(client: any) {
+    console.log('socket disconnect');
+  }
+  /**
+   * recieveMessage
+   * when send chat to client from server
+   * nickname, msg, avatar, createdTime, isBroadcast, isMyMessage
+   *
+   * sendMessage
+   * when send chat to server from client
+   * userId, roomId, message
+   */
+  @SubscribeMessage('chatting')
   async enterChatRoom(client: Socket, roomId: number): Promise<void> {
     client.join(roomId.toString());
 

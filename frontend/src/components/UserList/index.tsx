@@ -38,7 +38,7 @@ const UserList: React.FC = () => {
       }
     };
     getUserList();
-  }, [activeMenu, userList]);
+  }, [activeMenu]);
 
   return (
     <>
