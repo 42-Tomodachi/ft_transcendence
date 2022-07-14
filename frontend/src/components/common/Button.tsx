@@ -1,15 +1,17 @@
 import React from 'react';
 import styled from '@emotion/styled';
+import { ButtonColorType } from '../../utils/interface';
 
 interface ButtonProps {
-  color: string;
+  color: ButtonColorType;
   text: string;
   width: number;
   height: number;
-  onClick: () => void;
+  disabled?: boolean;
+  onClick?: () => void;
 }
 
-const Button: React.FC<ButtonProps> = ({ color, text, width, height, onClick }) => {
+const Button: React.FC<ButtonProps> = ({ color, text, width, height, disabled, onClick }) => {
   return (
     <ButtonContainer
       width={width}
@@ -17,6 +19,7 @@ const Button: React.FC<ButtonProps> = ({ color, text, width, height, onClick }) 
       gradient={color === 'gradient' ? true : false}
       color={color}
       onClick={onClick}
+      disabled={disabled !== undefined ? disabled : false}
     >
       {text}
     </ButtonContainer>
@@ -32,19 +35,37 @@ interface ButtonContainerProps {
 
 const ButtonContainer = styled.button<ButtonContainerProps>`
   ${({ color, gradient, theme }) =>
-    gradient ? `background: ${theme.colors[color]}` : `background-color: ${theme.colors[color]}`}
+    gradient
+      ? `background: ${theme.colors[color]};`
+      : `background-color: ${theme.colors[color === 'white2' ? 'white' : color]};`}
   width: ${({ width }) => width}px;
   height: ${({ height }) => height}px;
-  color: ${({ color, theme }) => (color === 'white' ? theme.colors[color] : 'white')};
-  border: none;
+  color: ${({ color, theme }) => {
+    switch (color) {
+      case 'white':
+        return 'black';
+      case 'white2':
+        return theme.colors.main;
+      default:
+        return 'white';
+    }
+  }};
+  border: ${({ color, theme }) =>
+    color.includes('white') ? `1px solid ${theme.colors.main}` : 'none'};
   border-radius: 10px;
   cursor: pointer;
   margin: 0 auto;
   display: block;
   transition: all 0.2s ease-in-out;
+  user-select: none;
 
   &:hover {
     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.25);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 `;
 

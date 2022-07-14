@@ -1,0 +1,187 @@
+export interface IUserKey {
+  userId: number;
+  nickname: string;
+}
+
+export interface IUser extends IUserKey {
+  email: string;
+  avatar: string;
+}
+export interface IUserAuth extends IUser {
+  isSecondAuthOn: boolean;
+  jwt: string;
+}
+
+// export interface IGetUserProfile extends IUserProfile {
+//   isSecondAuthOn: boolean;
+//   isFriend: boolean;
+//   isBlocked: boolean;
+// }
+export interface IChatRoomInfo {
+  roomId: number;
+  title: string;
+  ownerId: number;
+}
+export interface IChatDMRoom extends IChatRoomInfo {}
+export interface IChatRooms {
+  roomId: number;
+  title: string;
+  isPublic: boolean;
+  ownerId: number;
+  numberOfParticipants: number;
+  isDm: boolean;
+}
+export interface IGameRooms {
+  gameId: number;
+  roomTitle: string;
+  playerCount: number;
+  isPublic: boolean;
+  isStart: boolean;
+}
+
+export interface IRoomSetting {
+  title: string;
+  isDm?: boolean; // TODO: 수정될 예정
+  password: string;
+}
+
+export interface IParticipants extends IUserKey {
+  role: string;
+}
+
+export const ALL = 'ALL' as const;
+export const JOINED = 'JOINED' as const;
+
+export type ChatRoomType = 'ALL' | 'JOINED';
+
+// TODO: delete IRoomList
+// export interface IRoomList {
+//   id: number;
+//   title: string;
+//   isPublic: boolean;
+//   playerCount: number;
+//   isLadder: boolean;
+//   isGameStart?: boolean;
+// }
+export interface IWinLoseCount {
+  winCount: number;
+  loseCount: number;
+  ladderWinCount: number;
+  ladderLoseCount: number;
+  ladderLevel: number;
+}
+export interface IUserData extends IUserAuth, IWinLoseCount {
+  isSecondAuthOn: boolean;
+  isFriend: boolean;
+  isBlocked: boolean;
+}
+
+export interface IUserWinLoseCount extends IWinLoseCount {
+  id: number;
+}
+
+export interface IGameRecord {
+  isLadder: true;
+  isWin: true;
+  opponentNickname: string;
+}
+export interface IFollowId {
+  followId: number;
+}
+
+export interface INickname {
+  nickname: string;
+}
+
+export interface IUserAvatar {
+  originalname: string;
+  filename: string;
+  UpdateImg: string;
+}
+
+export interface IMessage {
+  isBroadcast: boolean;
+  from?: {
+    userId: number;
+    nickname: string;
+    role: string;
+    avatar: string; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
+  };
+  message: string;
+  fromUser: boolean;
+  createdTime: string;
+}
+
+export type ButtonColorType = 'white' | 'white2' | 'main' | 'gradient';
+
+export interface IGetUser {
+  userId: number;
+  nickname: string;
+  status: 'on' | 'off' | 'play';
+}
+export type UserRole = 'owner' | 'manager' | 'guest';
+
+export type ActiveMenuType = 'ALL' | 'FRIEND';
+
+export const ON = 'on' as const;
+export const OFF = 'off' as const;
+export const PLAY = 'play' as const;
+
+export const LOGIN = 'LOGIN' as const;
+export const LOGOUT = 'LOGOUT' as const;
+export const UPDATE_USER = 'UPDATE_USER' as const;
+export const UPDATE_RECORD = 'UPDATE_RECORD' as const;
+export const SET_NICKNAME = 'SET_NICKNAME' as const;
+export const SECOND_AUTH = 'SECOND_AUTH' as const;
+export const LOADING = 'LOADING' as const;
+
+export type UserStatusType = 'LOGIN' | 'LOGOUT' | 'SET_NICKNAME' | 'SECOND_AUTH' | 'LOADING';
+export type HandleUserType = 'LOGIN' | 'LOGOUT' | 'UPDATE_USER' | 'UPDATE_RECORD';
+
+export const GAME = 'GAME' as const;
+export const CHAT = 'CHAT' as const;
+export const HOME = 'HOME' as const;
+
+export type MenuType = 'GAME' | 'CHAT';
+
+export const SHOW_PROFILE = 'SHOW_PROFILE' as const;
+export const ON_SECOND_AUTH = 'ON_SECOND_AUTH' as const;
+export const OFF_SECOND_AUTH = 'OFF_SECOND_AUTH' as const;
+export const EDIT_NICKNAME = 'EDIT_NICKNAME' as const;
+export const MAKE_GAME_ROOM = 'MAKE_GAME_ROOM' as const;
+export const MAKE_CHAT_ROOM = 'MAKE_CHAT_ROOM' as const;
+export const ENTER_GAME_ROOM = 'ENTER_GAME_ROOM' as const;
+export const ENTER_CHAT_ROOM = 'ENTER_CHAT_ROOM' as const;
+export const CHECK_SCORE = 'CHECK_SCORE' as const;
+export const LOADING_LADDER_GAME = 'LOADING_LADDER_GAME' as const;
+export const EDIT_CHAT_ROOM = 'EDIT_CHAT_ROOM' as const;
+export const SHOW_OWNER_PROFILE = 'SHOW_OWNER_PROFILE' as const;
+export const SHOW_MANAGER_PROFILE = 'SHOW_MANAGER_PROFILE' as const;
+export const CHECK_LOGOUT = 'CHECK_LOGOUT' as const;
+export const FIGHT_RES_MODAL = 'FIGHT_RES_MODAL' as const;
+export const FIGHT_REQ_MODAL = 'FIGHT_REQ_MODAL' as const;
+export const EDIT_MY_PROFILE = 'EDIT_MY_PROFILE' as const;
+
+export type ModalType =
+  | 'SHOW_PROFILE' // 프로필 정보 보기
+  | 'ON_SECOND_AUTH' // 2차 인증 켜기
+  | 'OFF_SECOND_AUTH' // 2차 인증 끄기
+  | 'EDIT_NICKNAME' // 닉네임 수정
+  | 'MAKE_GAME_ROOM' // 게임방 만들기
+  | 'MAKE_CHAT_ROOM' // 채팅방 만들기
+  | 'ENTER_GAME_ROOM' // 비밀 게임방 입장
+  | 'ENTER_CHAT_ROOM' // 비밀 채팅방 입장
+  | 'CHECK_SCORE' // 전적 확인
+  | 'LOADING_LADDER_GAME' // 래더 게임 로딩
+  | 'EDIT_CHAT_ROOM' // 채팅방 수정
+  | 'SHOW_OWNER_PROFILE' // 채팅방 소유자 프로필
+  | 'SHOW_MANAGER_PROFILE' // 채팅방 관리자 프로필
+  | 'CHECK_LOGOUT' // 로그아웃 확인
+  | 'FIGHT_RES_MODAL' // 1:1 대전 응답 모달
+  | 'FIGHT_REQ_MODAL' // 1:1 대전 요청 모달
+  | 'EDIT_MY_PROFILE'; // 내 프로필 수정하기
+
+export interface IModalData {
+  modal: ModalType | null;
+  id: number;
+}
