@@ -3,8 +3,9 @@ import styled from '@emotion/styled';
 import LogoImg from '../../assets/logo-white.png';
 import { MenuType, GAME, CHAT, HOME, CHECK_LOGOUT, EDIT_CHAT_ROOM } from '../../utils/interface';
 import { AllContext } from '../../store';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../common/Button';
+import { chatsAPI } from '../../API';
 
 interface HeaderProps {
   type: 'HOME' | 'CHAT' | 'GAME';
@@ -12,7 +13,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ type }) => {
   const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
   const navigate = useNavigate();
+  const { roomId } = useParams();
 
   const onClickMenu = (menu: MenuType | 'HOME') => {
     switch (menu) {
@@ -27,6 +30,13 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
         return;
       default:
         return;
+    }
+  };
+
+  const onClickExitBtn = async () => {
+    if (user && roomId) {
+      await chatsAPI.leaveChatRoom(+roomId, user.userId, user.jwt);
+      onClickMenu(CHAT);
     }
   };
 
@@ -46,6 +56,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
           ),
           CHAT: (
             <Menus>
+              {/* TODO : 나중에 role 받아와서 소유자만 버튼 표시되도록 해야함 */}
               <Button
                 color="white"
                 text="방 설정"
@@ -58,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
                 text="방 나가기"
                 width={140}
                 height={50}
-                onClick={() => onClickMenu(CHAT)}
+                onClick={onClickExitBtn}
               />
             </Menus>
           ),

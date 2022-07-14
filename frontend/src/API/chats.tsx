@@ -1,5 +1,12 @@
 import { instance } from './index';
-import { IChatRooms, IRoomSetting, IParticipants, IChatDMRoom, IMessage } from '../utils/interface';
+import {
+  IChatRooms,
+  IRoomSetting,
+  IParticipants,
+  IChatDMRoom,
+  IMessage,
+  IChatRoomInfo,
+} from '../utils/interface';
 const chatsPath = (path: string) => {
   return `/chats${path}`;
 };
@@ -40,7 +47,7 @@ const chatsAPI = {
     isDm: boolean,
     password: string,
     jwt: string,
-  ): Promise<IRoomSetting | null> => {
+  ): Promise<IChatRoomInfo | null> => {
     try {
       const url = chatsPath(`/${userId}`);
       const res = await instance.post(
@@ -50,6 +57,20 @@ const chatsAPI = {
           headers: { Authorization: `Bearer ${jwt}` },
         },
       );
+      return res.data;
+    } catch (e) {
+      if (e instanceof Error) console.error(e.message);
+      else console.error(e);
+      return null;
+    }
+  },
+  // GET chats/{roomId} - getChatRoomStatus
+  getChatRoomStatus: async (roomId: number, jwt: string): Promise<IChatRoomInfo | null> => {
+    try {
+      const url = chatsPath(`/${roomId}`);
+      const res = await instance.get(url, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -191,7 +212,7 @@ const chatsAPI = {
     try {
       const url = chatsPath(`/${roomId}/muteToggle`);
       const res = await instance.put(url, { headers: { Authorization: `Bearer ${jwt}` } });
-      return res.data;
+      return res.data; // INFO: isMuted : boolean
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
@@ -207,12 +228,8 @@ const chatsAPI = {
   ): Promise<boolean> => {
     try {
       const url = chatsPath(`/${roomId}/users/${userId}/messages`);
-      const res = await instance.post(
-        url,
-        { data: chatLog },
-        { headers: { Authorization: `Bearer ${jwt}` } },
-      );
-      return res.data;
+      await instance.post(url, { data: chatLog }, { headers: { Authorization: `Bearer ${jwt}` } });
+      return true;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);

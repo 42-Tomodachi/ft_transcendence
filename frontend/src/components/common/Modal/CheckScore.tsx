@@ -3,33 +3,43 @@ import styled from '@emotion/styled';
 import Button from '../Button';
 import axios from 'axios';
 import Modal from '.';
-import ProfileImage from '../ProfileImage';
 import { AllContext } from '../../../store';
 import { IGameRecord } from '../../../utils/interface';
+import { usersAPI } from '../../../API';
 
-const CheckScore: React.FC = () => {
+const CheckScore: React.FC<{ id: number }> = ({ id }) => {
   const [recordList, setRecord] = useState<IGameRecord[] | []>([]);
   const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
 
   useEffect(() => {
-    axios.get('http://localhost:4000/record').then(({ data }) => {
-      console.log(data);
-      setRecord(data);
-    });
+    const getUserInfo = async () => {
+      if (user && user.jwt) {
+        const data = await usersAPI.getUserGameRecords(id, user.jwt);
+        setRecord(data);
+      }
+    };
+    getUserInfo();
   }, []);
 
   return (
     <Modal width={450} height={450} title={'전적 확인'}>
       <MainBlock>
-        <RecordList>
-          {recordList.map((record: IGameRecord, index: number) => (
-            <RecordItem key={index} isWin={record.isWin}>
-              <RecordisLadder>{record.isLadder ? '래더 게임' : '일반 게임'}</RecordisLadder>
-              <RecordisWin>{record.isWin ? '승' : '패'}</RecordisWin>
-              <RecordNickName>{record.opponentNickname}</RecordNickName>
-            </RecordItem>
-          ))}
-        </RecordList>
+        <>
+          {recordList.length !== 0 ? (
+            <RecordList>
+              {recordList.map((record: IGameRecord, index: number) => (
+                <RecordItem key={index} isWin={record.isWin}>
+                  <RecordisLadder>{record.isLadder ? '래더 게임' : '일반 게임'}</RecordisLadder>
+                  <RecordisWin>{record.isWin ? '승' : '패'}</RecordisWin>
+                  <RecordNickName>{record.opponentNickname}</RecordNickName>
+                </RecordItem>
+              ))}
+            </RecordList>
+          ) : (
+            <NonRecordText>전적이 존재하지 않습니다</NonRecordText>
+          )}
+        </>
         <Button
           color="gradient"
           text="확인"
@@ -95,4 +105,14 @@ const RecordNickName = styled.span`
   text-align: right;
 `;
 
-export default CheckScore;
+const NonRecordText = styled.span`
+  margin-top: 60px;
+  height: 200px;
+  display: inline-block;
+  font-size: 25px;
+  width: 100%;
+  color: ${({ theme }) => theme.colors.deepGrey};
+  text-align: center;
+`;
+
+export default React.memo(CheckScore);

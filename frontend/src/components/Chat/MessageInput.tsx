@@ -45,7 +45,13 @@ const MessageInput: React.FC<MessageItemProps> = ({ setMessages, messages }) => 
   return (
     <ChatInputArea>
       <ChatInputWrap>
-        <ChatInput type="text" onChange={onChangeInput} value={input} onKeyPress={handleEnter} />
+        <ChatInput
+          type="text"
+          onChange={onChangeInput}
+          value={input}
+          spellCheck={false}
+          onKeyPress={handleEnter}
+        />
       </ChatInputWrap>
       <Button color="main" width={100} height={50} text="전송" onClick={sendMessage} />
     </ChatInputArea>

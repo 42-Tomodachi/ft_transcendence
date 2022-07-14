@@ -67,6 +67,7 @@ const SecondAuthPage: React.FC = () => {
             placeholder="인증코드를 입력하세요"
             type="text"
             onChange={onUpdateAuthCode}
+            spellCheck={false}
             required
           />
           <SubText>{errMsg}</SubText>

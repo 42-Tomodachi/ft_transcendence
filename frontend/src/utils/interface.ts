@@ -11,13 +11,18 @@ export interface IUserAuth extends IUser {
   isSecondAuthOn: boolean;
   jwt: string;
 }
-export interface IUserProfile extends IUser, IWinLoseCount {}
 
-export interface IChatDMRoom {
+// export interface IGetUserProfile extends IUserProfile {
+//   isSecondAuthOn: boolean;
+//   isFriend: boolean;
+//   isBlocked: boolean;
+// }
+export interface IChatRoomInfo {
   roomId: number;
   title: string;
   ownerId: number;
 }
+export interface IChatDMRoom extends IChatRoomInfo {}
 export interface IChatRooms {
   roomId: number;
   title: string;
@@ -44,6 +49,11 @@ export interface IParticipants extends IUserKey {
   role: string;
 }
 
+export const ALL = 'ALL' as const;
+export const JOINED = 'JOINED' as const;
+
+export type ChatRoomType = 'ALL' | 'JOINED';
+
 // TODO: delete IRoomList
 // export interface IRoomList {
 //   id: number;
@@ -60,12 +70,10 @@ export interface IWinLoseCount {
   ladderLoseCount: number;
   ladderLevel: number;
 }
-export interface IUserData extends IUserAuth {
-  winCount: number;
-  loseCount: number;
-  ladderWinCount: number;
-  ladderLoseCount: number;
-  ladderLevel: number;
+export interface IUserData extends IUserAuth, IWinLoseCount {
+  isSecondAuthOn: boolean;
+  isFriend: boolean;
+  isBlocked: boolean;
 }
 
 export interface IUserWinLoseCount extends IWinLoseCount {
@@ -97,7 +105,7 @@ export interface IMessage {
     userId: number;
     nickname: string;
     role: string;
-    avatar: string | null; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
+    avatar: string; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
   };
   message: string;
   fromUser: boolean;
@@ -106,10 +114,9 @@ export interface IMessage {
 
 export type ButtonColorType = 'white' | 'white2' | 'main' | 'gradient';
 
-export interface IUserList {
-  id: number;
+export interface IGetUser {
+  userId: number;
   nickname: string;
-  isfriend: boolean;
   status: 'on' | 'off' | 'play';
 }
 export type UserRole = 'owner' | 'manager' | 'guest';
@@ -126,8 +133,9 @@ export const UPDATE_USER = 'UPDATE_USER' as const;
 export const UPDATE_RECORD = 'UPDATE_RECORD' as const;
 export const SET_NICKNAME = 'SET_NICKNAME' as const;
 export const SECOND_AUTH = 'SECOND_AUTH' as const;
+export const LOADING = 'LOADING' as const;
 
-export type UserStatusType = 'LOGIN' | 'LOGOUT' | 'SET_NICKNAME' | 'SECOND_AUTH';
+export type UserStatusType = 'LOGIN' | 'LOGOUT' | 'SET_NICKNAME' | 'SECOND_AUTH' | 'LOADING';
 export type HandleUserType = 'LOGIN' | 'LOGOUT' | 'UPDATE_USER' | 'UPDATE_RECORD';
 
 export const GAME = 'GAME' as const;

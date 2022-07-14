@@ -3,7 +3,7 @@ import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
 import { authAPI } from '../API';
-import { IUserData, LOGIN, SET_NICKNAME, UPDATE_USER } from '../utils/interface';
+import { IUserAvatar, IUserData, LOGIN, SET_NICKNAME, UPDATE_USER } from '../utils/interface';
 import imageCompression from 'browser-image-compression';
 import { usersAPI } from '../API/users';
 import DefaultProfile from '../assets/default-image.png';
@@ -20,12 +20,11 @@ const NicknamePage: React.FC = () => {
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
-  const { jwt, setJwt } = useContext(AllContext).jwtData; // TODO: JWT 유지를 위해 사용
-  const [convertImg, setConvertImg] = useState<File | string>(''); // TODO: File or string ?
+  const { jwt } = useContext(AllContext).jwtData;
+  const [convertImg, setConvertImg] = useState<File | string>('');
   const [userProfile, setUserProfile] = useState<IUserData>(); // TODO: profile에 맞는 interface 제작
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    //  NOTE : 정규식 적용
     const inputNickValue = e.target.value;
 
     if (!regex.test(inputNickValue)) {
@@ -70,16 +69,19 @@ const NicknamePage: React.FC = () => {
       setIsEnabled(false);
       return;
     }
-    const res = await authAPI.checkNickname(nickName, jwt);
-    if (res === null) {
-      setCheckNickMsg(`다시 시도해주세요.`);
-      setIsEnabled(false);
-    } else if (res) {
-      setCheckNickMsg(`중복된 닉네임입니다.`);
-      setIsEnabled(false);
-    } else {
-      setCheckNickMsg(`사용 가능한 닉네임입니다.`);
-      setIsEnabled(true);
+    if (user && user.jwt) {
+      const res = await authAPI.checkNickname(nickName, user.jwt); // TODO: undefine
+
+      if (res === null) {
+        setCheckNickMsg(`다시 시도해주세요.`);
+        setIsEnabled(false);
+      } else if (res) {
+        setCheckNickMsg(`중복된 닉네임입니다.`);
+        setIsEnabled(false);
+      } else {
+        setCheckNickMsg(`사용 가능한 닉네임입니다.`);
+        setIsEnabled(true);
+      }
     }
   };
 
@@ -95,7 +97,8 @@ const NicknamePage: React.FC = () => {
         usersAPI.uploadAvatarImg(userId, formData, jwt);
       }
       usersAPI.updateUserNickname(userId, nickName, jwt);
-      setUser(LOGIN, { ...user, nickname: nickName });
+      console.log(nickName);
+      setUser(LOGIN, { ...user, nickname: nickName }); // TODO: update user avatar info
       setUserStatus(LOGIN);
     } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
   };
@@ -110,12 +113,9 @@ const NicknamePage: React.FC = () => {
 
   // TODO: 리렌더링 방지용 전역 데이터 갱신 시켜줘야함
   useEffect(() => {
-    const jwt = window.localStorage.getItem('jwt');
-    setUserStatus(SET_NICKNAME);
-    if (jwt) {
-      setJwt('SET_JWT', jwt);
-      getUserProfile(jwt);
-      return;
+    if (user) {
+      getUserProfile(user.jwt);
+      setUserStatus(SET_NICKNAME);
     }
   }, []);
 
@@ -141,6 +141,7 @@ const NicknamePage: React.FC = () => {
             type="text"
             onChange={onEditNick}
             onKeyDown={onKeyEnter}
+            spellCheck={false}
             defaultValue={nickName}
             required
           />
@@ -237,6 +238,7 @@ const NickInput = styled.input`
   height: 30px;
   margin: 1%;
   outline: none;
+  text-align: center;
 `;
 
 const CheckDuplicate = styled.button`

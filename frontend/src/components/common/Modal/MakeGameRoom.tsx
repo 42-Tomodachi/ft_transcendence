@@ -9,10 +9,11 @@ const MakeGameRoom: React.FC = () => {
       <MainBlock>
         <TextGridBlock>
           <RoomNPwd>방 제목</RoomNPwd>
-          <InputRoomName></InputRoomName>
+          <InputRoomName spellCheck={false} />
           <RoomNPwd>비밀번호</RoomNPwd>
-          <InputPwd type="password"></InputPwd>
+          <InputPwd type="password" />
         </TextGridBlock>
+        {/* TODO: 스피드업, 장애물 생성, 일반모드 radio로 버튼 추가 */}
         <BtnBlock>
           <Button color="gradient" text="만들기" width={200} height={40} />
         </BtnBlock>

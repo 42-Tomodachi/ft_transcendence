@@ -1,21 +1,29 @@
 import React, { useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
 import { AllContext } from '../../../store';
+import { chatsAPI } from '../../../API';
 
-const EnterChatRoom: React.FC = () => {
+const EnterChatRoom: React.FC<{ id: number }> = ({ id }) => {
   const [errMsg, setErrMsg] = useState<string>('');
   const [inputPwd, setPwd] = useState<string>('');
   const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
+  const navigate = useNavigate();
 
-  const checkPwd = () => {
-    if (inputPwd === '1234') {
-      setErrMsg('');
-      alert(`정답ㅋ`);
-    } else {
-      setErrMsg('잘못된 비밀번호입니다.');
-      setPwd('');
+  const checkPwd = async () => {
+    if (user) {
+      const res = await chatsAPI.enterChatRoom(id, user.userId, inputPwd, user.jwt);
+      if (res !== -1) {
+        setErrMsg('');
+        setModal(null);
+        navigate(`/chatroom/${id}`);
+      } else {
+        setErrMsg('잘못된 비밀번호입니다.');
+        setPwd('');
+      }
     }
   };
 

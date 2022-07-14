@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import UserItem from './UserItem';
 import axios from 'axios';
-import { IUserList, OFF, ActiveMenuType } from '../../utils/interface';
+import { OFF, ActiveMenuType, IGetUser } from '../../utils/interface';
+import { AllContext } from '../../store';
+import { usersAPI } from '../../API';
 
 /*
  ** 제이슨서버에서 유저리스트를 받아와 정렬합니다.
@@ -18,69 +20,61 @@ import { IUserList, OFF, ActiveMenuType } from '../../utils/interface';
  */
 
 const UserList: React.FC = () => {
-  const [userList, setuserList] = useState<IUserList[] | []>([]);
-  useEffect(() => {
-    axios.get('http://localhost:4000/userlist').then(({ data }) => {
-      data.sort((a: IUserList, b: IUserList) => {
-        if (a.status === b.status) {
-          return a.nickname.localeCompare(b.nickname);
-        } else return b.status.localeCompare(a.status);
-      });
-      data.sort((a: IUserList, b: IUserList) => {
-        if (a.status !== OFF && b.status !== OFF) return a.nickname.localeCompare(b.nickname);
-      });
-      setuserList(data);
-    });
-  }, []);
-
+  const { user } = useContext(AllContext).userData;
   const [activeMenu, setActiveMenu] = useState<ActiveMenuType>('ALL');
+  const [userList, setUserList] = useState<IGetUser[] | []>([]);
+
+  useEffect(() => {
+    const getUserList = async () => {
+      if (user && user.jwt) {
+        const data =
+          activeMenu === 'ALL'
+            ? await usersAPI.getAllUsersIdNickName(user.jwt)
+            : await usersAPI.getFriendList(user.userId, user.jwt);
+        data.sort((a: IGetUser, b: IGetUser) => {
+          return a.status !== OFF ? -1 : 1;
+        });
+        setUserList(data);
+      }
+    };
+    getUserList();
+  }, [activeMenu, userList]);
+
   return (
-    <ListBox>
-      <ButtonBox>
-        <Button
-          color={activeMenu === 'ALL' ? 'gradient' : 'white'}
-          text="전체유저"
-          width={120}
-          height={40}
-          onClick={() => {
-            setActiveMenu('ALL');
-          }}
-        />
-        <Button
-          color={activeMenu === 'FRIEND' ? 'gradient' : 'white'}
-          text="친구"
-          width={120}
-          height={40}
-          onClick={() => {
-            setActiveMenu('FRIEND');
-          }}
-        />
-      </ButtonBox>
-      <UserContainer>
-        <ul>
-          {userList.map(
-            (user: IUserList, index: number) => (
-              <UserItem key={index} user={user} activeMenu={activeMenu} />
-            ),
-            // activeMenu === 'ALL' ? (
-            //   <UserItem status={list.status} key={index} onClick={() => console.log(list.nickname)}>
-            //     {list.nickname}
-            //   </UserItem>
-            // ) : (
-            //   list.isfriend && (
-            //     <UserItem
-            //       status={list.status}
-            //       key={index}
-            //       onClick={() => console.log(list.nickname)}
-            //     >
-            //       {list.nickname}
-            //     </UserItem>
-            //   )
-            // ),
-          )}
-        </ul>
-      </UserContainer>
-    </ListBox>
+    <>
+      {user && (
+        <ListBox>
+          <ButtonBox>
+            <Button
+              color={activeMenu === 'ALL' ? 'gradient' : 'white'}
+              text="전체유저"
+              width={120}
+              height={40}
+              onClick={() => {
+                setActiveMenu('ALL');
+              }}
+            />
+            <Button
+              color={activeMenu === 'FRIEND' ? 'gradient' : 'white'}
+              text="친구"
+              width={120}
+              height={40}
+              onClick={() => {
+                setActiveMenu('FRIEND');
+              }}
+            />
+          </ButtonBox>
+          <UserContainer>
+            <ul>
+              {userList.map(
+                (targetUser: IGetUser, index: number) =>
+                  user.userId !== targetUser.userId && <UserItem key={index} user={targetUser} />,
+              )}
+            </ul>
+          </UserContainer>
+        </ListBox>
+      )}
+    </>
   );
 };
 
