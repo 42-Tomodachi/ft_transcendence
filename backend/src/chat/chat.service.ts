@@ -18,7 +18,11 @@ import {
   IsMutedDto,
   ChatParticipantProfileDto,
 } from './dto/chatParticipant.dto';
-import { ChatContentDto, CreateChatContentDto } from './dto/chatContents.dto';
+import {
+  ChatContentDto,
+  CreateChatContentDto,
+  MessageDto,
+} from './dto/chatContents.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
@@ -262,7 +266,7 @@ export class ChatService {
       const createChatContentDto = new CreateChatContentDto();
       createChatContentDto.isBroadcast = true;
       createChatContentDto.message = `${user.nickname} 님이 입장하셨습니다.`;
-      this.submitChatContent(user, roomId, userId, createChatContentDto);
+      await this.submitChatContent(user, roomId, userId, createChatContentDto);
     }
 
     return { roomId: roomId };
@@ -423,8 +427,8 @@ export class ChatService {
     user: User,
     roomId: number,
     userId: number,
-    createChatContentDto: CreateChatContentDto,
-  ): Promise<BooleanDto> {
+    messageDto: MessageDto,
+  ): Promise<void> {
     if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
@@ -440,17 +444,12 @@ export class ChatService {
     const chatContents = new ChatContents();
     chatContents.chatRoomId = roomId;
     chatContents.userId = userId;
-    chatContents.content = createChatContentDto.message;
-    chatContents.isNotice = createChatContentDto.isBroadcast;
-    this.chatContentsRepo.save(chatContents);
+    chatContents.content = messageDto.message;
+    await this.chatContentsRepo.save(chatContents);
     //전체에 emit
     this.ChatGateway.server
       .to(roomId.toString())
-      .emit('updateChat', createChatContentDto);
-
-    const result = new BooleanDto();
-    result.boolean = true;
-    return result;
+      .emit('updateChat', messageDto);
   }
 
   async enterDmRoom(
@@ -533,7 +532,7 @@ export class ChatService {
       userId,
     });
     if (!participant) {
-      throw new BadRequestException('해당하는 유저가 존재하지 않습니다.');
+      throw new BadRequestException('참여중인 채팅방이 아닙니다.');
     }
     const { createdTime: participatedTime } = participant;
     const blockedUsers = await this.blockedUserRepo.findBy({
@@ -567,7 +566,7 @@ export class ChatService {
         return true;
       })
       .map((chatContent) => {
-        return chatContent.toChatContentDto(roomId, userId);
+        return chatContent.toChatContentDto(userId);
       });
 
     return result;

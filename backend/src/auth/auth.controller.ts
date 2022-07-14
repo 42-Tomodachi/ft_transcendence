@@ -9,6 +9,8 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  Request,
+  Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EmailDto, NicknameDto } from '../users/dto/users.dto';
@@ -62,6 +64,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'kankim✅ 닉네임 중복 확인' })
   @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Post('isDuplicateNickname')
   async isDuplicateNickname(
     @Body() nicknameDto: NicknameDto,
@@ -71,6 +74,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '로그아웃' })
   @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Put('logout/:userId')
   async logOut(
     @GetJwtUser() user: User,
@@ -81,6 +85,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 시작' })
   @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Post('/secondAuth/:userId')
   async startSecondAuth(
     @GetJwtUser() user: User,
@@ -92,6 +97,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '✅ 2차 인증 번호 검증' })
   @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Get('/secondAuthVerify/:userId')
   async verifySecondAuth(
     @GetJwtUser() user: User,
@@ -103,6 +109,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 완료' })
   @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Get('/secondAuthEnroll/:userId')
   async enrollSecondAuth(
     @GetJwtUser() user: User,
@@ -113,6 +120,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '✅ 2차 인증 해제' })
   @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Delete('/secondAuth/:userId')
   async disableSecondAuth(
     @GetJwtUser() user: User,
@@ -123,6 +131,7 @@ export class AuthController {
 
   @ApiOperation({ summary: '✅ 2차 인증 수행' })
   @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard())
   @Get('/secondAuth/:userId')
   @UseGuards(AuthGuard())
   async shootSecAuth(

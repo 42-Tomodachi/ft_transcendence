@@ -18,11 +18,32 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  private accessTokens: Map<number, string> = new Map<number, string>();
+
+  getJwtAccessToken = (id: number): string => {
+    return this.accessTokens[id];
+  };
+
+  setJwtAccessToken = (id: number, accessToken: string): void => {
+    this.accessTokens.set(id, accessToken);
+  };
+
+  deletejwtAccessToken(id: number) {
+    this.accessTokens.has(id);
+    this.accessTokens.delete(id);
+  }
+
   async validate(payload) {
-    const { email } = payload;
+    const { id } = payload;
+    const { email, accessToken } = payload;
     const user = await this.usersService.getUserByEmail(email);
     if (!user) {
       throw new UnauthorizedException('회원이 아닙니다.');
+    }
+
+    const token = this.accessTokens;
+    if (token.get(id) !== accessToken) {
+      throw new UnauthorizedException('잘못된 토큰입니다.');
     }
     return user;
   }

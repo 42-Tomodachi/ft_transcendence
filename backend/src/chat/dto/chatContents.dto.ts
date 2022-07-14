@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { ChatRoomUserDto } from './chatParticipant.dto';
 
-class FromWhomDto extends PickType(ChatRoomUserDto, ['nickname', 'role']) {
+export class FromWhomDto extends PickType(ChatRoomUserDto, ['nickname']) {
   @ApiProperty({ description: '유저 프로필 사진' })
   avatar: string | null;
 }
@@ -45,3 +45,5 @@ export class CreateChatContentDto extends PickType(ChatContentDto, [
   'isBroadcast',
   'message',
 ]) {}
+
+export class MessageDto extends PickType(ChatContentDto, ['message']) {}

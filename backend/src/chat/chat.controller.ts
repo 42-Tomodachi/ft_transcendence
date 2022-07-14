@@ -26,7 +26,7 @@ import {
   IsMutedDto,
   ChatParticipantProfileDto,
 } from './dto/chatParticipant.dto';
-import { ChatContentDto, CreateChatContentDto } from './dto/chatContents.dto';
+import { ChatContentDto, MessageDto } from './dto/chatContents.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/users/entities/users.entity';
 import { GetJwtUser } from 'src/auth/jwt.strategy';
@@ -197,14 +197,9 @@ export class ChatController {
     @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Param('userId', ParseIntPipe) userId: number,
-    @Body() createChatContentDto: CreateChatContentDto,
-  ): Promise<BooleanDto> {
-    return this.chatService.submitChatContent(
-      user,
-      roomId,
-      userId,
-      createChatContentDto,
-    );
+    @Body() messageDto: MessageDto,
+  ): Promise<void> {
+    await this.chatService.submitChatContent(user, roomId, userId, messageDto);
   }
 
   @ApiOperation({ summary: 'kankim✅ 채팅방에 있는 유저의 프로필 조회' })
