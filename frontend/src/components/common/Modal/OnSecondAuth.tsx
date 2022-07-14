@@ -88,6 +88,7 @@ const OnSecondAuth: React.FC = () => {
             setEmail(event.target.value);
             setEmailMsg('');
           }}
+          spellCheck={false}
           value={email}
           onKeyPress={EmailhandleEnter}
           disabled={activeEmail}
@@ -107,6 +108,7 @@ const OnSecondAuth: React.FC = () => {
               setAuth(event.target.value);
               setAuthMsg('');
             }}
+            spellCheck={false}
             value={authCode}
             onKeyPress={AuthhandleEnter}
             disabled={activeCode}

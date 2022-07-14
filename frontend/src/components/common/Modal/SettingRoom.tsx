@@ -10,9 +10,9 @@ const SettingRoom: React.FC = () => {
       <MainBlock>
         <TextGridBlock>
           <RoomNPwd>방 제목</RoomNPwd>
-          <InputRoomName></InputRoomName>
+          <InputRoomName spellCheck={false} />
           <RoomNPwd>비밀번호</RoomNPwd>
-          <InputPwd type="password"></InputPwd>
+          <InputPwd type="password" />
         </TextGridBlock>
         <BtnBlock>
           <Button color="gradient" text="설정" width={200} height={40} />
@@ -52,9 +52,11 @@ const InputRoomName = styled.input`
   border: none;
   outline: none;
   border-bottom: 1px solid;
+  text-align: center;
 `;
 
 const InputPwd = styled(InputRoomName)`
+  text-align: center;
   &[type='password'] {
   }
 `;

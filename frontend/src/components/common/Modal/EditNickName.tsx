@@ -9,6 +9,7 @@ const EditNickName: React.FC = () => {
 
   const validNicknameChecker = () => {
     if (nickname === 'sgang') {
+      // TODO: API 요청이 필요함
       setNickName('');
       alert(`올ㅋ`);
     } else setNickNameMsg('중복된 닉네임입니다.');
@@ -31,6 +32,7 @@ const EditNickName: React.FC = () => {
               setNickNameMsg('');
             }}
             value={nickname}
+            spellCheck={false}
             onKeyPress={nickHandlerEnter}
           />
           <Button

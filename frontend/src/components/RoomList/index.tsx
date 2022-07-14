@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import GameListItem from './RoomListItem';
-import { IRoomList } from '../../utils/interface';
-
+import { IChatRooms, IGameRooms, CHAT } from '../../utils/interface';
+import ChatRooms from './ChatRooms';
+import GameRooms from './GameRooms';
 interface RoomListProps {
-  list: IRoomList[] | [];
+  list: IChatRooms[] | IGameRooms[] | [];
   type: string;
 }
 
@@ -12,8 +12,12 @@ const RoomList: React.FC<RoomListProps> = ({ list, type }) => {
   return (
     <RoomListContainer>
       {list.length > 0 &&
-        [...list, ...list, ...list, ...list, ...list].map((li, index) => {
-          return <GameListItem key={index} item={li} type={type} />;
+        list.map((li, index) => {
+          return type === CHAT ? (
+            <ChatRooms key={index} item={li as IChatRooms} />
+          ) : (
+            <GameRooms key={index} item={li as IGameRooms} />
+          );
         })}
     </RoomListContainer>
   );

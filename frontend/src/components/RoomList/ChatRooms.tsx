@@ -1,21 +1,32 @@
-import React from 'react';
-import styled from '@emotion/styled';
-import { IRoomList, GAME, CHAT } from '../../utils/interface';
+import React, { useContext } from 'react';
+import { ENTER_CHAT_ROOM, IChatRooms } from '../../utils/interface';
 import Button from '../common/Button';
+import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
+import { AllContext } from '../../store';
+import { chatsAPI } from '../../API';
 
-interface RoomListItemProps {
-  item: IRoomList;
-  type: string;
+interface ChatRoomProps {
+  item: IChatRooms;
 }
 
-const RoomListItem: React.FC<RoomListItemProps> = ({ item, type }) => {
+const ChatRooms: React.FC<ChatRoomProps> = ({ item }) => {
   const navigate = useNavigate();
-  // TODO: string 타입말고 다른 타입?
-  const navigateRoomType = (type: string, roomNumber: number) => {
-    console.dir(type);
-    if (type === GAME) navigate(`/modalTester`); // TODO: navigate(`${roomNumber}`); // game room
-    else if (type === CHAT) navigate(`/chat`); // TODO: change /chat/{roomNumber}
+  const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
+
+  const handleEnterRoom = async () => {
+    if (user) {
+      if (!item.isPublic) {
+        setModal(ENTER_CHAT_ROOM, item.roomId);
+        // TODO: 모달 안에서도 enterChatRoom 넣기
+      } else {
+        const res = await chatsAPI.enterChatRoom(item.roomId, user.userId, '', user.jwt);
+        if (res !== -1) {
+          navigate(`/chatroom/${item.roomId}`);
+        }
+      }
+    }
   };
 
   return (
@@ -23,21 +34,16 @@ const RoomListItem: React.FC<RoomListItemProps> = ({ item, type }) => {
       <ListTitle>{item.title}</ListTitle>
       <ListStatus>
         <PrivateStat>{item.isPublic ? `공개` : `비공개`}</PrivateStat>
-        <CountStat>{item.playerCount + '명'}</CountStat>
+        <CountStat>{item.numberOfParticipants + '명'}</CountStat>
         <EnterBtnWrap>
           <Button
             width={50}
             height={30}
             color="gradient"
             text="입장"
-            onClick={() => navigateRoomType(type, item.id)}
+            onClick={handleEnterRoom} // TODO: change /chat/{roomNumber}
           />
         </EnterBtnWrap>
-        {item.isGameStart !== undefined && (
-          <GameStat isGameStart={item.isGameStart}>
-            {item.isGameStart ? `게임중` : `대기중`}
-          </GameStat>
-        )}
       </ListStatus>
     </ListItem>
   );
@@ -97,4 +103,4 @@ const GameStat = styled.span<{ isGameStart: boolean }>`
   user-select: none;
 `;
 
-export default React.memo(RoomListItem);
+export default React.memo(ChatRooms);

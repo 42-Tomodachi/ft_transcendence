@@ -12,6 +12,7 @@ import {
   UserStatusType,
   HandleUserType,
   IWinLoseCount,
+  LOADING,
 } from '../utils/interface';
 
 export const AllContext = createContext<stateType>({
@@ -27,19 +28,23 @@ export const AllContext = createContext<stateType>({
     setUser: () => null,
   },
   userStatus: {
-    userStatus: LOGOUT,
+    userStatus: LOADING,
     setUserStatus: () => null,
   },
   jwtData: {
     jwt: '',
     setJwt: () => null,
   },
+  targetItem: {
+    targetId: 0,
+    setTargetId: () => null,
+  },
 });
 
 type stateType = {
   modalData: {
     modal: IModalData;
-    setModal: (type: ModalType | null) => void;
+    setModal: (type: ModalType | null, id?: number) => void;
   };
   userData: {
     user: IUserData | null;
@@ -53,6 +58,10 @@ type stateType = {
     jwt: string;
     setJwt: (type: 'SET_JWT' | 'REMOVE_JWT', jwt?: string) => void;
   };
+  targetItem: {
+    targetId: number;
+    setTargetId: (type: number) => void;
+  };
 };
 
 interface AllContextApiProps {
@@ -65,8 +74,9 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     id: -1,
   });
   const [user, setUser] = useState<IUserData | null>(null);
-  const [userStatus, setUserStatus] = useState<UserStatusType>(LOGOUT);
+  const [userStatus, setUserStatus] = useState<UserStatusType>(LOADING);
   const [jwt, setJwt] = useState<string>('');
+  const [targetId, setTargetId] = useState<number>(0);
 
   const handleJwt = (type: 'SET_JWT' | 'REMOVE_JWT', jwt?: string) => {
     switch (type) {
@@ -126,7 +136,12 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
   };
 
   const handleUserStatus = (type: UserStatusType) => {
+    // console.log('store', type);
     setUserStatus(type);
+  };
+
+  const handleTargetId = (type: number) => {
+    setTargetId(type);
   };
 
   const data = {
@@ -145,6 +160,10 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     jwtData: {
       jwt,
       setJwt: handleJwt,
+    },
+    targetItem: {
+      targetId,
+      setTargetId: handleTargetId,
     },
   };
   return <AllContext.Provider value={data}>{children}</AllContext.Provider>;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import { IMessage } from '../../utils/interface';
+import { chatsAPI } from '../../API';
 
 interface MessageItemProps {
   setMessages: (messages: IMessage[]) => void;
@@ -17,17 +18,18 @@ const MessageInput: React.FC<MessageItemProps> = ({ setMessages, messages }) => 
 
   const sendMessage = () => {
     if (input.trim().length > 0) {
+      // TODO: API로 받아야 함
       const newMessage: IMessage = {
-        id: messages.length + 1,
         from: {
-          id: 1,
+          userId: 1,
           nickname: 'test',
-          profileImage: 'https://placehold.jp/150x150.png',
+          avatar: 'https://placehold.jp/150x150.png',
+          role: 'guest',
         },
         message: input,
         isBroadcast: false,
         fromUser: true,
-        createdAt: new Date().toISOString(),
+        createdTime: new Date().toLocaleTimeString(),
       };
       setMessages([...messages, newMessage]);
     }
@@ -43,7 +45,13 @@ const MessageInput: React.FC<MessageItemProps> = ({ setMessages, messages }) => 
   return (
     <ChatInputArea>
       <ChatInputWrap>
-        <ChatInput type="text" onChange={onChangeInput} value={input} onKeyPress={handleEnter} />
+        <ChatInput
+          type="text"
+          onChange={onChangeInput}
+          value={input}
+          spellCheck={false}
+          onKeyPress={handleEnter}
+        />
       </ChatInputWrap>
       <Button color="main" width={100} height={50} text="전송" onClick={sendMessage} />
     </ChatInputArea>

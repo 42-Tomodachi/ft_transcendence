@@ -111,32 +111,32 @@
   },
   "gameList": [
     {
-      "id": 1,
-      "title": "즐겜하실분",
+      "roomId": 1,
+      "roomTitle": "즐겜하실분",
       "isPublic": true,
       "playerCount": 1,
       "isGameStart": false,
       "isLadder": false
     },
     {
-      "id": 2,
-      "title": "빡겜 하실 분",
+      "roomId": 2,
+      "roomTitle": "빡겜 하실 분",
       "isPublic": true,
       "playerCount": 2,
       "isGameStart": true,
       "isLadder": false
     },
     {
-      "id": 3,
-      "title": "님만 오면 고 ㄲ",
+      "roomId": 3,
+      "roomTitle": "님만 오면 고 ㄲ",
       "isPublic": true,
       "playerCount": 2,
       "isGameStart": true,
       "isLadder": false
     },
     {
-      "id": 4,
-      "title": "비밀방",
+      "roomId": 4,
+      "roomTitle": "비밀방",
       "isPublic": false,
       "playerCount": 1,
       "isGameStart": false,
@@ -188,7 +188,7 @@
       "from": {
         "id": 1,
         "nickname": "sgang",
-        "profileImage": "https://interbalance.org/wp-content/uploads/2021/08/ray-zhuang-Px2Y-sio6-c-unsplash-scaled.jpg"
+        "avatar": "https://interbalance.org/wp-content/uploads/2021/08/ray-zhuang-Px2Y-sio6-c-unsplash-scaled.jpg"
       },
       "message": "안녕하세요 하하하하",
       "fromUser": false,
@@ -200,7 +200,7 @@
       "from": {
         "id": 1,
         "nickname": "sgang",
-        "profileImage": "https://interbalance.org/wp-content/uploads/2021/08/ray-zhuang-Px2Y-sio6-c-unsplash-scaled.jpg"
+        "avatar": "https://interbalance.org/wp-content/uploads/2021/08/ray-zhuang-Px2Y-sio6-c-unsplash-scaled.jpg"
       },
       "message": "ㅎㅇㅎㅇ",
       "fromUser": false,
@@ -220,7 +220,7 @@
       "from": {
         "id": 2,
         "nickname": "dhyeon",
-        "profileImage": "https://src.hidoc.co.kr/image/lib/2022/5/4/1651651323632_0.jpg"
+        "avatar": "https://src.hidoc.co.kr/image/lib/2022/5/4/1651651323632_0.jpg"
       },
       "message": "하이 헬로 안녕",
       "fromUser": true,
