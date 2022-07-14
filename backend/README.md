@@ -71,3 +71,20 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](LICENSE).
+
+
+# mailer sample
+
+.env
+
+```
+EMAIL_AUTH_EMAIL=example@naver.com
+EMAIL_AUTH_PASSWORD=password
+EMAIL_HOST=smtp.naver.com
+EMAIL_FROM_USER_NAME=example
+```
+user.controller.ts 이메일 변경.
+
+# docker
+
+docker run -e POSTGRES_PASSWORD=1 -e POSTGRES_USER=postgres -e POSTGRES_DB=testdb -p5432:5432 postgres
