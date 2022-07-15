@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsSignedUpDto } from 'src/auth/dto/auth.dto';
 import { ChatContents } from 'src/chat/entities/chatContents.entity';
 import { ChatParticipant } from 'src/chat/entities/chatParticipant.entity';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
@@ -10,7 +9,11 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { UserProfileDto, WinLoseCountDto } from '../dto/users.dto';
+import {
+  GamerInfoDto,
+  UserProfileDto,
+  WinLoseCountDto,
+} from '../dto/users.dto';
 import { BlockedUser } from './blockedUser.entity';
 import { Follow } from './follow.entity';
 
@@ -61,7 +64,7 @@ export class User extends BaseEntity {
 
   // todo: 실시간으로 유저의 상태를 나타내지 않기로 함. 유저목록 갱신할 때 마다 api 호출 해야 하는데 그때 사용할 컬럼
   @ApiProperty({
-    description: '유저 상태 on | off | play, 프론트 요청으로 변경',
+    description: '유저 상태 on | off | play', // 프론트 요청으로 변경
   })
   @Column({ default: 'off' })
   userStatus: 'on' | 'off' | 'play';
@@ -159,5 +162,16 @@ export class User extends BaseEntity {
     winLoseCountDto.ladderLevel = this.getLadderLevel();
 
     return winLoseCountDto;
+  }
+
+  toGamerInfoDto(): GamerInfoDto {
+    const gamerInfoDto = new GamerInfoDto();
+    gamerInfoDto.nickname = this.nickname;
+    gamerInfoDto.avatar = this.avatar;
+    gamerInfoDto.winCount = this.winCount;
+    gamerInfoDto.loseCount = this.loseCount;
+    gamerInfoDto.ladderLevel = this.getLadderLevel();
+
+    return gamerInfoDto;
   }
 }
