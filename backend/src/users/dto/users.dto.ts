@@ -78,6 +78,17 @@ export class SimpleUserDto extends PickType(UserProfileDto, [
   status: 'on' | 'off' | 'play';
 }
 
+export class GamerInfoDto extends PickType(UserProfileDto, [
+  'nickname',
+  'avatar',
+  'winCount',
+  'loseCount',
+]) {
+  @ApiProperty({ description: '레더게임 레벨' })
+  @IsNumber()
+  ladderLevel: number;
+}
+
 export class UpdateUserDto extends PickType(UserProfileDto, [
   'userId',
   'avatar',
