@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { GameRecordSaveDto } from 'src/users/dto/gameRecord.dto';
+import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
 import { GamerInfoDto as PlayerInfoDto } from '../users/dto/users.dto';
@@ -190,5 +192,44 @@ export class GameService {
         this.gameRoomTable[gameIndex].playerCount--;
       // 소켓: 관전자 설정
     }
+  }
+
+  async saveGameRecord(gameRecordSaveDto: GameRecordSaveDto): Promise<void> {
+    const firstPlayer = await this.userRepo.findOneBy({
+      id: gameRecordSaveDto.playerOneId,
+    });
+    const secondPlayer = await this.userRepo.findOneBy({
+      id: gameRecordSaveDto.playerTwoId,
+    });
+    if (!firstPlayer || !secondPlayer) {
+      throw new BadRequestException('유저 정보를 찾을 수 없습니다.');
+    }
+    if (gameRecordSaveDto.winnerId == gameRecordSaveDto.playerOneId) {
+      if (gameRecordSaveDto.isLadder) {
+        firstPlayer.ladderWinCount++;
+        secondPlayer.ladderLoseCount++;
+      } else {
+        firstPlayer.winCount++;
+        secondPlayer.loseCount++;
+      }
+    } else {
+      if (gameRecordSaveDto.isLadder) {
+        firstPlayer.ladderWinCount++;
+        secondPlayer.ladderLoseCount++;
+      } else {
+        firstPlayer.winCount++;
+        secondPlayer.loseCount++;
+      }
+    }
+    const newRecord = new GameRecord();
+    newRecord.playerOneId = gameRecordSaveDto.playerOneId;
+    newRecord.playerOneScore = gameRecordSaveDto.playerOneScore;
+    newRecord.playerTwoId = gameRecordSaveDto.playerTwoId;
+    newRecord.playerTwoScore = gameRecordSaveDto.playerTwoScore;
+    newRecord.winnerId = gameRecordSaveDto.winnerId;
+    await newRecord.save();
+
+    await firstPlayer.save();
+    await secondPlayer.save();
   }
 }

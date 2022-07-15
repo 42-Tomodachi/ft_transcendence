@@ -14,7 +14,7 @@ export class GameRecord extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ApiProperty({ description: '[FK] 첫번째 플래이어의 유저 id' })
+  @ApiProperty({ description: '[FK] 첫번째 플레이어의 유저 id' })
   @Column()
   playerOneId: number;
 
