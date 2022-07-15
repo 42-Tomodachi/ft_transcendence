@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { UsersService } from 'src/users/users.service';
+import { GameRecord } from 'src/users/entities/gameRecord.entity';
 
 @Module({
   imports: [
