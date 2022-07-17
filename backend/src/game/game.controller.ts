@@ -12,6 +12,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GetJwtUser } from '../auth/jwt.strategy';
 import { User } from '../users/entities/users.entity';
+import { GameRecordSaveDto } from '../users/dto/gameRecord.dto';
 import { GamerInfoDto } from '../users/dto/users.dto';
 import {
   CreateGameRoomDto,
@@ -74,5 +75,13 @@ export class GameController {
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<void> {
     await this.gameService.exitGameRoom(user, gameId, userId);
+  }
+
+  @ApiOperation({ summary: 'seungyel✅ 게임 전적 반영' })
+  @Post('/result')
+  async saveGameRecord(
+    @Body() gameRecordSaveDto: GameRecordSaveDto,
+  ): Promise<void> {
+    await this.gameService.saveGameRecord(gameRecordSaveDto);
   }
 }
