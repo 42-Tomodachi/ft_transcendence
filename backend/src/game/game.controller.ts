@@ -77,11 +77,11 @@ export class GameController {
     await this.gameService.exitGameRoom(user, gameId, userId);
   }
 
-  @ApiOperation({ summary: 'seungyel 게임 전적 반영' })
-  @Post('/reault')
-  async gameRecord(
+  @ApiOperation({ summary: 'seungyel✅ 게임 전적 반영' })
+  @Post('/result')
+  async saveGameRecord(
     @Body() gameRecordSaveDto: GameRecordSaveDto,
   ): Promise<void> {
-    return await this.gameService.saveGameRecord(gameRecordSaveDto);
+    await this.gameService.saveGameRecord(gameRecordSaveDto);
   }
 }
