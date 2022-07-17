@@ -23,6 +23,7 @@ import { UsersService } from './users/users.service';
 import { ChatModule } from './chat/chat.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { GameModule } from './game/game.module';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [
@@ -55,7 +56,6 @@ import { GameModule } from './game/game.module';
       },
     }),
     AuthModule,
-    ChatModule,
     GameModule,
   ],
   controllers: [AppController],

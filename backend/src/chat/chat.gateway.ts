@@ -1,6 +1,8 @@
 import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  ConnectedSocket,
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -60,7 +62,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // 채팅방에 처음 들어왔을 때 입장 메세지
   // 채팅방에서 나갔을 때 퇴장 메세지
-  sendNoticdMessage(roomId: number, chatToClientDto: ChatToClientDto): void {
+  sendNoticeMessage(roomId: number, chatToClientDto: ChatToClientDto): void {
     this.wss.to(roomId.toString()).emit('recieveMessage', chatToClientDto);
   }
 
@@ -73,7 +75,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    */
   // 채팅을 보냈을 때 채팅방 참여자에게 메세지 전달
   @SubscribeMessage('sendMessage')
-  async handleMessage(client: Socket, data: ChatToServerDto): Promise<void> {
+  async handleMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: ChatToServerDto,
+  ): Promise<void> {
     const chatToClientDto = await this.chatService.createChatContent(
       data.userId,
       data.roomId,
@@ -83,12 +88,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.wss.to(data.roomId.toString()).emit('recieveMessage', chatToClientDto);
   }
 
-  // 클라이언트가 받은 채팅을 검증하기 위해 사용
+  // 클라이언트가 받은 채팅을 검증(차단한 유저인지)하기 위해 사용
   // 받은 채팅을 보낸 유저가 내가 차단한 유저이면 true리턴 차단하지 않았으면 false 리턴
   @SubscribeMessage('isMessageFromBlockedUser')
   async isMessageFromBlockedUser(
-    client: Socket,
-    data: { senderId: number; myId: number }, // senderId: 메세지 보낸 유저 id, myId: 메세지 받은 유저 id
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { senderId: number; myId: number }, // senderId: 메세지 보낸 유저 id, myId: 메세지 받은 유저 id
   ): Promise<void> {
     const res = await this.chatService.isMessageFromBlockedUser(
       data.myId,

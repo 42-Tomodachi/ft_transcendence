@@ -38,7 +38,7 @@ export class ChatService {
     private readonly chatParticipantRepo: Repository<ChatParticipant>,
     @InjectRepository(ChatRoom)
     private readonly chatRoomRepo: Repository<ChatRoom>,
-    private readonly ChatGateway: ChatGateway,
+    private readonly chatGateway: ChatGateway,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private dataSource: DataSource,
@@ -266,7 +266,7 @@ export class ChatService {
       chatToClientDto.isBroadcast = createdChatContent.isNotice;
       chatToClientDto.createdTime = createdChatContent.createdTime;
 
-      this.ChatGateway.sendNoticdMessage(roomId, chatToClientDto);
+      this.chatGateway.sendNoticeMessage(roomId, chatToClientDto);
     }
 
     return { roomId: roomId };
@@ -319,7 +319,7 @@ export class ChatService {
 
     if (room.ownerId === userId) {
       // 방 폭파 + 방에서 다 내보내기
-      this.ChatGateway.wss.socketsLeave(roomId.toString());
+      this.chatGateway.wss.socketsLeave(roomId.toString());
       await this.chatRoomRepo.delete({ id: roomId });
     } else {
       await this.chatParticipantRepo.delete({ chatRoomId: roomId, userId });
@@ -338,7 +338,7 @@ export class ChatService {
       chatToClientDto.isBroadcast = createdChatContent.isNotice;
       chatToClientDto.createdTime = createdChatContent.createdTime;
 
-      this.ChatGateway.sendNoticdMessage(roomId, chatToClientDto);
+      this.chatGateway.sendNoticeMessage(roomId, chatToClientDto);
     }
   }
 
@@ -382,7 +382,7 @@ export class ChatService {
     }
     await targetParticipant.save();
 
-    this.ChatGateway.wss
+    this.chatGateway.wss
       .to(roomId.toString())
       .emit('updateUserList', targetParticipant);
 
@@ -421,7 +421,7 @@ export class ChatService {
 
     // timer 10 min.
 
-    this.ChatGateway.wss
+    this.chatGateway.wss
       .to(roomId.toString())
       .emit('updateUserList', chatParticipant);
 
@@ -500,7 +500,7 @@ export class ChatService {
     chatContents.content = messageDto.message;
     await this.chatContentsRepo.save(chatContents);
     //전체에 emit
-    // this.ChatGateway.wss.to(roomId.toString()).emit('updateChat', messageDto);
+    // this.chatGateway.wss.to(roomId.toString()).emit('updateChat', messageDto);
   }
 
   async enterDmRoom(
