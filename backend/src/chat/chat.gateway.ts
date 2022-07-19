@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { forwardRef, Inject, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   ConnectedSocket,
@@ -41,9 +41,12 @@ class ChatToServerDto {
   message: string;
 }
 
-@WebSocketGateway({ namespace: '/chat' })
+@WebSocketGateway({ namespace: '/ws-chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    @Inject(forwardRef(() => ChatService))
+    private readonly chatService: ChatService,
+  ) {}
 
   @WebSocketServer() wss: Server;
 

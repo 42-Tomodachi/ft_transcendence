@@ -56,6 +56,7 @@ import { ChatGateway } from './chat/chat.gateway';
       },
     }),
     AuthModule,
+    ChatModule,
     GameModule,
   ],
   controllers: [AppController],

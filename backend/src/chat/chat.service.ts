@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
@@ -38,6 +43,7 @@ export class ChatService {
     private readonly chatParticipantRepo: Repository<ChatParticipant>,
     @InjectRepository(ChatRoom)
     private readonly chatRoomRepo: Repository<ChatRoom>,
+    @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
