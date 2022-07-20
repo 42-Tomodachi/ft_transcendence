@@ -41,7 +41,7 @@ class ChatToServerDto {
   message: string;
 }
 
-@WebSocketGateway({ namespace: '/ws-chat' })
+@WebSocketGateway({ namespace: '/ws-chat', cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @Inject(forwardRef(() => ChatService))
