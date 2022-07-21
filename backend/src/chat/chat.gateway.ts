@@ -66,6 +66,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // 채팅방에 처음 들어왔을 때 입장 메세지
   // 채팅방에서 나갔을 때 퇴장 메세지
   sendNoticeMessage(roomId: number, chatToClientDto: ChatToClientDto): void {
+    this.logger.log(`roomId: ${roomId}, emit recieveMessage`);
     this.wss.to(roomId.toString()).emit('recieveMessage', chatToClientDto);
   }
 
@@ -88,6 +89,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.message,
     );
 
+    this.logger.log(`roomId: ${data.roomId}, on sendMessage`);
     this.wss.to(data.roomId.toString()).emit('recieveMessage', chatToClientDto);
   }
 
@@ -103,6 +105,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.senderId,
     );
 
+    this.logger.log(`on isMessageFromBlockedUser`);
     client.emit('isMessageFromBlockedUserResult', res);
   }
 }
