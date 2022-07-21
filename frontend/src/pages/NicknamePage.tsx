@@ -97,8 +97,8 @@ const NicknamePage: React.FC = () => {
         usersAPI.uploadAvatarImg(userId, formData, jwt);
       }
       usersAPI.updateUserNickname(userId, nickName, jwt);
-      console.log(nickName);
-      setUser(LOGIN, { ...user, nickname: nickName }); // TODO: update user avatar info
+      // console.dir(profileImg);
+      setUser(LOGIN, { ...user, jwt: jwt, nickname: nickName, avatar: profileImg }); // TODO: update user avatar info
       setUserStatus(LOGIN);
     } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
   };
@@ -106,7 +106,7 @@ const NicknamePage: React.FC = () => {
   const getUserProfile = async (jwt: string) => {
     const res = await usersAPI.getLoginUserProfile(jwt);
     if (res) {
-      setUserProfile(res); // user/own
+      setUserProfile({ ...res, jwt: jwt }); // user/own
       setUser(UPDATE_USER, userProfile);
     }
   };

@@ -7,6 +7,7 @@ import {
   CHECK_SCORE,
   EDIT_MY_PROFILE,
   IUserData,
+  LOGIN,
   OFF_SECOND_AUTH,
   ON_SECOND_AUTH,
 } from '../../utils/interface';
@@ -14,16 +15,14 @@ import { usersAPI } from '../../API';
 
 const ProfilePage: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
-  const { user } = useContext(AllContext).userData;
-  const [own, setUser] = useState<IUserData | null>(null);
+  const { user, setUser } = useContext(AllContext).userData;
 
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
         const data = await usersAPI.getLoginUserProfile(user.jwt);
-        if (data) {
-          console.dir(data);
-          setUser(data);
+        if (data && data.nickname) {
+          setUser(LOGIN, { ...data, jwt: user.jwt });
         }
       }
     };
@@ -32,18 +31,17 @@ const ProfilePage: React.FC = () => {
 
   return (
     <>
-      {own && (
+      {user && (
         <MainBlock>
           <MainText>내 프로필</MainText>
 
           <ProfileBlock>
-            {/* TODO: image 클릭시 이미지 변경할 수 있도록(upload profile) */}
             <PictureBlock>
-              <ProfileImage src={own.avatar} size={100} />
+              <ProfileImage src={user.avatar} size={100} />
             </PictureBlock>
             <UserInfo>
-              <UserName>{own.nickname}</UserName>
-              <UserLevel>lv.{own.ladderLevel}</UserLevel>
+              <UserName>{user.nickname}</UserName>
+              <UserLevel>lv.{user.ladderLevel}</UserLevel>
             </UserInfo>
           </ProfileBlock>
 
@@ -51,7 +49,7 @@ const ProfilePage: React.FC = () => {
 
           <RecordBlock>
             <Record>
-              {own.winCount}승 {own.loseCount}패/{own.ladderWinCount}승 {own.ladderLoseCount}패
+              {user.winCount}승 {user.loseCount}패/{user.ladderWinCount}승 {user.ladderLoseCount}패
             </Record>
             <RecordBtn>
               <Button
@@ -60,7 +58,7 @@ const ProfilePage: React.FC = () => {
                 width={97}
                 height={30}
                 onClick={() => {
-                  setModal(CHECK_SCORE, own.userId);
+                  setModal(CHECK_SCORE, user.userId);
                 }}
               />
             </RecordBtn>
@@ -73,7 +71,7 @@ const ProfilePage: React.FC = () => {
               width={120}
               height={30}
               onClick={() => {
-                setModal(EDIT_MY_PROFILE, own.userId); // TODO: nickname만 변경하는거로 다시 회귀(sgang, dhyeon)
+                setModal(EDIT_MY_PROFILE, user.userId); // TODO: nickname만 변경하는거로 다시 회귀(sgang, dhyeon)
               }}
             />
             <Button
