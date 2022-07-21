@@ -197,6 +197,14 @@ export class ChatService {
       'owner',
     );
 
+    // 입장 메세지 db에 저장
+    await this.chatContentsRepo.save({
+      chatRoomId: createdChatRoom.id,
+      userId: null,
+      content: `${user.nickname} 님이 입장 하셨습니다.`,
+      isNotice: true,
+    });
+
     const chatRoomDataDto = new ChatRoomDataDto();
     chatRoomDataDto.roomId = createdChatRoom.id;
     chatRoomDataDto.title = createdChatRoom.title;
@@ -604,6 +612,7 @@ export class ChatService {
       .andWhere('chatContents.createdTime > :participatedTime', {
         participatedTime,
       })
+      .orderBy('chatContents.createdTime', 'ASC')
       .getMany();
 
     const result = chatContents

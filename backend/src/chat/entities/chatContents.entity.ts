@@ -49,7 +49,6 @@ export class ChatContents extends BaseEntity {
     const chatContentDto = new ChatContentDto();
     chatContentDto.isBroadcast = this.isNotice;
 
-    console.log(this.isNotice, this.user.nickname, this.content);
     if (!this.isNotice && this.user && this.user.nickname) {
       const fromWhomDto = new FromWhomDto();
       fromWhomDto.nickname = this.user.nickname;
@@ -58,7 +57,7 @@ export class ChatContents extends BaseEntity {
     }
     chatContentDto.message = this.content;
     chatContentDto.isMyMessage = this.userId === userId ? true : false;
-    chatContentDto.createdTime = this.createdTime.toLocaleTimeString();
+    chatContentDto.createdTime = this.createdTime.toISOString();
 
     return chatContentDto;
   }
