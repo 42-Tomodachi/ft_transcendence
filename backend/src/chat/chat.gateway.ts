@@ -10,6 +10,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { CLIENT_RENEG_WINDOW } from 'tls';
 import { Repository } from 'typeorm';
 import { ChatService } from './chat.service';
 import { ChatParticipant } from './entities/chatParticipant.entity';
@@ -52,11 +53,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private logger: Logger = new Logger('ChatGateway');
 
-  async handleConnection(client: Socket, data: ChatToServerDto) {
+  async handleConnection(client: Socket) {
     this.logger.log(
-      `client id: ${client.id}, userId: ${data.userId} connected`,
+      `client id: ${client.id}, userId: ${client.handshake.query['userId']} connected`,
     );
-    client.join(data.roomId.toString());
+    client.join(client.handshake.query['roomId'].toString());
   }
 
   async handleDisconnect(client: any) {
