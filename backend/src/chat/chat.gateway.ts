@@ -159,6 +159,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { userId: string; roomId: string },
   ): void {
+    this.logger.log('on clientDisconnect');
     client.disconnect();
     if (this.connectedSocketMap.has(data.roomId)) {
       this.connectedSocketMap.get(data.roomId).delete(client.id);
