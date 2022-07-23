@@ -19,10 +19,10 @@ const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
   else {
     return (
       <>
-        {message.from && message.isMyMessage && (
-          <MessageItemContainer fromUser={message.isMyMessage}>
+        {message.from && (
+          <MessageItemContainer fromUser={message.isMyMessage as boolean}>
             {!message.isMyMessage && <ProfileImage src={message.from.avatar} size={40} />}
-            <MessageWrapper fromUser={message.isMyMessage}>
+            <MessageWrapper fromUser={message.isMyMessage as boolean}>
               {!message.isMyMessage && <MessageName>{message.from.nickname}</MessageName>}
               <MessageContent>
                 {message.isMyMessage && <MessageTime>{getTime(message.createdTime)}</MessageTime>}
