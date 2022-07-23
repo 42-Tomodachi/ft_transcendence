@@ -8,13 +8,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { DataSource, Repository } from 'typeorm';
-import { callbackify } from 'util';
-import { ChatGateway, ChatToClientDto } from './chat.gateway';
+import { ChatGateway } from './chat.gateway';
 import {
   ChatRoomDataDto,
   SetChatRoomDto,
   ChatRoomIdDto,
-  BooleanDto,
   ChatRoomDto,
 } from './dto/chatRoom.dto';
 import {
@@ -26,6 +24,7 @@ import {
 import {
   ChatContentDto,
   CreateChatContentDto,
+  FromWhomDto,
   MessageDto,
 } from './dto/chatContents.dto';
 import { ChatContents } from './entities/chatContents.entity';
@@ -247,6 +246,20 @@ export class ChatService {
     });
   }
 
+  async getChatContentDtoForEmit(
+    chatContentId: number,
+  ): Promise<ChatContentDto> {
+    const createdChatcontent = await this.chatContentsRepo
+      .createQueryBuilder('chatContent')
+      .leftJoinAndSelect('chatContent.user', 'user')
+      .where('chatContent.id = :chatContentId', {
+        chatContentId,
+      })
+      .getOne();
+
+    return createdChatcontent.toChatContentDto();
+  }
+
   async enterChatRoom(
     user: User,
     roomId: number,
@@ -267,20 +280,18 @@ export class ChatService {
       await this.chatParticipantRepo.save(chatParticipant);
 
       // 입장 메세지 db에 저장
-      const createdChatContent = await this.chatContentsRepo.save({
+      const { id: createdChatContentId } = await this.chatContentsRepo.save({
         chatRoomId: roomId,
-        userId: null,
-        content: `${user.nickname} 님이 입장 하셨습니다.`,
+        userId: user.id,
+        content: `님이 입장 하셨습니다.`,
         isNotice: true,
       });
 
       // 채널 유저들에게 입장 메세지 전송
-      const chatToClientDto = new ChatToClientDto();
-      chatToClientDto.msg = createdChatContent.content;
-      chatToClientDto.isBroadcast = createdChatContent.isNotice;
-      chatToClientDto.createdTime = createdChatContent.createdTime;
-
-      this.chatGateway.sendNoticeMessage(roomId, chatToClientDto);
+      this.chatGateway.sendNoticeMessage(
+        roomId,
+        await this.getChatContentDtoForEmit(createdChatContentId),
+      );
     }
 
     return { roomId: roomId };
@@ -339,20 +350,18 @@ export class ChatService {
       await this.chatParticipantRepo.delete({ chatRoomId: roomId, userId });
 
       // 퇴장 메세지 db에 저장
-      const createdChatContent = await this.chatContentsRepo.save({
+      const { id: createdChatContentId } = await this.chatContentsRepo.save({
         chatRoomId: roomId,
-        userId: null,
-        content: `${user.nickname} 님이 퇴장 하셨습니다.`,
+        userId: user.id,
+        content: `님이 퇴장 하셨습니다.`,
         isNotice: true,
       });
 
       // 채널 유저들에게 퇴장 메세지 전송
-      const chatToClientDto = new ChatToClientDto();
-      chatToClientDto.msg = createdChatContent.content;
-      chatToClientDto.isBroadcast = createdChatContent.isNotice;
-      chatToClientDto.createdTime = createdChatContent.createdTime;
-
-      this.chatGateway.sendNoticeMessage(roomId, chatToClientDto);
+      this.chatGateway.sendNoticeMessage(
+        roomId,
+        await this.getChatContentDtoForEmit(createdChatContentId),
+      );
     }
   }
 
@@ -448,7 +457,7 @@ export class ChatService {
     userId: number,
     roomId: number,
     msg: string,
-  ): Promise<ChatToClientDto> {
+  ): Promise<ChatContentDto> {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
@@ -458,21 +467,13 @@ export class ChatService {
       throw new BadRequestException('존재하지 않는 채팅방입니다.');
     }
 
-    const { createdTime } = await this.chatContentsRepo.save({
+    const { id: createdChatContentId } = await this.chatContentsRepo.save({
       chatRoomId: roomId,
       userId,
       content: msg,
     });
 
-    const chatToClientDto = new ChatToClientDto();
-    chatToClientDto.userId = userId;
-    chatToClientDto.nickname = user.nickname;
-    chatToClientDto.avatar = user.avatar;
-    chatToClientDto.msg = msg;
-    chatToClientDto.isBroadcast = false;
-    chatToClientDto.createdTime = createdTime;
-
-    return chatToClientDto;
+    return await this.getChatContentDtoForEmit(createdChatContentId);
   }
 
   async isMessageFromBlockedUser(

@@ -31,7 +31,7 @@ export class ChatContentDto {
 
   @ApiProperty({ description: '자신이 보낸 메세지인지 여부' })
   @IsBoolean()
-  isMyMessage: boolean;
+  isMyMessage?: boolean;
 
   @ApiProperty({
     description:

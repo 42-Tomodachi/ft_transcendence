@@ -13,6 +13,7 @@ import { Server, Socket } from 'socket.io';
 import { CLIENT_RENEG_WINDOW } from 'tls';
 import { Repository } from 'typeorm';
 import { ChatService } from './chat.service';
+import { ChatContentDto } from './dto/chatContents.dto';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom } from './entities/chatRoom.entity';
 
@@ -26,20 +27,25 @@ import { ChatRoom } from './entities/chatRoom.entity';
  * userId, roomId, message
  */
 
-export class ChatToClientDto {
-  userId: number;
-  nickname: string;
-  avatar: string;
-  msg: string;
-  createdTime: Date;
-  isBroadcast: boolean;
-  // isMyMessage: boolean; // 소켓에 유저의 정보를 저장할 수 있나? 없다면 isMyMessage를 구분하여 리턴할 수 없음. 클라이언트에서 받은 데이터의 userId와 클라이언트 자신의 userId를 비교해야 할 듯
-}
+// export class ChatToClientDto {
+//   userId: number;
+//   nickname: string;
+//   avatar: string;
+//   msg: string;
+//   createdTime: Date;
+//   isBroadcast: boolean;
+//   // isMyMessage: boolean; // 소켓에 유저의 정보를 저장할 수 있나? 없다면 isMyMessage를 구분하여 리턴할 수 없음. 클라이언트에서 받은 데이터의 userId와 클라이언트 자신의 userId를 비교해야 할 듯
+// }
 
 class ChatToServerDto {
   userId: number;
   roomId: number;
   message: string;
+}
+
+class SocketUserInfo {
+  socketId: string;
+  userId: number;
 }
 
 @WebSocketGateway({ namespace: '/ws-chat', cors: { origin: '*' } })
@@ -53,22 +59,34 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private logger: Logger = new Logger('ChatGateway');
 
+  // Map<roomId, Map<socketId, userId>>
+  connectedSocketMap = new Map<string, Map<string, string>>();
+
   async handleConnection(client: Socket) {
-    this.logger.log(
-      `client id: ${client.id}, userId: ${client.handshake.query['userId']} connected`,
-    );
-    client.join(client.handshake.query['roomId'].toString());
+    const roomId = client.handshake.query.roomId as string;
+    const userId = client.handshake.query.userId as string;
+
+    this.logger.log(`socket id: ${client.id}, userId: ${userId} connected`);
+
+    client.join(roomId);
+    if (this.connectedSocketMap.has(roomId)) {
+      this.connectedSocketMap.get(roomId).set(client.id, userId);
+    } else {
+      const socketUser = new Map<string, string>();
+      socketUser.set(client.id, userId);
+      this.connectedSocketMap.set(roomId, socketUser);
+    }
   }
 
-  async handleDisconnect(client: any) {
-    this.logger.log(`client id: ${client.id} disconnected`);
+  async handleDisconnect(client: Socket) {
+    this.logger.log(`socket id: ${client.id} disconnected`);
   }
 
   // 채팅방에 처음 들어왔을 때 입장 메세지
   // 채팅방에서 나갔을 때 퇴장 메세지
-  sendNoticeMessage(roomId: number, chatToClientDto: ChatToClientDto): void {
+  sendNoticeMessage(roomId: number, chatContentDto: ChatContentDto): void {
     this.logger.log(`roomId: ${roomId}, emit recieveMessage`);
-    this.wss.to(roomId.toString()).emit('recieveMessage', chatToClientDto);
+    this.wss.to(roomId.toString()).emit('recieveMessage', chatContentDto);
   }
 
   /**
@@ -84,14 +102,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: ChatToServerDto,
   ): Promise<void> {
-    const chatToClientDto = await this.chatService.createChatContent(
+    const chatContentDto = await this.chatService.createChatContent(
       data.userId,
       data.roomId,
       data.message,
     );
 
     this.logger.log(`roomId: ${data.roomId}, on sendMessage`);
-    this.wss.to(data.roomId.toString()).emit('recieveMessage', chatToClientDto);
+    this.wss.to(data.roomId.toString()).emit('recieveMessage', chatContentDto);
   }
 
   // 클라이언트가 받은 채팅을 검증(차단한 유저인지)하기 위해 사용
@@ -99,14 +117,24 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('isMessageFromBlockedUser')
   async isMessageFromBlockedUser(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { senderId: number; myId: number }, // senderId: 메세지 보낸 유저 id, myId: 메세지 받은 유저 id
+    @MessageBody() data: { senderId: string; myId: string }, // senderId: 메세지 보낸 유저 id, myId: 메세지 받은 유저 id
   ): Promise<void> {
     const res = await this.chatService.isMessageFromBlockedUser(
-      data.myId,
-      data.senderId,
+      +data.myId,
+      +data.senderId,
     );
 
     this.logger.log(`on isMessageFromBlockedUser`);
     client.emit('isMessageFromBlockedUserResult', res);
+  }
+
+  @SubscribeMessage('clientDisconnect')
+  clientDisconnect(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { userId: string; roomId: string },
+  ): void {
+    if (this.connectedSocketMap.has(data.roomId)) {
+      this.connectedSocketMap.get(data.roomId).delete(client.id);
+    }
   }
 }
