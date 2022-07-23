@@ -5,10 +5,13 @@ import Button from '../common/Button';
 import GameList from '../RoomList';
 import { AllContext } from '../../store';
 import { LOADING_LADDER_GAME, IGameRooms, MAKE_GAME_ROOM, GAME } from '../../utils/interface';
+//import io from 'socket.io-client'; // 아이오 연결하고.
+//import { useNavigate } from 'react-router-dom';
 
 const Game: React.FC = () => {
   const [gameList, setGameList] = useState<IGameRooms[] | []>([]);
   const { setModal } = useContext(AllContext).modalData;
+  //const navigate = useNavigate();
 
   useEffect(() => {
     const getGameList = async () => {
@@ -17,7 +20,14 @@ const Game: React.FC = () => {
     };
     getGameList();
   }, []);
+  const creatMatch = async () => {
+    console.log('creatMatch!!!!!!');
+    //모달 표시해주고
+    setModal(LOADING_LADDER_GAME);
+    //await new Promise(resolve => setTimeout(resolve, 3000));
 
+    // 이후에 모달이 사라지고 네비게이터로 작성된 페이지로 이동..
+  };
   return (
     <>
       <LadderGame>
@@ -33,7 +43,7 @@ const Game: React.FC = () => {
           height={40}
           color="gradient"
           text="래더 게임 매칭"
-          onClick={() => setModal(LOADING_LADDER_GAME)}
+          onClick={creatMatch}
         />
       </LadderGame>
       <GameList list={gameList} type={GAME} />
