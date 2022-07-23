@@ -46,9 +46,6 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    console.log(userStatus);
-  }, [userStatus]);
   return (
     <ThemeProvider theme={theme}>
       <BrowserRouter>

@@ -67,6 +67,7 @@ const Chat: React.FC = () => {
           onClick={handleRoomType}
         />
       </EnteredRoomBtn>
+      {/* TODO: 채팅방이 하나도 없을 때 하나도 없다는걸 보여주는 info 컴포넌트 필요 */}
       <ChatList list={chatList} type={CHAT} />
     </>
   );

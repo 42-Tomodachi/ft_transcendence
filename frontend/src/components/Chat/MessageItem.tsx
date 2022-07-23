@@ -2,7 +2,6 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { IMessage } from '../../utils/interface';
 import ProfileImage from '../common/ProfileImage';
-import defaultImage from '../../assets/default-image.png';
 interface MessageItemProps {
   message: IMessage;
 }
@@ -17,24 +16,25 @@ const getTime = (time: string | number): string => {
 
 const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
   if (message.isBroadcast) return <BroadcastMsg>{message.message}</BroadcastMsg>;
-  else
+  else {
     return (
       <>
-        {message.from && (
-          <MessageItemContainer fromUser={message.fromUser}>
-            {!message.fromUser && <ProfileImage src={message.from.avatar} size={40} />}
-            <MessageWrapper fromUser={message.fromUser}>
-              {!message.fromUser && <MessageName>{message.from.nickname}</MessageName>}
+        {message.from && message.isMyMessage && (
+          <MessageItemContainer fromUser={message.isMyMessage}>
+            {!message.isMyMessage && <ProfileImage src={message.from.avatar} size={40} />}
+            <MessageWrapper fromUser={message.isMyMessage}>
+              {!message.isMyMessage && <MessageName>{message.from.nickname}</MessageName>}
               <MessageContent>
-                {message.fromUser && <MessageTime>{getTime(message.createdTime)}</MessageTime>}
+                {message.isMyMessage && <MessageTime>{getTime(message.createdTime)}</MessageTime>}
                 <MessageBox>{message.message}</MessageBox>
-                {!message.fromUser && <MessageTime>{getTime(message.createdTime)}</MessageTime>}
+                {!message.isMyMessage && <MessageTime>{getTime(message.createdTime)}</MessageTime>}
               </MessageContent>
             </MessageWrapper>
           </MessageItemContainer>
         )}
       </>
     );
+  }
 };
 
 const BroadcastMsg = styled.span`

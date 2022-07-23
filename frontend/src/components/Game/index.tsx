@@ -36,6 +36,7 @@ const Game: React.FC = () => {
           onClick={() => setModal(LOADING_LADDER_GAME)}
         />
       </LadderGame>
+      {/* TODO: 게임방이 하나도 없을 때 하나도 없다는걸 보여주는 info 컴포넌트 필요 */}
       <GameList list={gameList} type={GAME} />
     </>
   );

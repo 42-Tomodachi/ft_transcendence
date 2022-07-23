@@ -17,7 +17,6 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
   const { setUser, user } = useContext(AllContext).userData;
 
   useEffect(() => {
-    console.dir(user);
     if (user) {
       const getWinLoseCount = async () => {
         const res = await usersAPI.getUserWinLoseCount(user.userId, user.jwt);

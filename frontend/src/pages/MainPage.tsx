@@ -12,7 +12,7 @@ interface MainPageProps {
 
 const MainPage: React.FC<MainPageProps> = ({ menu }) => {
   const { userStatus } = useContext(AllContext).userStatus;
-  // console.log('m', userStatus);
+
   return (
     <>
       {
