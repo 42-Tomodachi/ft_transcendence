@@ -11,6 +11,18 @@ import { AllContext } from '../store';
 import { chatsAPI } from '../API';
 import backaway from '../assets/backaway.png';
 import { useNavigate } from 'react-router-dom';
+import io, { Socket } from 'socket.io-client';
+
+let socket: Socket;
+
+interface recieveData {
+  userId: number;
+  nickname: string;
+  avatar: string;
+  msg: string;
+  createdTime: Date;
+  isBroadcast: boolean;
+}
 
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[] | []>([]);
@@ -19,6 +31,41 @@ const ChatPage: React.FC = () => {
   const [roomName, setRoomName] = useState<string>('');
   const navigate = useNavigate();
 
+  const submitMessage = (message: string) => {
+    socket.emit('sendMessage', {
+      userId: user?.userId,
+      roomId: roomId,
+      message: message,
+    });
+  };
+  useEffect(() => {
+    socket = io(`ws://localhost:5500/ws-chat`, {
+      query: {
+        userId: user?.userId,
+        roomId: roomId,
+      },
+    }); // 쿼리, 헤더
+    console.dir(socket);
+  }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('recieveMessage', (data: recieveData) => {
+        const recieve: IMessage = {
+          isBroadcast: data.isBroadcast,
+          from: {
+            nickname: data.nickname,
+            avatar: data.avatar,
+          },
+          message: data.msg,
+          isMyMessage: data.userId === user?.userId,
+          createdTime: data.createdTime.toString(),
+        };
+        console.log(messages);
+        setMessages([...messages, recieve]);
+      });
+    }
+  }, [messages]);
   useEffect(() => {
     // TODO : 채팅방 참여 인원 불러와서 있으면 그대로, 없으면 루트로 navigate
     if (roomId && user) {
@@ -28,6 +75,7 @@ const ChatPage: React.FC = () => {
           setRoomName(res.title);
         }
       };
+      // 최초 입장시에 해당 msgHistory
       const getMessages = async (roomId: number, userId: number) => {
         const data = await chatsAPI.getMsgHistoryInChatRoom(roomId, userId, user.jwt);
         setMessages(data);
@@ -36,24 +84,6 @@ const ChatPage: React.FC = () => {
       getRoomData();
     }
   }, [roomId, user]);
-  // useEffect(() => {
-  //   const jwt = window.localStorage.getItem('jwt');
-  //   const roomId = 16; // TODO: get roomId, userId from URL??
-  //   const userId = 6;
-
-  //   if (jwt) {
-  //     setJwt('SET_JWT', jwt);
-
-  //     const getMessages = async (roomId: number, userId: number) => {
-  //       const data1 = await chatsAPI.getMsgHistoryInChatRoom(roomId, userId, jwt);
-  //       // const { data } = await axios.get('http://localhost:4000/messages');
-  //       // setMessages(data);
-  //       console.dir(data1);
-  //       setMessages(data1);
-  //     };
-  //     getMessages(roomId, userId);
-  //   }
-  // }, []);
 
   return (
     <Background>
@@ -63,13 +93,23 @@ const ChatPage: React.FC = () => {
           <ChatArea>
             {/* TODO: 뒤로가기 클릭시 짧게나마 제일 첫 페이지가 렌더링됨 */}
             <ChatTitle>
-              <BackawayWrap onClick={() => navigate(-1)}>
+              <BackawayWrap
+                onClick={() => {
+                  console.log(socket.connected);
+                  socket.emit('clientDisconnect', {
+                    userId: user?.userId,
+                    roomId: roomId,
+                  });
+                  socket.disconnect();
+                  navigate(-1);
+                }}
+              >
                 <Backaway src={backaway} alt="backaway" />
               </BackawayWrap>
               {roomName}
             </ChatTitle>
             <MessageList messages={messages} />
-            <MessageInput setMessages={setMessages} messages={messages} />
+            <MessageInput submitMessage={submitMessage} />
           </ChatArea>
           <ChatSideMenu>
             <UserList />

@@ -71,7 +71,6 @@ export interface IWinLoseCount {
   ladderLevel: number;
 }
 export interface IUserData extends IUserAuth, IWinLoseCount {
-  isSecondAuthOn: boolean;
   isFriend: boolean;
   isBlocked: boolean;
 }
@@ -102,13 +101,11 @@ export interface IUserAvatar {
 export interface IMessage {
   isBroadcast: boolean;
   from?: {
-    userId: number;
     nickname: string;
-    role: string;
     avatar: string; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
   };
   message: string;
-  fromUser: boolean;
+  isMyMessage?: boolean;
   createdTime: string;
 }
 
