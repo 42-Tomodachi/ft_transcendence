@@ -1,6 +1,11 @@
 export interface IUserKey {
   userId: number;
   nickname: string;
+  //test!!!!! real!!!!!!!!!! 되는지만 볼게여 !!! 맘대로 끼워넣어서 죄송해여 !!
+  player: string;
+  oppnickname: string;
+  roomid: number;
+  socket: any;
 }
 
 export interface IUser extends IUserKey {
