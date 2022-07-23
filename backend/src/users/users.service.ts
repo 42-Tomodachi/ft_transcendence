@@ -276,4 +276,23 @@ export class UsersService {
       return { isBlocked: true };
     }
   }
+
+  async getUnblockedUserIds(
+    userIdsForCheck: number[],
+    senderId: number,
+  ): Promise<number[]> {
+    const blockerUserIds = (
+      await this.blockedUserRepo.findBy({
+        blockedId: senderId,
+      })
+    ).map((blockedUser) => {
+      return blockedUser.blockerId;
+    });
+
+    const unblockedUserIds = userIdsForCheck.filter(
+      (idForCheck) => !blockerUserIds.includes(idForCheck),
+    );
+
+    return unblockedUserIds;
+  }
 }

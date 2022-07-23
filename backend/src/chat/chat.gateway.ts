@@ -10,6 +10,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { UsersService } from 'src/users/users.service';
 import { CLIENT_RENEG_WINDOW } from 'tls';
 import { Repository } from 'typeorm';
 import { ChatService } from './chat.service';
@@ -53,6 +54,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
+    private readonly userService: UsersService,
   ) {}
 
   @WebSocketServer() wss: Server;
@@ -102,14 +104,37 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: ChatToServerDto,
   ): Promise<void> {
+    this.logger.log(`roomId: ${data.roomId}, on sendMessage`);
+
     const chatContentDto = await this.chatService.createChatContent(
       data.userId,
       data.roomId,
       data.message,
     );
 
-    this.logger.log(`roomId: ${data.roomId}, on sendMessage`);
-    this.wss.to(data.roomId.toString()).emit('recieveMessage', chatContentDto);
+    const userInSocketRoom = this.connectedSocketMap.get(
+      data.roomId.toString(),
+    );
+
+    const userIdsForCheck: number[] = [];
+    for (const x of userInSocketRoom.values()) {
+      userIdsForCheck.push(+x);
+    }
+
+    const unblockedUserIds = await this.userService.getUnblockedUserIds(
+      userIdsForCheck,
+      data.userId,
+    );
+
+    userInSocketRoom.forEach((userId, socketId) => {
+      if (!unblockedUserIds.includes(+userId)) {
+        return;
+      }
+      this.wss.to(socketId).emit('recieveMessage', chatContentDto);
+    });
+    // const socketsForEmit = this.wss
+    //   .to(data.roomId.toString())
+    //   .emit('recieveMessage', chatContentDto);
   }
 
   // 클라이언트가 받은 채팅을 검증(차단한 유저인지)하기 위해 사용
@@ -119,12 +144,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { senderId: string; myId: string }, // senderId: 메세지 보낸 유저 id, myId: 메세지 받은 유저 id
   ): Promise<void> {
+    this.logger.log(`on isMessageFromBlockedUser`);
+
     const res = await this.chatService.isMessageFromBlockedUser(
       +data.myId,
       +data.senderId,
     );
 
-    this.logger.log(`on isMessageFromBlockedUser`);
     client.emit('isMessageFromBlockedUserResult', res);
   }
 
