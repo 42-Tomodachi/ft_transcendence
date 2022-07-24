@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
@@ -32,6 +33,7 @@ import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
 import * as bcrypt from 'bcryptjs';
 import { EmailService } from 'src/emails/email.service';
+import { Cron, SchedulerRegistry, Timeout } from '@nestjs/schedule';
 
 @Injectable()
 export class ChatService {
@@ -49,7 +51,10 @@ export class ChatService {
     private dataSource: DataSource,
     @InjectRepository(BlockedUser)
     private readonly blockedUserRepo: Repository<BlockedUser>,
+    private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
+
+  private logger: Logger = new Logger('ChatService');
 
   async getChatRoomById(id: number): Promise<ChatRoom> {
     const chatRoom = await this.chatRoomRepo.findOneOrFail({ where: { id } });
@@ -437,12 +442,16 @@ export class ChatService {
 
     if (chatParticipant.isMuted) {
       chatParticipant.isMuted = false;
+      this.deleteMuteTimeout(`muteTimeout${chatParticipant.id}`);
     } else {
       chatParticipant.isMuted = true;
+      this.addMuteTimeout(
+        `muteTimeout${chatParticipant.id}`,
+        10 * 1000,
+        chatParticipant,
+      );
     }
     await chatParticipant.save();
-
-    // timer 10 min.
 
     this.chatGateway.wss
       .to(roomId.toString())
@@ -689,5 +698,28 @@ export class ChatService {
     }
 
     return chatParticipant.isMuted;
+  }
+
+  addMuteTimeout(
+    name: string,
+    milliseconds: number,
+    chatParticipant: ChatParticipant,
+  ) {
+    const callback = () => {
+      chatParticipant.isMuted = false;
+      chatParticipant.save();
+      this.logger.warn(
+        `Timeout ${name}(name) executed. Now ${chatParticipant.id}(chatParticipantId) is unMuted.`,
+      );
+      this.schedulerRegistry.deleteTimeout(name);
+    };
+
+    const timeout = setTimeout(callback, milliseconds);
+    this.schedulerRegistry.addTimeout(name, timeout);
+  }
+
+  deleteMuteTimeout(name: string) {
+    this.schedulerRegistry.deleteTimeout(name);
+    this.logger.warn(`Timeout ${name}(name) deleted!`);
   }
 }

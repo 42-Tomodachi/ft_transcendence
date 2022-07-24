@@ -24,9 +24,11 @@ import { ChatModule } from './chat/chat.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { GameModule } from './game/game.module';
 import { ChatGateway } from './chat/chat.gateway';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     MulterModule.register({
       dest: './src/files',
     }),
