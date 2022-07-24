@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from 'src/auth/auth.module';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
@@ -12,6 +12,7 @@ import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom } from './entities/chatRoom.entity';
 
 @Module({
+  exports: [ChatGateway],
   imports: [
     TypeOrmModule.forFeature([
       ChatContents,
@@ -21,7 +22,7 @@ import { ChatRoom } from './entities/chatRoom.entity';
       BlockedUser,
     ]),
     AuthModule,
-    UsersModule,
+    forwardRef(() => UsersModule),
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway],

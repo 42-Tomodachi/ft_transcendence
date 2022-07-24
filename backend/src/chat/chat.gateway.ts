@@ -49,6 +49,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
+    @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
   ) {}
 
@@ -91,6 +92,52 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   sendNoticeMessage(roomId: number, chatContentDto: ChatContentDto): void {
     this.logger.log(`roomId: ${roomId}, emit recieveMessage`);
     this.wss.to(roomId.toString()).emit('recieveMessage', chatContentDto);
+  }
+
+  sendChatHistory(roomId: number, chatContentDtos: ChatContentDto[]): void {
+    this.logger.log(`roomId: ${roomId}, emit recieveChatHistory`);
+    this.wss.to(roomId.toString()).emit('recieveChatHistory', chatContentDtos);
+  }
+
+  getParticipatingChatRoomIds(userId: number): string[] {
+    const participatingChatRoomIds = [];
+
+    this.connectedSocketMap.forEach((userSocket, roomId) => {
+      let isParticipantingRoom = false;
+
+      userSocket.forEach((socketId, userIdInMap) => {
+        if (userIdInMap === userId.toString()) {
+          isParticipantingRoom = true;
+        }
+      });
+
+      if (isParticipantingRoom) {
+        participatingChatRoomIds.push(roomId);
+      }
+    });
+
+    return participatingChatRoomIds;
+  }
+
+  emitChatHistoryToParticipatingChatRooms(
+    userIdOfupdatedNickname: number,
+  ): void {
+    const participantingChatRoomIds = this.getParticipatingChatRoomIds(
+      userIdOfupdatedNickname,
+    );
+
+    participantingChatRoomIds.forEach((roomId) => {
+      this.connectedSocketMap
+        .get(roomId.toString())
+        .forEach(async (socketId, userIdInRoom) => {
+          const chatContentDtos = await this.chatService.getChatContentsForEmit(
+            +roomId,
+            +userIdInRoom,
+          );
+
+          this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
+        });
+    });
   }
 
   /**

@@ -594,6 +594,58 @@ export class ChatService {
     return { roomId: chatRoomDataDto.roomId };
   }
 
+  async getChatContentsForEmit(
+    roomId: number,
+    userId: number,
+  ): Promise<ChatContentDto[]> {
+    const participant = await this.chatParticipantRepo.findOneBy({
+      chatRoomId: roomId,
+      userId,
+    });
+    if (!participant) {
+      throw new BadRequestException('참여중인 채팅방이 아닙니다.');
+    }
+
+    const { createdTime: participatedTime } = participant;
+
+    const blockedUsers = await this.blockedUserRepo.findBy({
+      blockerId: userId,
+    });
+
+    const chatContents = await this.chatContentsRepo
+      .createQueryBuilder('chatContents')
+      .leftJoinAndSelect('chatContents.user', 'user')
+      .leftJoinAndSelect('user.chatParticipant', 'chatParticipant')
+      .where('chatContents.chatRoomId = :roomId', { roomId })
+      .andWhere('chatContents.createdTime > :participatedTime', {
+        participatedTime,
+      })
+      .orderBy('chatContents.createdTime', 'ASC')
+      .getMany();
+
+    const result = chatContents
+      .filter((chatContent) => {
+        if (chatContent.isNotice) {
+          return true;
+        }
+
+        for (const blockedUser of blockedUsers) {
+          if (
+            chatContent.userId === blockedUser.blockedId &&
+            chatContent.createdTime > blockedUser.createdTime
+          ) {
+            return false;
+          }
+        }
+        return true;
+      })
+      .map((chatContent) => {
+        return chatContent.toChatContentDto(userId);
+      });
+
+    return result;
+  }
+
   async getChatContents(
     user: User,
     roomId: number,

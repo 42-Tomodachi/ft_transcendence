@@ -57,7 +57,6 @@ import { ScheduleModule } from '@nestjs/schedule';
         };
       },
     }),
-    AuthModule,
     ChatModule,
     GameModule,
   ],

@@ -1,6 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsDuplicateDto, IsSignedUpDto } from 'src/auth/dto/auth.dto';
+import { ChatGateway } from 'src/chat/chat.gateway';
 import { Repository } from 'typeorm';
 import { BlockResultDto } from './dto/blockedUser.dto';
 import { GameRecordDto } from './dto/gameRecord.dto';
@@ -25,6 +31,8 @@ export class UsersService {
     private readonly blockedUserRepo: Repository<BlockedUser>,
     @InjectRepository(GameRecord)
     private readonly gameRecordRepo: Repository<GameRecord>,
+    @Inject(forwardRef(() => ChatGateway))
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   async getUsers(): Promise<SimpleUserDto[]> {
@@ -219,6 +227,8 @@ export class UsersService {
 
     user.nickname = nicknameForUpdate;
     const updatedUser = await this.userRepo.save(user);
+
+    this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
 
     return updatedUser.toUserProfileDto();
   }

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmailModule } from 'src/emails/email.module';
 import { UsersController } from './users.controller';
@@ -7,9 +7,9 @@ import { UsersService } from './users.service';
 import { Follow } from './entities/follow.entity';
 import { BlockedUser } from './entities/blockedUser.entity';
 import { GameRecord } from './entities/gameRecord.entity';
-import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { ChatModule } from 'src/chat/chat.module';
 
 @Module({
   exports: [UsersService],
@@ -23,8 +23,9 @@ import { JwtModule } from '@nestjs/jwt';
         expiresIn: process.env.EC2_JWT_EXPIRESIN || process.env.JWT_EXPIRESIN,
       },
     }),
+    forwardRef(() => ChatModule),
   ],
   controllers: [UsersController],
-  providers: [UsersService, JwtStrategy, PassportModule],
+  providers: [UsersService, PassportModule],
 })
 export class UsersModule {}
