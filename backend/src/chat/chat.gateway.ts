@@ -108,6 +108,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): Promise<void> {
     this.logger.log(`roomId: ${data.roomId}, on sendMessage`);
 
+    // 음소거 상태일 경우 얼리 리턴
+    if (await this.chatService.isMutedUser(data.roomId, data.userId)) {
+      return;
+    }
+
     const chatContentDto = await this.chatService.createChatContent(
       data.userId,
       data.roomId,

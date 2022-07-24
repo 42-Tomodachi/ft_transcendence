@@ -675,4 +675,19 @@ export class ChatService {
       role: foundChatParticipant.role,
     };
   }
+
+  async isMutedUser(roomId: number, userId: number): Promise<boolean> {
+    const chatParticipant = await this.chatParticipantRepo.findOneBy({
+      id: roomId,
+      userId,
+    });
+
+    if (!chatParticipant) {
+      throw new BadRequestException(
+        `해당하는 채팅방에 참여중인 유저가 아닙니다.`,
+      );
+    }
+
+    return chatParticipant.isMuted;
+  }
 }
