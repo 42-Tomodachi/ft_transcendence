@@ -44,11 +44,6 @@ class ChatToServerDto {
   message: string;
 }
 
-class SocketUserInfo {
-  socketId: string;
-  userId: number;
-}
-
 @WebSocketGateway({ namespace: '/ws-chat', cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
@@ -61,7 +56,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private logger: Logger = new Logger('ChatGateway');
 
-  // Map<roomId, Map<socketId, userId>>
+  // Map<roomId, Map<userId, socketId>>
   connectedSocketMap = new Map<string, Map<string, string>>();
 
   async handleConnection(client: Socket) {
@@ -72,16 +67,23 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.join(roomId);
     if (this.connectedSocketMap.has(roomId)) {
-      this.connectedSocketMap.get(roomId).set(client.id, userId);
+      this.connectedSocketMap.get(roomId).set(userId, client.id);
     } else {
       const socketUser = new Map<string, string>();
-      socketUser.set(client.id, userId);
+      socketUser.set(userId, client.id);
       this.connectedSocketMap.set(roomId, socketUser);
     }
   }
 
   async handleDisconnect(client: Socket) {
     this.logger.log(`socket id: ${client.id} disconnected`);
+    this.connectedSocketMap.forEach((userSocket) => {
+      userSocket.forEach((socketId, userId) => {
+        if (socketId === client.id) {
+          userSocket.delete(userId);
+        }
+      });
+    });
   }
 
   // 채팅방에 처음 들어왔을 때 입장 메세지
@@ -117,7 +119,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
 
     const userIdsForCheck: number[] = [];
-    for (const x of userInSocketRoom.values()) {
+    for (const x of userInSocketRoom.keys()) {
       userIdsForCheck.push(+x);
     }
 
@@ -126,7 +128,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.userId,
     );
 
-    userInSocketRoom.forEach((userId, socketId) => {
+    console.log(this.connectedSocketMap);
+    userInSocketRoom.forEach((socketId, userId) => {
       if (!unblockedUserIds.includes(+userId)) {
         return;
       }
