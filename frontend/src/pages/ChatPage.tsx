@@ -15,15 +15,6 @@ import io, { Socket } from 'socket.io-client';
 
 let socket: Socket;
 
-interface recieveData {
-  userId: number;
-  nickname: string;
-  avatar: string;
-  msg: string;
-  createdTime: Date;
-  isBroadcast: boolean;
-}
-
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[] | []>([]);
   const { user } = useContext(AllContext).userData;
@@ -32,37 +23,33 @@ const ChatPage: React.FC = () => {
   const navigate = useNavigate();
 
   const submitMessage = (message: string) => {
-    socket.emit('sendMessage', {
-      userId: user?.userId,
-      roomId: roomId,
-      message: message,
-    });
-  };
-  useEffect(() => {
-    socket = io(`ws://localhost:5500/ws-chat`, {
-      query: {
-        userId: user?.userId,
+    if (user) {
+      socket.emit('sendMessage', {
+        userId: user.userId,
         roomId: roomId,
-      },
-    }); // 쿼리, 헤더
-    console.dir(socket);
-  }, []);
+        message: message,
+      });
+    } else console.error('user가 없음');
+  };
+
+  useEffect(() => {
+    if (user && !socket) {
+      socket = io(`http://localhost:5500/ws-chat`, {
+        transports: ['websocket'],
+        query: {
+          userId: user.userId,
+          roomId: roomId,
+        },
+      });
+      console.dir(socket);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (socket) {
-      socket.on('recieveMessage', (data: recieveData) => {
-        const recieve: IMessage = {
-          isBroadcast: data.isBroadcast,
-          from: {
-            nickname: data.nickname,
-            avatar: data.avatar,
-          },
-          message: data.msg,
-          isMyMessage: data.userId === user?.userId,
-          createdTime: data.createdTime.toString(),
-        };
-        console.log(messages);
-        setMessages([...messages, recieve]);
+      socket.on('recieveMessage', (data: IMessage) => {
+        const receive: IMessage = data;
+        setMessages([...messages, receive]);
       });
     }
   }, [messages]);
@@ -95,12 +82,11 @@ const ChatPage: React.FC = () => {
             <ChatTitle>
               <BackawayWrap
                 onClick={() => {
-                  console.log(socket.connected);
                   socket.emit('clientDisconnect', {
                     userId: user?.userId,
                     roomId: roomId,
                   });
-                  socket.disconnect();
+                  // socket.disconnect();
                   navigate(-1);
                 }}
               >
