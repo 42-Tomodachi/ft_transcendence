@@ -43,7 +43,8 @@ const GameStart: React.FC = () => {
     otherScore: 0,
     checkPoint: false,
   }); // 공의 현재위치 (어떤 클라이언트던지 같음11)
-  const [player, setPlayer] = useState('p1'); // 플레이어가 누군지.(이건사실 클라이언트에서 각자갱신)
+  const [player, setPlayer] = useState<string>('p1'); // 플레이어가 누군지.(이건사실 클라이언트에서 각자갱신)
+  const [mousePoint, setMousePoint] = useState<number>(0);
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
   const { user } = useContext(AllContext).userData;
 
@@ -80,54 +81,66 @@ const GameStart: React.FC = () => {
     ctx.fill();
   };
 
-  // const reset = function reset(win: string): void {
-  //   setGameInfo({
-  //     ...gameInfo,
-  //     ballP_X: 50,
-  //     ballP_Y: 50,
-  //   });
-  //   if (win === 'left') {
-  //     setGameInfo({
-  //       ...gameInfo,
-  //       ballVelo_X: -1,
-  //       ballVelo_Y: 0,
-  //     });
-  //     setGameInfo({
-  //       ...gameInfo,
-  //       turn: 2,
-  //     });
-  //   } else if (win === 'right') {
-  //     setGameInfo({
-  //       ...gameInfo,
-  //       ballVelo_X: 1,
-  //       ballVelo_Y: 0,
-  //     });
-  //     setGameInfo({
-  //       ...gameInfo,
-  //       turn: 1,
-  //     });
-  //   }
-  //   //자기조건만 볼테니
-  //   setGameInfo({
-  //     ...gameInfo,
-  //     otherScore: gameInfo.otherScore + 1,
-  //   }); //내패들을지나 득점했음 상대점수 올라가야댐,
+  const reset = function reset(win: string): void {
+    setGameInfo({
+      ...gameInfo,
+      ballP_X: 50,
+      ballP_Y: 50,
+      ballVelo_X: win == 'right' ? 1 : -1,
+      ballVelo_Y: 0,
+      turn: win == 'right' ? 1 : 2,
+      myScore: win == 'right' ? gameInfo.myScore : gameInfo.myScore + 1, //얜 임시로 확인하려고, 원래는 서버로부터 받을거임.
+      otherScore: win == 'right' ? gameInfo.otherScore + 1 : gameInfo.otherScore,
+      checkPoint: true,
+    });
+  };
 
-  //   setGameInfo({
-  //     ...gameInfo,
-  //     checkPoint: true,
-  //   });
-  // };
+  const hitPaddle = function hitPaddle(who: string): void {
+    if (who == 'p1') {
+      const relativeIntersectY = gameInfo.myPaddlePos + 10 - gameInfo.ballP_Y - 1;
+      const normalizedRelativeIntersectionY = relativeIntersectY / 10;
+      const test =
+        (1 - Math.abs(normalizedRelativeIntersectionY)) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED;
+      setGameInfo({
+        ...gameInfo,
+        ballP_X: 9,
+        ballVelo_X: test,
+        ballVelo_Y: -normalizedRelativeIntersectionY,
+        checkPoint: false,
+        turn: 2,
+      }); // 상대방이 계산
+    }
+    if (who == 'p2') {
+      const relativeIntersectY = gameInfo.otherPaddlePos + 10 - gameInfo.ballP_Y - 1;
+      const normalizedRelativeIntersectionY = relativeIntersectY / 10;
+      const test1 =
+        -(1 - Math.abs(normalizedRelativeIntersectionY)) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED;
+      setGameInfo({
+        ...gameInfo,
+        ballP_X: 93,
+        ballVelo_X: test1,
+        ballVelo_Y: -normalizedRelativeIntersectionY,
+        checkPoint: false,
+        turn: 2,
+      }); // 상대방이 계산
+    }
+  };
 
   const cal_basic = function cal(): void {
     setGameInfo({
       ...gameInfo,
       ballP_X: gameInfo.ballP_X + gameInfo.ballVelo_X,
       ballP_Y: gameInfo.ballP_Y + gameInfo.ballVelo_Y,
+      myPaddlePos: mousePoint,
     });
-    console.log('안변해?:' + gameInfo.ballP_X);
-    console.log('이래도?:' + gameInfo.ballP_Y);
-
+    // console.log('x엑스좌표?:' + gameInfo.ballP_X);
+    // console.log('x와이좌표?:' + gameInfo.ballP_Y);
+    // console.log('x마우스값이 왜?:' + mousePoint);
+    //newTest();
+    //setGameInfo({ ...gameInfo, myPaddlePos: mousePoint });
+    console.log('엑스좌표?:' + gameInfo.ballP_X);
+    console.log('와이좌표?:' + gameInfo.ballP_Y);
+    console.log('마우스값이 왜?:' + mousePoint);
     // setGameInfo({
     //   ...gameInfo,
     //   checkPoint: false,
@@ -144,45 +157,25 @@ const GameStart: React.FC = () => {
     //     ballVelo_X: -1,
     //     ballVelo_Y: 1,
     //   }); // 임시로 같은방향임 고쳐야댐
-    // // if (player === 'p2' && gameInfo.ballP_X >= 100) reset('left');
-    // // if (player === 'p1' && gameInfo.ballP_X <= 0) reset('right');
-
-    // if (
-    //   player == 'p1' &&
-    //   gameInfo.ballP_X >= 2 &&
-    //   gameInfo.ballP_X <= 9 &&
-    //   gameInfo.ballP_Y >= gameInfo.myPaddlePos - 10 &&
-    //   gameInfo.ballP_Y <= gameInfo.myPaddlePos + 10
-    // ) {
-    //   setGameInfo({
-    //     ...gameInfo,
-    //     ballP_X: 9,
-    //   });
-    //   const relativeIntersectY = gameInfo.myPaddlePos - gameInfo.ballP_Y - 1;
-    //   const normalizedRelativeIntersectionY = relativeIntersectY / 10;
-    //   const test =
-    //     (1 - Math.abs(normalizedRelativeIntersectionY)) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED;
-    //   setGameInfo({
-    //     ...gameInfo,
-    //     ballVelo_X: test,
-    //   });
-    //   setGameInfo({
-    //     ...gameInfo,
-    //     checkPoint: false,
-    //   });
-    //   setGameInfo({
-    //     ...gameInfo,
-    //     turn: 2,
-    //   }); // 상대방이 계산
-    // }
-    // if (
-    //   player == 'p2' &&
-    //   gameInfo.ballP_X >= 93 &&
-    //   gameInfo.ballP_X <= 98 &&
-    //   gameInfo.ballP_Y >= gameInfo.myPaddlePos - 10 &&
-    //   gameInfo.ballP_Y <= gameInfo.myPaddlePos + 10
-    // ) {
-    //   setGameInfo({
+    if (player === 'p1' && gameInfo.ballP_X >= 100) reset('left');
+    if (player === 'p1' && gameInfo.ballP_X <= 0) reset('right');
+    if (
+      player == 'p1' &&
+      gameInfo.ballP_X >= 2 &&
+      gameInfo.ballP_X <= 9 &&
+      gameInfo.ballP_Y >= mousePoint &&
+      gameInfo.ballP_Y <= mousePoint + 20
+    )
+      hitPaddle(player);
+    if (
+      player == 'p1' &&
+      gameInfo.ballP_X >= 93 &&
+      gameInfo.ballP_X <= 98 &&
+      gameInfo.ballP_Y >= gameInfo.otherPaddlePos &&
+      gameInfo.ballP_Y <= gameInfo.otherPaddlePos + 20
+    )
+      hitPaddle('p2');
+    //{}   setGameInfo({
     //     ...gameInfo,
     //     ballP_X: 93,
     //   });
@@ -214,7 +207,7 @@ const GameStart: React.FC = () => {
     //     ...gameInfo,
     //     player: 2,
     //   }); // 상대방이 계산
-    user?.socket.emit('calculatedRTData', gameInfo);
+    //user?.socket.emit('calculatedRTData', gameInfo);
   };
 
   //마우스 컨트롤
@@ -223,12 +216,9 @@ const GameStart: React.FC = () => {
   mouse?.addEventListener('mousemove', e => {
     const mouse_pos = getMousePos(e);
     //얘가 계산된 마우스 좌표임 근데, 내가 누군지 알아야. 자기꺼에 맞는 위치에 그림
-    // if (mouse_pos)
-    //   setGameInfo({
-    //     ...gameInfo,
-    //     myPaddlePos: (mouse_pos.y / mouse.height) * 100,
-    //   });
-    // else console.log('변수 mouse_pos가 0이 나왔다 : 비정상 ');
+    // 사실 간단한게, 얘를 따로 받아서 최신값으로 갱신해주면됨.
+    if (mouse_pos) setMousePoint((mouse_pos.y / mouse.height) * 100);
+    else console.log('변수 mouse_pos가 0이 나왔다 : 비정상 ');
   });
 
   // rect: DOMRect | undefined;
@@ -281,116 +271,18 @@ const GameStart: React.FC = () => {
       paddle(ctx);
       ball(ctx);
       const test = setInterval(() => {
+        //위에가 필요없는게 아니고 아래가 필요없는거였네, 아니 이것도 실제 소켓으로 대전을 하게 되면 렌더가 어케될지 모름
+        //일단 혼자돌릴땐 없어도됨, 근데 끊기는 증상은 둘다 넣을때가 제일 적음.. 이것도 생각해볼일.
         clear(ctx);
         paddle(ctx);
         ball(ctx);
         cal_basic();
-        /////////ㅡㅡㅡㅡㅡㅡㅡ 계산로직 ㅡㅡㅡㅡㅡㅡㅡㅡ///////////
-        // console.log('rqktkq?:' + gameInfo.ballVelo_X);
-        // console.log('dkfjej?:' + gameInfo.ballVelo_Y);
-        // setGameInfo({
-        //   ...gameInfo,
-        //   ballP_X: gameInfo.ballP_X + gameInfo.ballVelo_X,
-        //   ballP_Y: gameInfo.ballP_Y + gameInfo.ballVelo_Y,
-        // });
-        // setGameInfo({ ...gameInfo, ballP_X: 34 });
-        // console.log('여기선 왜 안변해?111:' + gameInfo.ballP_X);
-        // console.log('여기선 왜 안변해?222:' + gameInfo.ballP_Y);
-
-        // setGameInfo({
-        //   ...gameInfo,
-        //   checkPoint: false,
-        // }); // 뭐든 다시계산할땐 득점이 아님, 득점할때 true로 바꾸면 댐
-        // if (gameInfo.ballP_Y >= 100)
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     ballVelo_X: 1,
-        //     ballVelo_Y: -1,
-        //   }); // 임시로 같은방향임 고쳐야댐
-        // if (gameInfo.ballP_Y <= 0)
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     ballVelo_X: -1,
-        //     ballVelo_Y: 1,
-        //   }); // 임시로 같은방향임 고쳐야댐
-        // if (player === 'p2' && gameInfo.ballP_X >= 100) reset('left');
-        // if (player === 'p1' && gameInfo.ballP_X <= 0) reset('right');
-
-        // if (
-        //   player == 'p1' &&
-        //   gameInfo.ballP_X >= 2 &&
-        //   gameInfo.ballP_X <= 9 &&
-        //   gameInfo.ballP_Y >= gameInfo.myPaddlePos - 10 &&
-        //   gameInfo.ballP_Y <= gameInfo.myPaddlePos + 10
-        // ) {
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     ballP_X: 9,
-        //   });
-        //   const relativeIntersectY = gameInfo.myPaddlePos - gameInfo.ballP_Y - 1;
-        //   const normalizedRelativeIntersectionY = relativeIntersectY / 10;
-        //   const test =
-        //     (1 - Math.abs(normalizedRelativeIntersectionY)) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED;
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     ballVelo_X: test,
-        //   });
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     checkPoint: false,
-        //   });
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     turn: 2,
-        //   }); // 상대방이 계산
-        // }
-        // if (
-        //   player == 'p2' &&
-        //   gameInfo.ballP_X >= 93 &&
-        //   gameInfo.ballP_X <= 98 &&
-        //   gameInfo.ballP_Y >= gameInfo.myPaddlePos - 10 &&
-        //   gameInfo.ballP_Y <= gameInfo.myPaddlePos + 10
-        // ) {
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     ballP_X: 93,
-        //   });
-        //   const relativeIntersectY = gameInfo.myPaddlePos - gameInfo.ballP_Y - 1;
-        //   const normalizedRelativeIntersectionY = relativeIntersectY / 10;
-        //   const test =
-        //     -(1 - Math.abs(normalizedRelativeIntersectionY)) * (MAX_SPEED - MIN_SPEED) + MIN_SPEED;
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     ballVelo_X: test,
-        //   });
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     checkPoint: false,
-        //   });
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     turn: 1,
-        //   }); // 상대방이 계산
-        // }
-        // if (player == 'p1')
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     player: 1,
-        //   });
-        // // 상대방이 계산
-        // else
-        //   setGameInfo({
-        //     ...gameInfo,
-        //     player: 2,
-        //   }); // 상대방이 계산
-        //user?.socket.emit('calculatedRTData', gameInfo);
-        /////////ㅡㅡㅡㅡㅡㅡㅡ 계산로직 ㅡㅡㅡㅡㅡㅡㅡㅡ///////////
         // setGameInfo({ ...gameInfo, ballP_X: 74 });
         // console.log('여기선 왜변해! : ' + gameInfo.ballP_X);
         // console.log('아마도??? : ' + gameInfo.ballP_Y);
         // console.log('아마도??? : ' + gameInfo.myPaddlePos);
-      }, 1 * 4000); //1000이면 최초시작도 1초 있다가 시작. (바로 시작하고 1초를 기다리는게 아님.)
-      // return () => clearInterval(test);
+      }, 60); //1000이면 최초시작도 1초 있다가 시작. (바로 시작하고 1초를 기다리는게 아님.)
+      return () => clearInterval(test);
     }
   }, [gameInfo]); // 반영
 
