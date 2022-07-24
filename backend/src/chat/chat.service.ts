@@ -204,8 +204,8 @@ export class ChatService {
     // 입장 메세지 db에 저장
     await this.chatContentsRepo.save({
       chatRoomId: createdChatRoom.id,
-      userId: null,
-      content: `${user.nickname} 님이 입장 하셨습니다.`,
+      userId,
+      content: `님이 입장 하셨습니다.`,
       isNotice: true,
     });
 
@@ -262,7 +262,10 @@ export class ChatService {
       })
       .getOne();
 
-    return createdChatcontent.toChatContentDto();
+    if (createdChatcontent.isNotice) {
+      return createdChatcontent.toChatContentDto();
+    }
+    return createdChatcontent.toChatContentDto(createdChatcontent.userId);
   }
 
   async enterChatRoom(
