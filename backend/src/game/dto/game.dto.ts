@@ -52,3 +52,23 @@ export class CreateGameRoomDto extends PickType(GameRoomProfileDto, [
 export class GameRoomPasswordDto extends PickType(CreateGameRoomDto, [
   'password',
 ]) {}
+
+export class GameResultDto {
+  @ApiProperty({ description: '래더게임 여부' })
+  isLadder: boolean;
+
+  @ApiProperty({ description: '[FK] 첫번째 플레이어의 유저 id' })
+  playerOneId: number;
+
+  @ApiProperty({ description: '[FK] 두번째 플레이어의 유저 id' })
+  playerTwoId: number;
+
+  @ApiProperty({ description: '첫번째 플레이어의 점수' })
+  playerOneScore: number;
+
+  @ApiProperty({ description: '두번째 플레이어의 점수' })
+  playerTwoScore: number;
+
+  @ApiProperty({ description: '승자 id' })
+  winnerId: number;
+}

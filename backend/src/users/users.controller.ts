@@ -25,7 +25,7 @@ import {
 import { diskStorage } from 'multer';
 import { editFileName, imageFileFilter } from '../files/file-uploading.utils';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { GameRecordDto } from './dto/gameRecord.dto';
+import { GameRecordDto } from './dto/users.dto';
 import { FollowIdDto } from './dto/follow.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetJwtUser } from 'src/auth/jwt.strategy';

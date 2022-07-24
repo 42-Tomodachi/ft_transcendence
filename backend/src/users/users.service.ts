@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsDuplicateDto, IsSignedUpDto } from 'src/auth/dto/auth.dto';
 import { Repository } from 'typeorm';
 import { BlockResultDto } from './dto/blockedUser.dto';
-import { GameRecordDto } from './dto/gameRecord.dto';
+import { GameRecordDto } from './dto/users.dto';
 import {
   UpdateUserDto,
   EmailDto,

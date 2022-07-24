@@ -150,10 +150,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const player = this.socketMap[client.id];
     const game = this.gameService.getGameRoom(player.gameId);
 
-    if (!game.updateRtData(data)) {
-      // if game is finished
-      //
-      // save the result
+    game.updateRtData(data);
+    if (game.isFinished()) {
+      this.gameService.saveGameRecord(game.toGameResultDto());
     }
   }
 }

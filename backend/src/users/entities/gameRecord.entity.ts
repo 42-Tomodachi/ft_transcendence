@@ -7,7 +7,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { GameRecordDto } from '../dto/gameRecord.dto';
+import { GameRecordDto } from '../dto/users.dto';
 
 @Entity()
 export class GameRecord extends BaseEntity {

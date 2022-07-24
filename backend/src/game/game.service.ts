@@ -1,11 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GameRecordSaveDto } from 'src/users/dto/gameRecord.dto';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
 import { GamerInfoDto as PlayerInfoDto } from '../users/dto/users.dto';
-import { CreateGameRoomDto, GameRoomProfileDto } from './dto/game.dto';
+import {
+  CreateGameRoomDto,
+  GameRoomProfileDto,
+  GameResultDto,
+} from './dto/game.dto';
 import { GameGateway } from './game.gateway';
 import { Socket } from 'socket.io';
 import { randomInt } from 'crypto';
@@ -155,6 +158,22 @@ class GameRoomAttribute {
     return gameRoomProfileDto;
   }
 
+  toGameResultDto(): GameResultDto {
+    const gameResultDto = new GameResultDto();
+    gameResultDto.isLadder =
+      this.password == null && this.isPublic == false ? true : false;
+    gameResultDto.playerOneId = this.firstPlayer.userId;
+    gameResultDto.playerTwoId = this.secondPlayer.userId;
+    gameResultDto.playerOneScore = this.rtData.scoreLeft;
+    gameResultDto.playerTwoScore = this.rtData.scoreRight;
+    gameResultDto.winnerId =
+      this.rtData.scoreLeft > this.rtData.scoreRight
+        ? this.firstPlayer.userId
+        : this.secondPlayer.userId;
+
+    return gameResultDto;
+  }
+
   save(gameRoomTable: GameRoomAttribute[]) {
     if (gameRoomTable.length == this.roomId) {
       gameRoomTable.push(this);
@@ -163,14 +182,8 @@ class GameRoomAttribute {
     }
   }
 
-  updateRtData(data: GameInfo): boolean {
+  updateRtData(data: GameInfo) {
     this.rtData.updateRtData(data);
-    if (this.rtData.scoreLeft >= 10 || this.rtData.scoreRight >= 10) {
-      this.gameStop();
-      return false;
-    } else {
-      return true;
-    }
   }
 
   streamRtData(gateway: GameGateway) {
@@ -193,6 +206,10 @@ class GameRoomAttribute {
 
   gameStop() {
     clearInterval(this.streaming);
+  }
+
+  isFinished(): boolean {
+    return this.rtData.scoreLeft >= 10 || this.rtData.scoreRight >= 10;
   }
 }
 
@@ -431,7 +448,7 @@ export class GameService {
     }
   }
 
-  async saveGameRecord(gameRecordSaveDto: GameRecordSaveDto): Promise<void> {
+  async saveGameRecord(gameRecordSaveDto: GameResultDto): Promise<void> {
     const firstPlayer = await this.userRepo.findOneBy({
       id: gameRecordSaveDto.playerOneId,
     });
