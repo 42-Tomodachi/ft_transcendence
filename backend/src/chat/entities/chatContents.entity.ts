@@ -49,7 +49,7 @@ export class ChatContents extends BaseEntity {
     const chatContentDto = new ChatContentDto();
     chatContentDto.isBroadcast = this.isNotice;
 
-    if (!this.isNotice && this.user && this.user.nickname) {
+    if (this.user && this.user.nickname) {
       const fromWhomDto = new FromWhomDto();
       fromWhomDto.nickname = this.user.nickname;
       fromWhomDto.avatar = this.user.avatar;

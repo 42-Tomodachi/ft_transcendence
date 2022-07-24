@@ -248,6 +248,7 @@ export class ChatService {
 
   async getChatContentDtoForEmit(
     chatContentId: number,
+    userId?: number,
   ): Promise<ChatContentDto> {
     const createdChatcontent = await this.chatContentsRepo
       .createQueryBuilder('chatContent')
@@ -257,6 +258,9 @@ export class ChatService {
       })
       .getOne();
 
+    if (userId) {
+      return createdChatcontent.toChatContentDto(userId);
+    }
     return createdChatcontent.toChatContentDto();
   }
 
@@ -473,7 +477,7 @@ export class ChatService {
       content: msg,
     });
 
-    return await this.getChatContentDtoForEmit(createdChatContentId);
+    return await this.getChatContentDtoForEmit(createdChatContentId, userId);
   }
 
   async isMessageFromBlockedUser(
