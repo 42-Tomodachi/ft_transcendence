@@ -682,7 +682,7 @@ export class ChatService {
 
     const result = chatContents
       .filter((chatContent) => {
-        if (!chatContent.userId) {
+        if (chatContent.isNotice) {
           return true;
         }
 
