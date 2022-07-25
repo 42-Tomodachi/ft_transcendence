@@ -139,7 +139,7 @@ export const authAPI = {
           },
         },
       );
-      return response.data.data;
+      return response.data;
     } catch (e) {
       if (e instanceof Error) {
         console.error(e.message);
