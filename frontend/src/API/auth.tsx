@@ -23,7 +23,11 @@ export const authAPI = {
   },
 
   // 2차 인증 등록시 이메일 등록 + 코드 발송
-  setSecondAuth: async (id: number, email: string, jwt: string): Promise<boolean | null> => {
+  setSecondAuth: async (
+    id: number,
+    email: string,
+    jwt: string,
+  ): Promise<{ isOk: boolean } | null> => {
     try {
       const url = authPath(`/second_auth/${id}`);
       const response = await instance.post(
@@ -67,7 +71,7 @@ export const authAPI = {
   },
 
   // 2차 인증 코드 발송(수행)
-  sendSecondAuthCode: async (id: number, jwt: string): Promise<boolean | null> => {
+  sendSecondAuthCode: async (id: number, jwt: string): Promise<{ isOk: boolean } | null> => {
     try {
       const url = authPath(`/second_auth/${id}`);
       const response = await instance.get(url, {
@@ -107,7 +111,11 @@ export const authAPI = {
   },
 
   // 2차 인증 코드 체크(검증)
-  checkSecondAuthCode: async (id: number, code: number, jwt: string): Promise<boolean | null> => {
+  checkSecondAuthCode: async (
+    id: number,
+    code: number,
+    jwt: string,
+  ): Promise<{ isOk: boolean } | null> => {
     try {
       const url = authPath(`/second_auth_verify/${id}?code=${code}`);
       const response = await instance.get(url, {

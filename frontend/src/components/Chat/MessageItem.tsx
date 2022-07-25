@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import styled from '@emotion/styled';
 import { IMessage } from '../../utils/interface';
 import ProfileImage from '../common/ProfileImage';
+import { AllContext } from '../../store';
 interface MessageItemProps {
   message: IMessage;
 }
@@ -15,19 +16,25 @@ const getTime = (time: string | number): string => {
 };
 
 const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
+  const { user } = useContext(AllContext).userData;
+
   if (message.isBroadcast) return <BroadcastMsg>{message.message}</BroadcastMsg>;
   else {
     return (
       <>
-        {message.from && (
-          <MessageItemContainer fromUser={message.isMyMessage as boolean}>
-            {!message.isMyMessage && <ProfileImage src={message.from.avatar} size={40} />}
-            <MessageWrapper fromUser={message.isMyMessage as boolean}>
-              {!message.isMyMessage && <MessageName>{message.from.nickname}</MessageName>}
+        {message && user && (
+          <MessageItemContainer fromUser={message.userId === user.userId}>
+            {message.userId !== user.userId && <ProfileImage src={message.avatar} size={40} />}
+            <MessageWrapper fromUser={message.userId === user.userId}>
+              {message.userId !== user.userId && <MessageName>{message.nickname}</MessageName>}
               <MessageContent>
-                {message.isMyMessage && <MessageTime>{getTime(message.createdTime)}</MessageTime>}
+                {message.userId === user.userId && (
+                  <MessageTime>{getTime(message.createdTime)}</MessageTime>
+                )}
                 <MessageBox>{message.message}</MessageBox>
-                {!message.isMyMessage && <MessageTime>{getTime(message.createdTime)}</MessageTime>}
+                {message.userId !== user.userId && (
+                  <MessageTime>{getTime(message.createdTime)}</MessageTime>
+                )}
               </MessageContent>
             </MessageWrapper>
           </MessageItemContainer>

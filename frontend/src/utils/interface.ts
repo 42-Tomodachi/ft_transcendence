@@ -100,12 +100,10 @@ export interface IUserAvatar {
 
 export interface IMessage {
   isBroadcast: boolean;
-  from?: {
-    nickname: string;
-    avatar: string; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
-  };
+  userId: number;
+  nickname: string;
+  avatar: string; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
   message: string;
-  isMyMessage?: boolean;
   createdTime: string;
 }
 
@@ -118,7 +116,7 @@ export interface IGetUser {
 }
 export type UserRole = 'owner' | 'manager' | 'guest';
 
-export type ActiveMenuType = 'ALL' | 'FRIEND';
+export type ActiveMenuType = 'ALL' | 'FRIEND' | 'INCHAT';
 
 export const ON = 'on' as const;
 export const OFF = 'off' as const;
