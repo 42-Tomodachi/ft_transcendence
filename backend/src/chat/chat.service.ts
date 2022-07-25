@@ -743,7 +743,7 @@ export class ChatService {
 
   async isMutedUser(roomId: number, userId: number): Promise<boolean> {
     const chatParticipant = await this.chatParticipantRepo.findOneBy({
-      id: roomId,
+      chatRoomId: roomId,
       userId,
     });
 
