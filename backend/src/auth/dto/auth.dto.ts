@@ -45,3 +45,8 @@ export class IsDuplicateDto {
   @ApiProperty({ description: '닉네임 중복 여부' })
   isDuplicate: boolean;
 }
+
+export class IsOkDto {
+  @ApiProperty({ description: '정상 작동하면 true, 아니면 false' })
+  isOk: boolean;
+}
