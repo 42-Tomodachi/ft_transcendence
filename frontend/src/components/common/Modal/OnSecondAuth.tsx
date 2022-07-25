@@ -33,7 +33,7 @@ const OnSecondAuth: React.FC = () => {
     } else {
       const res = await authAPI.setSecondAuth(user.userId, email, jwt);
 
-      if (!res) {
+      if (res && !res.isOk) {
         setEmailMsg('인증 코드가 전송에 실패하였습니다.');
       } else {
         setEmailMsg('인증 코드가 전송되었습니다.');
@@ -52,7 +52,7 @@ const OnSecondAuth: React.FC = () => {
     if (user) {
       if (authCode) {
         const res = await authAPI.checkSecondAuthCode(user.userId, Number(authCode), jwt);
-        if (res) {
+        if (res && res.isOk) {
           setAuthMsg('인증에 성공하였습니다.');
           setActiveEmail(true);
         } else setAuthMsg('코드가 일치하지 않습니다.');
