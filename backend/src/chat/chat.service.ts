@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   forwardRef,
   Inject,
   Injectable,
@@ -243,12 +244,18 @@ export class ChatService {
     return false;
   }
 
-  // 채팅방 참여자일 경우 chatParticipant 엔티티 리턴, 참여자가 아닐 경우 null 리턴
+  // 채팅방 참여자일 경우 chatParticipant 엔티티 리턴, 참여자가 아닐 경우 null 리턴, 차단된 유저일 경우 403리턴
   async isExistMember(roomId: number, userId: number) {
-    return await this.chatParticipantRepo.findOneBy({
+    const chatParticipant = await this.chatParticipantRepo.findOneBy({
       chatRoomId: roomId,
       userId,
     });
+
+    if (chatParticipant.isBanned) {
+      throw new ForbiddenException('강퇴당한 유저입니다.');
+    }
+
+    return chatParticipant;
   }
 
   async getChatContentDtoForEmit(
