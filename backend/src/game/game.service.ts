@@ -114,6 +114,14 @@ class GameRTData {
     this.updateScore();
     this.updateFlag = true;
   }
+
+  updatePaddleRtData(data: number) {
+    if (this.turn == 1) {
+      this.paddle_R_pos = data;
+    } else {
+      this.paddle_L_pos = data;
+    }
+  }
 }
 
 class GameRoomAttribute {
@@ -182,8 +190,13 @@ class GameRoomAttribute {
     }
   }
 
-  updateRtData(data: GameInfo) {
-    this.rtData.updateRtData(data);
+  updateRtData(data: GameInfo | number) {
+    if (typeof data === 'number') {
+      this.rtData.updatePaddleRtData(data);
+    } else {
+      this.rtData.updateRtData(data);
+    }
+    // this.rtData.updateRtData(data);
   }
 
   streamRtData(gateway: GameGateway) {

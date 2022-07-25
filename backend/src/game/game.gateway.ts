@@ -105,6 +105,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('cancelLadderQueue')
   async cancleLadderQueue(client: Socket) {
     this.socketMap.delete(client.id);
+    // this.gameService.exitGameRoom();
     client.disconnect();
   }
 
@@ -154,5 +155,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (game.isFinished()) {
       this.gameService.saveGameRecord(game.toGameResultDto());
     }
+  }
+
+  @SubscribeMessage('paddleRTData')
+  async paddleRTData(client: Socket, data: number) {
+    console.log(`paddleRTData: ${data}`); // for test only
+
+    const player = this.socketMap[client.id];
+    const game = this.gameService.getGameRoom(player.gameId);
+
+    game.updateRtData(data);
   }
 }
