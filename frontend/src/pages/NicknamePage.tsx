@@ -74,7 +74,7 @@ const NicknamePage: React.FC = () => {
       if (res === null) {
         setCheckNickMsg(`다시 시도해주세요.`);
         setIsEnabled(false);
-      } else if (res) {
+      } else if (res.isDuplicate) {
         setCheckNickMsg(`중복된 닉네임입니다.`);
         setIsEnabled(false);
       } else {

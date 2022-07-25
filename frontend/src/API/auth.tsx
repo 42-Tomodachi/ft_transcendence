@@ -127,7 +127,10 @@ export const authAPI = {
   },
 
   // 닉네임 중복 체크
-  checkNickname: async (nickname: string, jwt: string): Promise<boolean | null> => {
+  checkNickname: async (
+    nickname: string,
+    jwt: string,
+  ): Promise<{ isDuplicate: boolean } | null> => {
     try {
       const url = authPath(`/isDuplicateNickname`);
       const response = await instance.post(
