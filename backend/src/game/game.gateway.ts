@@ -105,7 +105,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('cancelLadderQueue')
   async cancleLadderQueue(client: Socket) {
     this.socketMap.delete(client.id);
-    // this.gameService.exitGameRoom();
+    this.gameService.removeFromLadderQueue(
+      this.gameService.getPlayerById(this.socketMap[client.id]),
+    );
     client.disconnect();
   }
 
@@ -146,7 +148,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('calculatedRTData')
   async calculatedRTData(client: Socket, data: GameInfo) {
-    console.log(`calculatedRTData: ${data}`); // for test only
+    // console.log(`calculatedRTData: ${data}`); // for test only
 
     const player = this.socketMap[client.id];
     const game = this.gameService.getGameRoom(player.gameId);
@@ -154,16 +156,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     game.updateRtData(data);
     if (game.isFinished()) {
       this.gameService.saveGameRecord(game.toGameResultDto());
+      game.gameStop();
+      this.server.to(game.roomId.toString()).emit('gameFinished');
     }
+    game.streamRtData(this);
   }
 
   @SubscribeMessage('paddleRTData')
   async paddleRTData(client: Socket, data: number) {
-    console.log(`paddleRTData: ${data}`); // for test only
+    // console.log(`paddleRTData: ${data}`); // for test only
 
     const player = this.socketMap[client.id];
     const game = this.gameService.getGameRoom(player.gameId);
 
     game.updateRtData(data);
+    game.streamRtData(this);
   }
 }

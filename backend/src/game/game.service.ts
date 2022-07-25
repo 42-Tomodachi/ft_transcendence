@@ -204,17 +204,19 @@ class GameRoomAttribute {
     if (rtData.updateFlag === false) {
       return;
     }
-    console.log(`sending ${rtData.toRtData()}`); // this line test only
-    // gateway.server.to(game.roomId.toString()).emit('rtData', rtData.toRtData());
-    gateway.server.emit('rtData', rtData.toRtData());
+    // console.log(`sending ${rtData.toRtData()}`); // this line test only
+    gateway.server.to(this.roomId.toString()).emit('rtData', rtData.toRtData());
+    // gateway.server.emit('rtData', rtData.toRtData());
     rtData.updateFlag = false;
   }
 
   gameStart(gateway: GameGateway) {
-    const streamTimer = setInterval(() => {
-      this.streamRtData(gateway);
-    }, 1000 / 60);
-    this.streaming = streamTimer;
+    this.isStart = true;
+    this.streamRtData(gateway);
+    // const streamTimer = setInterval(() => {
+    //   this.streamRtData(gateway);
+    // }, 1000 / 60);
+    // this.streaming = streamTimer;
   }
 
   gameStop() {
