@@ -109,13 +109,14 @@ export class UsersService {
   }
 
   async findByNicknameAndUpdateImg(
-    id: number,
+    userId: number,
     fileName: string,
   ): Promise<string> {
-    const user = await this.userRepo.findOne({ where: { id } });
+    const user = await this.userRepo.findOne({ where: { id: userId } });
     user.avatar = `${process.env.SERVER_ADDRESS}/image/${fileName}`;
     await user.save();
 
+    this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
     return user.avatar;
   }
 

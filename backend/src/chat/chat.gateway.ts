@@ -74,6 +74,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       socketUser.set(userId, client.id);
       this.connectedSocketMap.set(roomId, socketUser);
     }
+
+    this.emitChatHistoryToParticipatingChatRooms(+userId);
   }
 
   async handleDisconnect(client: Socket) {
@@ -94,10 +96,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.wss.to(roomId.toString()).emit('recieveMessage', chatContentDto);
   }
 
-  sendChatHistory(roomId: number, chatContentDtos: ChatContentDto[]): void {
-    this.logger.log(`roomId: ${roomId}, emit recieveChatHistory`);
-    this.wss.to(roomId.toString()).emit('recieveChatHistory', chatContentDtos);
-  }
+  // sendChatHistory(roomId: number, chatContentDtos: ChatContentDto[]): void {
+  //   this.logger.log(`roomId: ${roomId}, emit recieveChatHistory`);
+  //   this.wss.to(roomId.toString()).emit('recieveChatHistory', chatContentDtos);
+  // }
 
   getParticipatingChatRoomIds(userId: number): string[] {
     const participatingChatRoomIds = [];
@@ -194,30 +196,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // 클라이언트가 받은 채팅을 검증(차단한 유저인지)하기 위해 사용
   // 받은 채팅을 보낸 유저가 내가 차단한 유저이면 true리턴 차단하지 않았으면 false 리턴
-  @SubscribeMessage('isMessageFromBlockedUser')
-  async isMessageFromBlockedUser(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { senderId: string; myId: string }, // senderId: 메세지 보낸 유저 id, myId: 메세지 받은 유저 id
-  ): Promise<void> {
-    this.logger.log(`on isMessageFromBlockedUser`);
+  // @SubscribeMessage('isMessageFromBlockedUser')
+  // async isMessageFromBlockedUser(
+  //   @ConnectedSocket() client: Socket,
+  //   @MessageBody() data: { senderId: string; myId: string }, // senderId: 메세지 보낸 유저 id, myId: 메세지 받은 유저 id
+  // ): Promise<void> {
+  //   this.logger.log(`on isMessageFromBlockedUser`);
 
-    const res = await this.chatService.isMessageFromBlockedUser(
-      +data.myId,
-      +data.senderId,
-    );
+  //   const res = await this.chatService.isMessageFromBlockedUser(
+  //     +data.myId,
+  //     +data.senderId,
+  //   );
 
-    client.emit('isMessageFromBlockedUserResult', res);
-  }
+  //   client.emit('isMessageFromBlockedUserResult', res);
+  // }
 
-  @SubscribeMessage('clientDisconnect')
-  clientDisconnect(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: { userId: string; roomId: string },
-  ): void {
-    this.logger.log('on clientDisconnect');
-    client.disconnect();
-    if (this.connectedSocketMap.has(data.roomId)) {
-      this.connectedSocketMap.get(data.roomId).delete(client.id);
-    }
-  }
+  // @SubscribeMessage('clientDisconnect')
+  // clientDisconnect(
+  //   @ConnectedSocket() client: Socket,
+  //   @MessageBody() data: { userId: string; roomId: string },
+  // ): void {
+  //   this.logger.log('on clientDisconnect');
+  //   client.disconnect();
+  //   if (this.connectedSocketMap.has(data.roomId)) {
+  //     this.connectedSocketMap.get(data.roomId).delete(client.id);
+  //   }
+  // }
 }
