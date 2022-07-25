@@ -5,7 +5,10 @@ import {
   IsString,
   IsDateString,
   ValidateNested,
+  IsNumber,
 } from 'class-validator';
+import { extend } from 'dayjs';
+import { UserProfileDto } from 'src/users/dto/users.dto';
 import { ChatRoomUserDto } from './chatParticipant.dto';
 
 export class FromWhomDto extends PickType(ChatRoomUserDto, ['nickname']) {
@@ -13,25 +16,18 @@ export class FromWhomDto extends PickType(ChatRoomUserDto, ['nickname']) {
   avatar: string | null;
 }
 
-export class ChatContentDto {
+export class ChatContentDto extends PickType(UserProfileDto, [
+  'userId',
+  'nickname',
+  'avatar',
+]) {
   @ApiProperty({ description: '공지 메시지인지 여부' })
   @IsBoolean()
   isBroadcast: boolean;
 
-  @ApiProperty({
-    description: '공지 메세지가 아닐 경우, 보낸이의 정보가 들어간다.',
-  })
-  @IsOptional()
-  @ValidateNested()
-  from?: FromWhomDto;
-
   @ApiProperty({ description: '채팅 내용' })
   @IsString()
   message: string;
-
-  @ApiProperty({ description: '자신이 보낸 메세지인지 여부' })
-  @IsBoolean()
-  isMyMessage?: boolean;
 
   @ApiProperty({
     description:

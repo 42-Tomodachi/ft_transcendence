@@ -45,21 +45,17 @@ export class ChatContents extends BaseEntity {
   @ManyToOne(() => User, (user) => user.sender)
   user: User;
 
-  toChatContentDto(userId?: number): ChatContentDto {
+  toChatContentDto(): ChatContentDto {
     const chatContentDto = new ChatContentDto();
-    chatContentDto.isBroadcast = this.isNotice;
 
-    if (this.user && this.user.nickname) {
-      const fromWhomDto = new FromWhomDto();
-      fromWhomDto.nickname = this.user.nickname;
-      fromWhomDto.avatar = this.user.avatar;
-      chatContentDto.from = fromWhomDto;
-    }
-    if (userId) {
-      chatContentDto.message = this.content;
-      chatContentDto.isMyMessage = this.userId === userId ? true : false;
+    chatContentDto.isBroadcast = this.isNotice;
+    chatContentDto.userId = this.userId;
+    chatContentDto.nickname = this.user.nickname;
+    chatContentDto.avatar = this.user.avatar;
+    if (this.isNotice) {
+      chatContentDto.message = `${chatContentDto.nickname} ${this.content}`;
     } else {
-      chatContentDto.message = `${chatContentDto.from.nickname} ${this.content}`;
+      chatContentDto.message = this.content;
     }
     chatContentDto.createdTime = this.createdTime.toISOString();
 

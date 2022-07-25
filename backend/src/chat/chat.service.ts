@@ -253,7 +253,6 @@ export class ChatService {
 
   async getChatContentDtoForEmit(
     chatContentId: number,
-    userId?: number,
   ): Promise<ChatContentDto> {
     const createdChatcontent = await this.chatContentsRepo
       .createQueryBuilder('chatContent')
@@ -263,10 +262,7 @@ export class ChatService {
       })
       .getOne();
 
-    if (createdChatcontent.isNotice) {
-      return createdChatcontent.toChatContentDto();
-    }
-    return createdChatcontent.toChatContentDto(createdChatcontent.userId);
+    return createdChatcontent.toChatContentDto();
   }
 
   async enterChatRoom(
@@ -486,7 +482,7 @@ export class ChatService {
       content: msg,
     });
 
-    return await this.getChatContentDtoForEmit(createdChatContentId, userId);
+    return await this.getChatContentDtoForEmit(createdChatContentId);
   }
 
   async isMessageFromBlockedUser(
@@ -644,7 +640,7 @@ export class ChatService {
         return true;
       })
       .map((chatContent) => {
-        return chatContent.toChatContentDto(userId);
+        return chatContent.toChatContentDto();
       });
 
     return result;
@@ -698,7 +694,7 @@ export class ChatService {
         return true;
       })
       .map((chatContent) => {
-        return chatContent.toChatContentDto(userId);
+        return chatContent.toChatContentDto();
       });
 
     return result;
