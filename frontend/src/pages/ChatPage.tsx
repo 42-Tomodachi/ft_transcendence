@@ -33,27 +33,6 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (user && !socket) {
-      socket = io(`http://localhost:5500/ws-chat`, {
-        transports: ['websocket'],
-        query: {
-          userId: user.userId,
-          roomId: roomId,
-        },
-      });
-      console.dir(socket);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('recieveMessage', (data: IMessage) => {
-        const receive: IMessage = data;
-        setMessages([...messages, receive]);
-      });
-    }
-  }, [messages]);
-  useEffect(() => {
     // TODO : 채팅방 참여 인원 불러와서 있으면 그대로, 없으면 루트로 navigate
     if (roomId && user) {
       const getRoomData = async () => {
@@ -62,15 +41,37 @@ const ChatPage: React.FC = () => {
           setRoomName(res.title);
         }
       };
-      // 최초 입장시에 해당 msgHistory
-      const getMessages = async (roomId: number, userId: number) => {
-        const data = await chatsAPI.getMsgHistoryInChatRoom(roomId, userId, user.jwt);
-        setMessages(data);
-      };
-      getMessages(+roomId, user.userId);
+      if (user) {
+        socket = io(`http://localhost:5500/ws-chat`, {
+          transports: ['websocket'],
+          query: {
+            userId: user.userId,
+            roomId: roomId,
+          },
+        });
+      }
       getRoomData();
     }
-  }, [roomId, user]);
+  }, [roomId, user, socket]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('reloadChatHistory', (data: IMessage[]) => {
+        setMessages(data);
+      });
+      socket.on('recieveMessage', (data: IMessage) => {
+        setMessages([...messages, data]);
+      });
+    }
+  }, [messages, user, socket]);
+
+  useEffect(() => {
+    return () => {
+      socket.off('reloadChatHistory');
+      socket.off('recieveMessage');
+      socket.disconnect();
+    };
+  }, []);
 
   return (
     <Background>
@@ -82,11 +83,6 @@ const ChatPage: React.FC = () => {
             <ChatTitle>
               <BackawayWrap
                 onClick={() => {
-                  socket.emit('clientDisconnect', {
-                    userId: user?.userId,
-                    roomId: roomId,
-                  });
-                  // socket.disconnect();
                   navigate(-1);
                 }}
               >
@@ -98,7 +94,7 @@ const ChatPage: React.FC = () => {
             <MessageInput submitMessage={submitMessage} />
           </ChatArea>
           <ChatSideMenu>
-            <UserList />
+            <UserList menuType={'INCHAT'} roomId={roomId} />
             <UserProfile />
           </ChatSideMenu>
         </ChatRoomBody>

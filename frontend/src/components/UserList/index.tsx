@@ -3,9 +3,9 @@ import styled from '@emotion/styled';
 import Button from '../common/Button';
 import UserItem from './UserItem';
 import axios from 'axios';
-import { OFF, ActiveMenuType, IGetUser } from '../../utils/interface';
+import { OFF, ActiveMenuType, IGetUser, MenuType } from '../../utils/interface';
 import { AllContext } from '../../store';
-import { usersAPI } from '../../API';
+import { chatsAPI, usersAPI } from '../../API';
 
 /*
  ** 제이슨서버에서 유저리스트를 받아와 정렬합니다.
@@ -18,19 +18,35 @@ import { usersAPI } from '../../API';
  ** 타입명시할때 인터페이스사용한 적용 요청사항 111 <-- 인터페이스.tsx에 넣어서 가져다쓰자
  ** 충돌원인 /gamepage에 넣어논 태그삭제  요청사항 222
  */
+// TODO:  userList type별로 출력하는 목록이 다르게 설정
+interface UserListType {
+  menuType: ActiveMenuType;
+  roomId?: string;
+}
 
-const UserList: React.FC = () => {
+const UserList: React.FC<UserListType> = ({ menuType, roomId }) => {
   const { user } = useContext(AllContext).userData;
-  const [activeMenu, setActiveMenu] = useState<ActiveMenuType>('ALL');
+  const [activeMenu, setActiveMenu] = useState<ActiveMenuType>(menuType);
   const [userList, setUserList] = useState<IGetUser[] | []>([]);
+
+  const selectActiveMenu = async (menuType: ActiveMenuType): Promise<IGetUser[]> => {
+    if (user) {
+      switch (menuType) {
+        case 'ALL':
+          return await usersAPI.getAllUsersIdNickName(user.jwt);
+        case 'FRIEND':
+          return await usersAPI.getFriendList(user.userId, user.jwt);
+        case 'INCHAT':
+          return await chatsAPI.getUsersInChatRoom(+(roomId as string), user.jwt);
+      }
+    } else console.log('아무것도 없음');
+    return [];
+  };
 
   useEffect(() => {
     const getUserList = async () => {
       if (user && user.jwt) {
-        const data =
-          activeMenu === 'ALL'
-            ? await usersAPI.getAllUsersIdNickName(user.jwt)
-            : await usersAPI.getFriendList(user.userId, user.jwt);
+        const data = await selectActiveMenu(activeMenu);
         data.sort((a: IGetUser, b: IGetUser) => {
           return a.status !== OFF ? -1 : 1;
         });
@@ -45,15 +61,27 @@ const UserList: React.FC = () => {
       {user && (
         <ListBox>
           <ButtonBox>
-            <Button
-              color={activeMenu === 'ALL' ? 'gradient' : 'white'}
-              text="전체유저"
-              width={120}
-              height={40}
-              onClick={() => {
-                setActiveMenu('ALL');
-              }}
-            />
+            {menuType === 'INCHAT' ? (
+              <Button
+                color={activeMenu === 'INCHAT' ? 'gradient' : 'white'}
+                text="채팅방유저"
+                width={120}
+                height={40}
+                onClick={() => {
+                  setActiveMenu('INCHAT');
+                }}
+              />
+            ) : (
+              <Button
+                color={activeMenu === 'ALL' ? 'gradient' : 'white'}
+                text="전체유저"
+                width={120}
+                height={40}
+                onClick={() => {
+                  setActiveMenu('ALL');
+                }}
+              />
+            )}
             <Button
               color={activeMenu === 'FRIEND' ? 'gradient' : 'white'}
               text="친구"

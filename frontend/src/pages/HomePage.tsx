@@ -36,7 +36,7 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
           <HomeContents>
             <MainArea>{menu && menu === 'CHAT' ? <Chat /> : <Game />}</MainArea>
             <HomeMenus>
-              <UserList />
+              <UserList menuType={'ALL'} />
               <UserProfile />
             </HomeMenus>
           </HomeContents>
