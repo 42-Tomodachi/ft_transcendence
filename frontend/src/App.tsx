@@ -59,7 +59,7 @@ function App() {
           <Route path="/game" element={<MainPage menu="GAME" />} />
           <Route path="/chat" element={<MainPage menu="CHAT" />} />
           <Route path="/chatroom/:roomId" element={<ChatPage />} />
-          <Route path="/userlist" element={<UserList />} />
+          {/* <Route path="/userlist" element={<UserList />} /> */}
 
           {/* Tester */}
           <Route path="/modaltester" element={<ModalTester />} />

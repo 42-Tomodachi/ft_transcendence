@@ -18,7 +18,7 @@ const LogoutModal: React.FC = () => {
   const handleLogout = () => {
     const logout = async () => {
       if (user && user.jwt) {
-        await authAPI.logout(user.userId, jwt);
+        await authAPI.logout(user.userId, user.jwt);
       }
     };
     logout();

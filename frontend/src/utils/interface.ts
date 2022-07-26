@@ -45,9 +45,9 @@ export interface IRoomSetting {
   password: string;
 }
 
-export interface IParticipants extends IUserKey {
-  role: string;
-}
+// export interface IParticipants extends IUserKey {
+//   role: string;
+// }
 
 export const ALL = 'ALL' as const;
 export const JOINED = 'JOINED' as const;
@@ -112,6 +112,7 @@ export type ButtonColorType = 'white' | 'white2' | 'main' | 'gradient';
 export interface IGetUser {
   userId: number;
   nickname: string;
+  role?: string;
   status: 'on' | 'off' | 'play';
 }
 export type UserRole = 'owner' | 'manager' | 'guest';

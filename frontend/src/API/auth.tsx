@@ -25,7 +25,6 @@ export const authAPI = {
   logout: async (userId: number, jwt: string): Promise<void> => {
     try {
       const url = authPath(`/logout/${userId}`);
-      console.log(jwt, userId);
       await instance.put(url, null, {
         headers: {
           Authorization: `Bearer ${jwt}`,
