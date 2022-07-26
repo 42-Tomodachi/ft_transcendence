@@ -6,6 +6,8 @@ import { AllContext } from '../../../store';
 import { authAPI, usersAPI } from '../../../API';
 import { LOGIN, SET_NICKNAME } from '../../../utils/interface';
 import ProfileImage from '../ProfileImage';
+import imageCompression from 'browser-image-compression';
+import DefaultProfile from '../../../assets/default-image.png';
 
 const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]{2,8}$/;
 const minNickName = 2;
@@ -16,7 +18,11 @@ const EditMyProfile: React.FC = () => {
   const [checkNickMsg, setCheckNickMsg] = useState<string>('');
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
+  const { setModal } = useContext(AllContext).modalData;
   const { jwt } = useContext(AllContext).jwtData; // TODO: JWT 유지를 위해 사용
+  const profileIamge = useRef<HTMLInputElement>(null);
+  const [profileImg, setProfileImg] = useState<string>(DefaultProfile);
+  const [convertImg, setConvertImg] = useState<File | string>('');
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     //  NOTE : 정규식 적용
@@ -30,6 +36,27 @@ const EditMyProfile: React.FC = () => {
     setIsEnabled(false);
     setNickName(inputNickValue);
   };
+
+  const onFindImage = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    if (e.target.files?.length) {
+      const imgTarget = e.target.files[0];
+      const fileReader = new FileReader();
+      const compressImgResult = await imageCompression(imgTarget, {
+        maxWidthOrHeight: 800,
+      });
+
+      if (compressImgResult !== undefined) {
+        const convertResult = new File([compressImgResult], imgTarget.name, {
+          type: imgTarget.type,
+          lastModified: imgTarget.lastModified,
+        });
+        setConvertImg(convertResult);
+        fileReader.readAsDataURL(convertResult);
+        fileReader.onload = () => setProfileImg(fileReader.result as string);
+      }
+    }
+  };
+
   const onKeyEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const key = e.key || e.keyCode;
     if (key == 'Enter' || key === 13) {
@@ -49,8 +76,9 @@ const EditMyProfile: React.FC = () => {
     if (res === null) {
       setCheckNickMsg(`다시 시도해주세요.`);
       setIsEnabled(false);
-    } else if (res) {
-      setCheckNickMsg(`중복된 닉네임입니다.`);
+    } else if (res.isDuplicate) {
+      if (user && user.nickname === nickName) setCheckNickMsg(`기존 닉네임입니다.`);
+      else setCheckNickMsg(`중복된 닉네임입니다.`);
       setIsEnabled(false);
     } else {
       setCheckNickMsg(`사용 가능한 닉네임입니다.`);
@@ -62,23 +90,39 @@ const EditMyProfile: React.FC = () => {
     if (!isEnabled) {
       setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
     } else if (user) {
+      const formData = new FormData();
       const userId = user.userId;
+
+      if (convertImg) {
+        formData.append('image', convertImg);
+        usersAPI.uploadAvatarImg(userId, formData, user.jwt);
+        setUser(LOGIN, { ...user, avatar: profileImg });
+      }
       usersAPI.updateUserNickname(userId, nickName, user.jwt);
       setUser(LOGIN, { ...user, nickname: nickName });
-    } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
+      setModal(null);
+    } else console.error('user 정보를 못불러 왔습니다.');
   };
+
+  useEffect(() => {
+    if (user) {
+      setProfileImg(user.avatar);
+    }
+  }, []);
 
   return (
     <>
-      {user && ( // TODO: 닉네임만 변경하는걸로 바꿔야함
+      {user && (
         <Modal width={450} height={530} title={'내 프로필 수정'}>
           <MainBlock>
             <ProfileBlock>
-              <ProfileImage src={user.avatar} size={150} />
+              <ProfileImage src={profileImg} size={150} />
             </ProfileBlock>
             <BtnBlock>
-              <Button color="gradient" text="프로필 변경" width={120} height={30} />
+              <ProfileImgLabel htmlFor="profile">프로필 변경</ProfileImgLabel>
             </BtnBlock>
+            {/* TODO: 프로필 변경만 파일 브라우저가 열리지 않음 */}
+            <ProfileImgButton type="file" id="profile" ref={profileIamge} onChange={onFindImage} />
             <Nick>
               <Nickguide>닉네임 :</Nickguide>
               <NickInput
@@ -88,14 +132,13 @@ const EditMyProfile: React.FC = () => {
                 defaultValue={nickName}
                 spellCheck={false}
               />
-
               <Button color="white" text="중복체크" width={80} height={28} onClick={onCheck} />
               <DupMsg>{checkNickMsg}</DupMsg>
             </Nick>
             <BtnBlock>
               <Button
                 color="gradient"
-                text="닉네임 변경"
+                text="확인"
                 width={120}
                 height={30}
                 onClick={onClickSubmit}
@@ -164,4 +207,25 @@ const DupMsg = styled.span`
   height: 10px;
 `;
 
+const ProfileImgLabel = styled.label`
+  text-align: center;
+  background: ${props => props.theme.colors.gradient};
+  width: 120px;
+  height: 30px;
+  color: ${props => props.theme.colors.white};
+  border: none;
+  border-radius: 10px;
+  line-height: 28px;
+  cursor: pointer;
+  margin: 0 auto;
+  transition: all 0.2s ease-in-out;
+  display: block;
+  &:hover {
+    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.25);
+  }
+`;
+
+const ProfileImgButton = styled.input`
+  display: none;
+`;
 export default EditMyProfile;

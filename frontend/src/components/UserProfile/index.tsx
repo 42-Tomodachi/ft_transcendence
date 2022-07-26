@@ -67,11 +67,11 @@ const ProfilePage: React.FC = () => {
           <OtherBtnBlock>
             <Button
               color="gradient"
-              text="닉네임 변경"
+              text="프로필 변경"
               width={120}
               height={30}
               onClick={() => {
-                setModal(EDIT_MY_PROFILE, user.userId); // TODO: nickname만 변경하는거로 다시 회귀(sgang, dhyeon)
+                setModal(EDIT_MY_PROFILE, user.userId);
               }}
             />
             <Button
