@@ -5,21 +5,28 @@ import Button from '../Button';
 import { AllContext } from '../../../store';
 import { LOGOUT } from '../../../utils/interface';
 import { useNavigate } from 'react-router-dom';
+import { authAPI, usersAPI } from '../../../API';
+import { useEffect } from 'react';
 
 const LogoutModal: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const { setUserStatus } = useContext(AllContext).userStatus;
-  const { setUser } = useContext(AllContext).userData;
-  const { setJwt } = useContext(AllContext).jwtData;
+  const { user, setUser } = useContext(AllContext).userData;
+  const { jwt, setJwt } = useContext(AllContext).jwtData;
   const navigater = useNavigate();
 
   const handleLogout = () => {
+    const logout = async () => {
+      if (user && user.jwt) {
+        await authAPI.logout(user.userId, jwt);
+      }
+    };
+    logout();
+    setModal(null);
     setUserStatus(LOGOUT);
     setUser(LOGOUT);
     setJwt('REMOVE_JWT');
-    setModal(null); // 모달 끄기
-    navigater('/'); // TODO: 초기화면으로 이동
-    // TODO: 로그아웃 후 초기화면에서 뒤로가기를 못하게 막아야함
+    navigater('/');
   };
 
   return (
