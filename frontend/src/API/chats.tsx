@@ -188,7 +188,9 @@ const chatsAPI = {
       const url = chatsPath(
         `/${roomId}/roleToggle?callingUserId=${callingUserId}&targetUserId=${targetUserId}`,
       );
-      const res = await instance.put(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      const res = await instance.put(url, null, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -200,7 +202,9 @@ const chatsAPI = {
   banUserInChatRoom: async (roomId: number, userId: number, targetUserId: number, jwt: string) => {
     try {
       const url = chatsPath(`/${roomId}/ban/${userId}?targetUserId=${targetUserId}`);
-      const res = await instance.put(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      const res = await instance.put(url, null, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -211,7 +215,7 @@ const chatsAPI = {
   setUpMuteUser: async (roomId: number, jwt: string): Promise<boolean> => {
     try {
       const url = chatsPath(`/${roomId}/muteToggle`);
-      const res = await instance.put(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      const res = await instance.put(url, null, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data; // INFO: isMuted : boolean
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
