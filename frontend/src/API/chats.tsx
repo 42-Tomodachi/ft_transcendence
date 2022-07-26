@@ -2,7 +2,7 @@ import { instance } from './index';
 import {
   IChatRooms,
   IRoomSetting,
-  IParticipants,
+  IGetUser,
   IChatDMRoom,
   IMessage,
   IChatRoomInfo,
@@ -79,7 +79,7 @@ const chatsAPI = {
     }
   },
   // GET chats/{roomid}/participants - getUsersInChatRoom
-  getUsersInChatRoom: async (roomId: number, jwt: string): Promise<IParticipants[] | []> => {
+  getUsersInChatRoom: async (roomId: number, jwt: string): Promise<IGetUser[] | []> => {
     try {
       const url = chatsPath(`/${roomId}/participants`);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });

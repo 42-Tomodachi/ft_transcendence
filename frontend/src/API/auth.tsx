@@ -21,7 +21,24 @@ export const authAPI = {
       return null;
     }
   },
-
+  // logout
+  logout: async (userId: number, jwt: string): Promise<void> => {
+    try {
+      const url = authPath(`/logout/${userId}`);
+      console.log(jwt, userId);
+      await instance.put(url, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(e.message);
+      } else {
+        console.error(e);
+      }
+    }
+  },
   // 2차 인증 등록시 이메일 등록 + 코드 발송
   setSecondAuth: async (
     id: number,
@@ -29,7 +46,7 @@ export const authAPI = {
     jwt: string,
   ): Promise<{ isOk: boolean } | null> => {
     try {
-      const url = authPath(`/second_auth/${id}`);
+      const url = authPath(`/secondAuth/${id}`);
       const response = await instance.post(
         url,
         { email },
@@ -53,7 +70,7 @@ export const authAPI = {
   // 2차 인증 등록 완료
   enrollSecondAuth: async (id: number, jwt: string): Promise<boolean> => {
     try {
-      const url = authPath(`/second_auth_enroll/${id}`);
+      const url = authPath(`/secondAuthEnroll/${id}`);
       await instance.get(url, {
         headers: {
           Authorization: `Bearer ${jwt}`,
@@ -73,7 +90,7 @@ export const authAPI = {
   // 2차 인증 코드 발송(수행)
   sendSecondAuthCode: async (id: number, jwt: string): Promise<{ isOk: boolean } | null> => {
     try {
-      const url = authPath(`/second_auth/${id}`);
+      const url = authPath(`/secondAuth/${id}`);
       const response = await instance.get(url, {
         headers: {
           Authorization: `Bearer ${jwt}`,
@@ -93,7 +110,7 @@ export const authAPI = {
   // 2차 인증 해제
   unsetSecondAuth: async (id: number, jwt: string): Promise<boolean> => {
     try {
-      const url = authPath(`/second_auth/${id}`);
+      const url = authPath(`/secondAuth/${id}`);
       await instance.delete(url, {
         headers: {
           Authorization: `Bearer ${jwt}`,
@@ -117,7 +134,7 @@ export const authAPI = {
     jwt: string,
   ): Promise<{ isOk: boolean } | null> => {
     try {
-      const url = authPath(`/second_auth_verify/${id}?code=${code}`);
+      const url = authPath(`/secondAuthVerify/${id}?code=${code}`);
       const response = await instance.get(url, {
         headers: {
           Authorization: `Bearer ${jwt}`,
