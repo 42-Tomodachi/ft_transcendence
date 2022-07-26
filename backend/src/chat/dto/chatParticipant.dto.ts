@@ -13,7 +13,10 @@ export class ChatRoomUserDto extends PickType(ChatParticipantProfileDto, [
   'userId',
   'nickname',
   'role',
-]) {}
+]) {
+  @ApiProperty({ description: '로그인 상태' })
+  status: 'on' | 'off' | 'play';
+}
 
 export class ParticipantRoleDto extends PickType(ChatParticipantProfileDto, [
   'role',

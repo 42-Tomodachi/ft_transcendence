@@ -102,6 +102,7 @@ export class ChatService {
       const chatRoomUserDto = new ChatRoomUserDto();
       chatRoomUserDto.userId = chatParticipant.userId;
       chatRoomUserDto.nickname = chatParticipant.user.nickname;
+      chatRoomUserDto.status = chatParticipant.user.userStatus;
       chatRoomUserDto.role = chatParticipant.role;
 
       return chatRoomUserDto;
@@ -251,7 +252,7 @@ export class ChatService {
       userId,
     });
 
-    if (chatParticipant.isBanned) {
+    if (chatParticipant && chatParticipant.isBanned) {
       throw new ForbiddenException('강퇴당한 유저입니다.');
     }
 
