@@ -27,6 +27,25 @@ export class Player {
 
 ///////////////////
 
+class RtLogger {
+  lastLogged: number = Date.now();
+
+  public log(interval: number, msg: string) {
+    const currentTime = Date.now();
+    if (this.lastLogged - currentTime < interval) {
+      return;
+    }
+    console.log(msg);
+    this.lastLogged = currentTime;
+  }
+
+  public resetTimer() {
+    this.lastLogged = Date.now();
+  }
+}
+
+const rtLogger = new RtLogger();
+
 export interface GameInfo {
   ballP_X: number;
   ballP_Y: number;
@@ -53,6 +72,7 @@ class GameRTData {
   updateFlag: boolean;
   scoreLeft: number;
   scoreRight: number;
+  lastSent: number;
 
   constructor() {
     this.ball_pos = [50, 50];
@@ -64,6 +84,7 @@ class GameRTData {
     this.updateFlag = true;
     this.scoreLeft = 0;
     this.scoreRight = 0;
+    this.lastSent = Date.now();
   }
 
   toRtData(): (number | boolean)[] {
@@ -81,12 +102,8 @@ class GameRTData {
     return data;
   }
 
-  toScoreData(): string {
-    let data: string;
-    data += this.scoreLeft.toString() + ',';
-    data += this.scoreRight.toString();
-
-    return data;
+  toScoreData(): number[] {
+    return [this.scoreLeft, this.scoreRight];
   }
 
   updateScore() {
@@ -200,23 +217,24 @@ class GameRoomAttribute {
   }
 
   streamRtData(gateway: GameGateway) {
+    const currentTime = Date.now();
     const rtData = this.rtData;
+    if (currentTime - rtData.lastSent < 15) {
+      return;
+    }
     if (rtData.updateFlag === false) {
       return;
     }
     // console.log(`sending ${rtData.toRtData()}`); // this line test only
+    rtLogger.log(500, `sending ${rtData.toRtData()}`);
     gateway.server.to(this.roomId.toString()).emit('rtData', rtData.toRtData());
-    // gateway.server.emit('rtData', rtData.toRtData());
+    rtData.lastSent = currentTime;
     rtData.updateFlag = false;
   }
 
   gameStart(gateway: GameGateway) {
     this.isStart = true;
     this.streamRtData(gateway);
-    // const streamTimer = setInterval(() => {
-    //   this.streamRtData(gateway);
-    // }, 1000 / 60);
-    // this.streaming = streamTimer;
   }
 
   gameStop() {
