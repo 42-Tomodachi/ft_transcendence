@@ -6,7 +6,7 @@ import Modal from '.';
 import { AllContext } from '../../../store';
 import { chatsAPI } from '../../../API';
 
-const EnterChatRoom: React.FC<{ id: number }> = ({ id }) => {
+const EnterChatRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
   const [errMsg, setErrMsg] = useState<string>('');
   const [inputPwd, setPwd] = useState<string>('');
   const { setModal } = useContext(AllContext).modalData;
@@ -15,11 +15,11 @@ const EnterChatRoom: React.FC<{ id: number }> = ({ id }) => {
 
   const checkPwd = async () => {
     if (user) {
-      const res = await chatsAPI.enterChatRoom(id, user.userId, inputPwd, user.jwt);
+      const res = await chatsAPI.enterChatRoom(roomId, user.userId, inputPwd, user.jwt);
       if (res !== -1) {
         setErrMsg('');
         setModal(null);
-        navigate(`/chatroom/${id}`);
+        navigate(`/chatroom/${roomId}`);
       } else {
         setErrMsg('잘못된 비밀번호입니다.');
         setPwd('');

@@ -29,7 +29,7 @@ const MakeChatRoom: React.FC = () => {
     }
     if (user) {
       const res = await chatsAPI.makeChatRoom(user.userId, roomName, false, password, user.jwt);
-      if (res?.roomId) {
+      if (res && res.roomId) {
         setModal(null);
         navigate(`/chatroom/${res.roomId}`);
       }

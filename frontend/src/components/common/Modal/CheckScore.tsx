@@ -7,7 +7,7 @@ import { AllContext } from '../../../store';
 import { IGameRecord } from '../../../utils/interface';
 import { usersAPI } from '../../../API';
 
-const CheckScore: React.FC<{ id: number }> = ({ id }) => {
+const CheckScore: React.FC<{ userId: number }> = ({ userId }) => {
   const [recordList, setRecord] = useState<IGameRecord[] | []>([]);
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
@@ -15,7 +15,7 @@ const CheckScore: React.FC<{ id: number }> = ({ id }) => {
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
-        const data = await usersAPI.getUserGameRecords(id, user.jwt);
+        const data = await usersAPI.getUserGameRecords(userId, user.jwt);
         setRecord(data);
       }
     };

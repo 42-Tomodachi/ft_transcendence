@@ -1,27 +1,41 @@
 import React, { useContext, useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import Button from '../Button';
-import axios from 'axios';
 import Modal from '.';
 import ProfileImage from '../ProfileImage';
 import { AllContext } from '../../../store';
 import { CHECK_SCORE, IUserData } from '../../../utils/interface';
-import { usersAPI } from '../../../API';
+import { chatsAPI, usersAPI } from '../../../API';
+import { useNavigate } from 'react-router-dom';
 
-const ShowProfile: React.FC<{ id: number }> = ({ id }) => {
+const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
   const [target, setTarget] = useState<IUserData | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
-        const data = await usersAPI.getUserProfile(user.userId, id, user.jwt);
+        const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
         setTarget(data);
       }
     };
     getUserInfo();
   }, []);
+  const onApplyGame = async () => {
+    console.log('send msg');
+  };
+  const onSendDm = async () => {
+    if (user && target) {
+      const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
+
+      if (res && res.roomId) {
+        setModal(null);
+        navigate(`/chatroom/${res.roomId}`);
+      }
+    }
+  };
 
   const onClickFriend = async () => {
     if (user && user.jwt && target) {
@@ -90,8 +104,20 @@ const ShowProfile: React.FC<{ id: number }> = ({ id }) => {
                   onClick={onClickFriend}
                   disabled={target.isBlocked ? true : false}
                 />
-                <Button color="gradient" text="게임 신청" width={200} height={40} />
-                <Button color="gradient" text="DM 보내기" width={200} height={40} />
+                <Button
+                  color="gradient"
+                  text="게임 신청"
+                  width={200}
+                  height={40}
+                  onClick={onApplyGame}
+                />
+                <Button
+                  color="gradient"
+                  text="DM 보내기"
+                  width={200}
+                  height={40}
+                  onClick={onSendDm}
+                />
                 <Button
                   color="white"
                   text={target.isBlocked ? '차단해제' : '차단하기'}

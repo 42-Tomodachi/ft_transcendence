@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { ENTER_CHAT_ROOM, IChatRooms } from '../../utils/interface';
+import { ENTER_CHAT_ROOM, IChatRooms, BAN_THIS_CHATROOM } from '../../utils/interface';
 import Button from '../common/Button';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
@@ -9,21 +9,22 @@ import { chatsAPI } from '../../API';
 interface ChatRoomProps {
   item: IChatRooms;
 }
-
+let timer: NodeJS.Timer;
 const ChatRooms: React.FC<ChatRoomProps> = ({ item }) => {
   const navigate = useNavigate();
-  const { setModal } = useContext(AllContext).modalData;
+  const { modal, setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
 
   const handleEnterRoom = async () => {
     if (user) {
       if (!item.isPublic) {
-        setModal(ENTER_CHAT_ROOM, item.roomId);
-        // TODO: 모달 안에서도 enterChatRoom 넣기
+        setModal(ENTER_CHAT_ROOM, item.roomId, user.userId);
       } else {
         const res = await chatsAPI.enterChatRoom(item.roomId, user.userId, '', user.jwt);
         if (res !== -1) {
           navigate(`/chatroom/${item.roomId}`);
+        } else {
+          setModal(BAN_THIS_CHATROOM);
         }
       }
     }

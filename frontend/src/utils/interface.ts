@@ -157,6 +157,7 @@ export const CHECK_LOGOUT = 'CHECK_LOGOUT' as const;
 export const FIGHT_RES_MODAL = 'FIGHT_RES_MODAL' as const;
 export const FIGHT_REQ_MODAL = 'FIGHT_REQ_MODAL' as const;
 export const EDIT_MY_PROFILE = 'EDIT_MY_PROFILE' as const;
+export const BAN_THIS_CHATROOM = 'BAN_THIS_CHATROOM' as const;
 
 export type ModalType =
   | 'SHOW_PROFILE' // 프로필 정보 보기
@@ -175,9 +176,11 @@ export type ModalType =
   | 'CHECK_LOGOUT' // 로그아웃 확인
   | 'FIGHT_RES_MODAL' // 1:1 대전 응답 모달
   | 'FIGHT_REQ_MODAL' // 1:1 대전 요청 모달
-  | 'EDIT_MY_PROFILE'; // 내 프로필 수정하기
+  | 'EDIT_MY_PROFILE' // 내 프로필 수정하기
+  | 'BAN_THIS_CHATROOM'; // 밴당한 채팅방 입장 경고 모달
 
 export interface IModalData {
   modal: ModalType | null;
-  id: number;
+  roomId: number;
+  userId: number;
 }

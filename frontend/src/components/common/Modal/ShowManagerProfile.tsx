@@ -1,71 +1,163 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import Button from '../Button';
-import axios from 'axios';
 import Modal from '.';
+import { AllContext } from '../../../store';
+import { CHECK_SCORE, IUserData } from '../../../utils/interface';
+import { useNavigate } from 'react-router-dom';
+import { chatsAPI, usersAPI } from '../../../API';
 
-const ShowManagerProfile: React.FC<{ id: number }> = ({ id }) => {
-  const [user, setUser] = useState({
-    id: '',
-    user: '',
-    user_nick: '',
-    user_lv: '',
-    gen_win: '',
-    gen_lose: '',
-    lad_win: '',
-    lad_lose: '',
-    picture: '',
-  });
+const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId, userId }) => {
+  const { modal, setModal } = useContext(AllContext).modalData;
+  const [target, setTarget] = useState<IUserData | null>(null);
+  const { user } = useContext(AllContext).userData;
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get(`http://localhost:4000/user_info`).then(res =>
-      setUser({
-        id: res.data.id,
-        user: res.data.user,
-        user_nick: res.data.user_nick,
-        user_lv: res.data.user_lv,
-        gen_win: res.data.gen_win,
-        gen_lose: res.data.gen_lose,
-        lad_win: res.data.lad_win,
-        lad_lose: res.data.lad_lose,
-        picture: res.data.picture,
-      }),
-    );
+    const getUserInfo = async () => {
+      if (user && user.jwt) {
+        const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
+        setTarget(data);
+      }
+    };
+    getUserInfo();
   }, []);
 
+  const onClickFriend = async () => {
+    if (user && user.jwt && target) {
+      if (target.isFriend === false) {
+        await usersAPI.makeFriend(user.userId, target.userId, user.jwt);
+      } else {
+        await usersAPI.deleteFriend(user.userId, target.userId, user.jwt);
+      }
+      setTarget({
+        ...target,
+        isFriend: !target.isFriend,
+      });
+    }
+  };
+
+  const onClickBlock = async () => {
+    if (user && user.jwt && target) {
+      await usersAPI.toggleBanUser(user.userId, target.userId, user.jwt);
+      setTarget({
+        ...target,
+        isFriend: false,
+        isBlocked: !target.isBlocked,
+      });
+    }
+    console.log('block');
+  };
+
+  const onClickBan = async () => {
+    if (target && user) {
+      await chatsAPI.banUserInChatRoom(roomId, user.userId, target.userId, user.jwt);
+      console.log('ban');
+    }
+  };
+  const onToggleMute = async () => {
+    if (target && user) {
+      const res = await chatsAPI.setUpMuteUser(roomId, user.jwt);
+      console.log('Toggle Mute', res);
+    }
+  };
+  const onApplyGame = async () => {
+    console.log('send msg');
+  };
+  const onSendDm = async () => {
+    if (user && target) {
+      const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
+
+      if (res && res.roomId) {
+        setModal(null);
+        navigate(`/chatroom/${res.roomId}`);
+      }
+    }
+  };
+
   return (
-    <Modal width={500} height={550} title={'프로필 보기'}>
-      <MainBlock>
-        <ProfileBlock>
-          <PictureBlock>
-            <ProfilePicture src={user.picture} alt="UserProfileImage" />
-          </PictureBlock>
-          <UserInfo>
-            <UserName>{user.user_nick}</UserName>
-            <UserLevel>lv.{user.user_lv}</UserLevel>
-          </UserInfo>
-        </ProfileBlock>
+    <>
+      {target && (
+        <Modal width={500} height={600} title={'프로필 보기'}>
+          <MainBlock>
+            <ProfileBlock>
+              <PictureBlock>
+                <ProfilePicture src={target.avatar} alt="UserProfileImage" />
+              </PictureBlock>
+              <UserInfo>
+                <UserName>{target.nickname}</UserName>
+                <UserLevel>lv.{target.ladderLevel}</UserLevel>
+              </UserInfo>
+            </ProfileBlock>
 
-        <RecordText>전적/래더전적</RecordText>
-        <RecordBlock>
-          <Record>
-            {user.gen_win}승 {user.gen_lose}패/{user.lad_win}승 {user.lad_lose}패
-          </Record>
-          <RecordBtn>
-            <Button color="white" text="전적 기록" width={97} height={30} />
-          </RecordBtn>
-        </RecordBlock>
+            <RecordText>전적/래더전적</RecordText>
 
-        <OtherBtnBlock>
-          <Button color="gradient" text="친구 추가" width={200} height={40} />
-          <Button color="gradient" text="게임 신청" width={200} height={40} />
-          <Button color="gradient" text="DM 보내기" width={200} height={40} />
-          <Button color="white" text="차단하기" width={200} height={40} />
-          <Button color="white" text="밴" width={200} height={40} />
-          <Button color="white" text="뮤트" width={200} height={40} />
-        </OtherBtnBlock>
-      </MainBlock>
-    </Modal>
+            <RecordBlock>
+              <Record>
+                {target.winCount}승 {target.loseCount}패/{target.ladderWinCount}승{' '}
+                {target.ladderLoseCount}패
+              </Record>
+              <RecordBtn>
+                <Button
+                  color="white"
+                  text="전적 기록"
+                  width={97}
+                  height={30}
+                  onClick={() => {
+                    setModal(CHECK_SCORE, target.userId);
+                  }}
+                />
+              </RecordBtn>
+            </RecordBlock>
+            {target.isBlocked === false ? (
+              <OtherBtnBlock>
+                <Button
+                  color="gradient"
+                  text={target.isFriend ? '친구 해제' : '친구 추가'}
+                  width={200}
+                  height={40}
+                  onClick={onClickFriend}
+                  disabled={target.isBlocked ? true : false}
+                />
+                <Button
+                  color="gradient"
+                  text="게임 신청"
+                  width={200}
+                  height={40}
+                  onClick={onApplyGame}
+                />
+                <Button
+                  color="gradient"
+                  text="DM 보내기"
+                  width={200}
+                  height={40}
+                  onClick={onSendDm}
+                />
+                <Button
+                  color="white"
+                  text={target.isBlocked ? '차단해제' : '차단하기'}
+                  width={200}
+                  height={40}
+                  onClick={onClickBlock}
+                />
+                <Button color="white" text="밴" width={200} height={40} onClick={onClickBan} />
+                <Button color="white" text="뮤트" width={200} height={40} onClick={onToggleMute} />
+              </OtherBtnBlock>
+            ) : (
+              <BanBtnBlock>
+                <Button
+                  color="white"
+                  text={target.isBlocked ? '차단해제' : '차단하기'}
+                  width={415}
+                  height={40}
+                  onClick={onClickBlock}
+                />
+              </BanBtnBlock>
+            )}
+          </MainBlock>
+        </Modal>
+      )}
+    </>
   );
 };
 
@@ -147,6 +239,12 @@ const OtherBtnBlock = styled.div`
   grid-template-rows: 1fr 1fr 1fr;
   gap: 10px 20px;
 
+  margin-top: 11px;
+  & button {
+    border-radius: 5px;
+  }
+`;
+const BanBtnBlock = styled.div`
   margin-top: 11px;
   & button {
     border-radius: 5px;

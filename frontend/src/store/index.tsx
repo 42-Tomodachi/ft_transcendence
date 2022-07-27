@@ -19,7 +19,8 @@ export const AllContext = createContext<stateType>({
   modalData: {
     modal: {
       modal: null,
-      id: -1,
+      roomId: -1,
+      userId: -1,
     },
     setModal: () => null,
   },
@@ -44,7 +45,7 @@ export const AllContext = createContext<stateType>({
 type stateType = {
   modalData: {
     modal: IModalData;
-    setModal: (type: ModalType | null, id?: number) => void;
+    setModal: (type: ModalType | null, userId?: number, roomId?: number) => void;
   };
   userData: {
     user: IUserData | null;
@@ -71,7 +72,8 @@ interface AllContextApiProps {
 const AllContextApi = ({ children }: AllContextApiProps) => {
   const [modal, setModal] = useState<IModalData>({
     modal: null,
-    id: -1,
+    userId: -1,
+    roomId: -1,
   });
   const [user, setUser] = useState<IUserData | null>(null);
   const [userStatus, setUserStatus] = useState<UserStatusType>(LOADING);
@@ -95,10 +97,11 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     }
   };
 
-  const handleModal = (type: ModalType | null, id?: number) => {
+  const handleModal = (type: ModalType | null, userId?: number, roomId?: number) => {
     setModal({
       modal: type,
-      id: id || -1,
+      userId: userId || -1,
+      roomId: roomId || -1,
     });
   };
 
