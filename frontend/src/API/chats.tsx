@@ -153,7 +153,7 @@ const chatsAPI = {
   ): Promise<IChatDMRoom | null> => {
     try {
       const url = chatsPath(`/${myId}/dmRooms?partnerId=${partnerId}`);
-      const res = await instance.post(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      const res = await instance.post(url, null, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);

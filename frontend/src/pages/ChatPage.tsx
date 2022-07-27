@@ -41,8 +41,9 @@ const ChatPage: React.FC = () => {
           setRoomName(res.title);
         }
       };
+
       if (user) {
-        socket = io(`http://localhost:5500/ws-chat`, {
+        socket = io(`${process.env.REACT_APP_BACK_API}/ws-chat`, {
           transports: ['websocket'],
           query: {
             userId: user.userId,
