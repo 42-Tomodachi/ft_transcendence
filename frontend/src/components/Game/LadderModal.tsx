@@ -15,7 +15,8 @@ const LadderModal: React.FC = () => {
 
   useEffect(() => {
     console.log('modal!!!!!!!!!');
-    socket = io('http://10.19.210.94:5500/', {
+    socket = io('http://localhost:5500/', {
+      // socket = io('http://10.19.210.94:5500/', {
       // socket = io('process.env.REACT_APP_BACK_API_A', {
       //socket = io('http://3.34.203.69:5500/', {
       transports: ['websocket'], // 웹소켓으로 간다는걸 알려준다. 구글링.

@@ -3,10 +3,9 @@ import styled from '@emotion/styled';
 import Header from '../components/Header';
 import { CHAT } from '../utils/interface';
 import { AllContext } from '../store';
+import { getEnvironmentData } from 'worker_threads';
 
-// const MAX_SPEED = 2;
-// const MIN_SPEED = 2;
-const HERTZ = 80;
+const HERTZ = 2;
 const PLAYERONE = 1;
 const PLAYERTWO = 2;
 
@@ -34,7 +33,7 @@ const GameStart: React.FC = () => {
   let turn22: any;
   turn22 = 1;
 
-  console.log('re-render');
+  //console.log('re-render');
 
   const [gameInfo, setGameInfo] = useState<GameInfo>({
     ballP_X: 50,
@@ -51,10 +50,10 @@ const GameStart: React.FC = () => {
   }); // 공의 현재위치 (어떤 클라이언트던지 같음11)
   const { user } = useContext(AllContext).userData;
 
-  const [player, setPlayer] = useState<string>(user ? user.player : 'g1'); // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
+  const player = user ? user.player : 'g1'; // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
   const [mousePoint, setMousePoint] = useState<number>();
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
-  const ballball = [0, 0];
+  const ballball = [50, 50];
 
   const paddle = function paddle(ctx: CanvasRenderingContext2D): void {
     ctx.font = '32px Roboto';
@@ -225,19 +224,6 @@ const GameStart: React.FC = () => {
   };
 
   const cal_basic = () => {
-    // setGameInfo({
-    //   ...gameInfo,
-    //   ballP_X: resetTest(gameInfo.ballP_X, gameInfo.ballVelo_X),
-    //   ballP_Y: resetTest(gameInfo.ballP_Y, gameInfo.ballVelo_Y),
-    //   leftPaddlePos: mousePoint ? mousePoint : 40,
-    //   //leftPaddlePos: player == 'p1' ? mousePoint : gameInfo.leftPaddlePos,
-    //   // rightPaddlePos: 20,
-    //   player: player == 'p1' ? 1 : 2,
-    //   ballVelo_X: XveloTest(),
-    //   ballVelo_Y: YveloTest(),
-    //   turn: turnTest(),
-    // });
-
     // 사용하면 React는 이 내부 함수에서 제공하는 상태 스냅샷이 항상 최신 상태 스냅샷이 되도록 보장하며 모든 예약된 상태 업데이트를 염두에 두고 있다.
     // 이것은 항상 최신 상태 스냅샷에서 작업하도록 하는 더 안전한 방법이다.
     // 따라서 상태 업데이트가 이전 상태에 따라 달라질 때마다 여기에서 이 함수 구문을 사용하는 것이 좋다.
@@ -254,7 +240,8 @@ const GameStart: React.FC = () => {
         turn: turnTest(),
       };
     });
-    if (user) user.socket.emit('calculatedRTData', gameInfo);
+    if (user && player == 'p1') user.socket.emit('calculatedRTData', gameInfo);
+    console.log('속도좀보자'); // 60번씩 쏘잖아. 근데 왜..?
   };
 
   // console.log(' 받는p:' + player + ' turn22: ' + turn22 + ' turn: ' + gameInfo.turn);
@@ -280,15 +267,15 @@ const GameStart: React.FC = () => {
 
   // 유즈이펙트로 소켓의 변화가 감지되면 끊어버린다. (블로그 참조)
   //https://obstinate-developer.tistory.com/entry/React-socket-io-client-%EC%A0%81%EC%9A%A9-%EB%B0%A9%EB%B2%95
-  useEffect(() => {
-    return () => {
-      if (user)
-        if (user.socket) {
-          console.log('디스커넥트? :' + user.socket.id);
-          user.socket.disconnect();
-        }
-    };
-  }, [user?.socket]);
+  // useEffect(() => {
+  //   return () => {
+  //     if (user)
+  //       if (user.socket) {
+  //         console.log('디스커넥트? :' + user.socket.id);
+  //         user.socket.disconnect();
+  //       }
+  //   };
+  // }, [user?.socket]);
 
   // console.log('pos_x:' + data[0]);
   // console.log('pos_y:' + data[1]);
@@ -300,59 +287,78 @@ const GameStart: React.FC = () => {
   // console.log('point:' + data[7]);
   //console.log(' 계산p:' + player + ' turn22: ' + turn22 + ' turn: ' + gameInfo.turn);
 
-  // const mouseUpdate = () => {
-  // const canvas = canvasRef.current;
-  // if (canvas)
-  //   canvas.onmousemove = e => {
-  //     setMousePoint(e.clientY / 7 - 17);
-  //   };
-  //   return mousePoint;
-  // };
+  const mouseUpdate = (canvas: any) => {
+    if (canvas)
+      canvas.onmousemove = (e: any) => {
+        setMousePoint(e.clientY / 7 - 17);
+      };
+    return mousePoint;
+  };
+
+  // 왜이렇게 많이 받아오지.. 페이지자체는 또 렌더링 안됨. 얘만 엄청 돌리네.
+  const get_data = () => {
+    if (player == 'p2') {
+      user?.socket.on('rtData', (data: any) => {
+        //setGameInfo({ ...gameInfo, ballP_X: data[0], ballP_Y: data[1] });
+        ballball[0] = data[0];
+        ballball[1] = data[1];
+        turn22 = data[6];
+        console.log('왜케빠르냐구..');
+      });
+    }
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    // if (canvas)
+
     if (user && canvas) {
       if (ctx) {
+        clear(ctx);
+        paddle(ctx);
+        ball(ctx);
         const test = setInterval(() => {
-          canvas.onmousemove = e => {
-            setMousePoint(e.clientY / 7 - 17);
-          };
+          if (player == 'p1') cal_basic();
+          if (player == 'p2') get_data();
+
           clear(ctx);
           paddle(ctx);
           ball(ctx);
-          if (player == 'p1') cal_basic();
-          else {
-            user.socket.on('rtData', (data: any) => {
-              // rtData(data);
-              // setGameInfo({
-              //   ...gameInfo,
-              //   ballP_X: data[0],
-              //   ballP_Y: data[1],
-              //   leftPaddlePos: data[4],
-              // });
-              ballball[0] = data[0];
-              ballball[1] = data[1];
-              // setGameInfo(gameInfo => {
-              //   return {
-              //     ...gameInfo,
-              //     ballP_X: data[0],
-              //     ballP_Y: data[1],
-              //     leftPaddlePos: data[4],
-              //   };
-              // });
-              user.socket.emit('paddleRTData', mousePoint);
-            });
-          }
+
           // console.log(gameInfo);
-        }, (1 / HERTZ) * 1000);
+        }, 5000);
         return () => {
           clearInterval(test);
         };
       }
     }
-  }, [gameInfo.ballP_X]); // 반영
+  }, [cal_basic, get_data]); // 반영
+
+  // useEffect(() => {
+  //   if (user && player == 'p2') {
+  //     user.socket.on('rtData', (data: any) => {
+  //       // rtData(data);
+  //       // setGameInfo({
+  //       //   ...gameInfo,
+  //       //   ballP_X: data[0],
+  //       //   ballP_Y: data[1],
+  //       //   leftPaddlePos: data[4],
+  //       // });
+  //       ballball[0] = data[0];
+  //       ballball[1] = data[1];
+  //       console.log('온!');
+  //       // setGameInfo(gameInfo => {
+  //       //   return {
+  //       //     ...gameInfo,
+  //       //     ballP_X: data[0],
+  //       //     ballP_Y: data[1],
+  //       //     leftPaddlePos: data[4],
+  //       //   };
+  //       // });
+  //       user.socket.emit('paddleRTData', mousePoint);
+  //     });
+  //   }
+  // }, []); // 반영
 
   return (
     <Background>
