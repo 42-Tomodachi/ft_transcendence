@@ -36,10 +36,10 @@ const GamePage: React.FC = () => {
       if (user) {
         if (user?.nickname === p1.nickname) {
           user.player = 'p1';
-          user.oppnickname = p2;
+          user.oppnickname = p2.nickname;
         } else if (user?.nickname === p2.nickname) {
           user.player = 'p2';
-          user.oppnickname = p1;
+          user.oppnickname = p1.nickname;
         }
       }
     });
