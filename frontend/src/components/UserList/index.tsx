@@ -2,10 +2,10 @@ import React, { useState, useEffect, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import UserItem from './UserItem';
-import axios from 'axios';
-import { OFF, ActiveMenuType, IGetUser, MenuType } from '../../utils/interface';
+import { OFF, ActiveMenuType, IGetUser, UserRole } from '../../utils/interface';
 import { AllContext } from '../../store';
 import { chatsAPI, usersAPI } from '../../API';
+import { Interface } from 'readline';
 
 /*
  ** 제이슨서버에서 유저리스트를 받아와 정렬합니다.
@@ -28,6 +28,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId }) => {
   const { user } = useContext(AllContext).userData;
   const [activeMenu, setActiveMenu] = useState<ActiveMenuType>(menuType);
   const [userList, setUserList] = useState<IGetUser[] | []>([]);
+  const [loginUserRole, setLoginUserRole] = useState<UserRole>('guest');
 
   const selectActiveMenu = async (menuType: ActiveMenuType): Promise<IGetUser[]> => {
     if (user) {
@@ -42,19 +43,22 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId }) => {
     } else console.log('아무것도 없음');
     return [];
   };
+  const getUserList = async () => {
+    const data = await selectActiveMenu(activeMenu);
 
-  useEffect(() => {
-    const getUserList = async () => {
-      if (user && user.jwt) {
-        const data = await selectActiveMenu(activeMenu);
-        data.sort((a: IGetUser, b: IGetUser) => {
-          return a.status !== OFF ? -1 : 1;
-        });
-        setUserList(data);
+    data.sort((a: IGetUser, b: IGetUser) => {
+      return a.status !== OFF ? -1 : 1;
+    });
+    data.find(element => {
+      if (user && element.userId === user.userId) {
+        setLoginUserRole(element.role as UserRole);
       }
-    };
+    });
+    setUserList(data);
+  };
+  useEffect(() => {
     getUserList();
-  }, [activeMenu]);
+  }, [activeMenu, user]);
 
   return (
     <>
@@ -62,25 +66,29 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId }) => {
         <ListBox>
           <ButtonBox>
             {menuType === 'INCHAT' ? (
-              <Button
-                color={activeMenu === 'INCHAT' ? 'gradient' : 'white'}
-                text="채팅방유저"
-                width={120}
-                height={40}
-                onClick={() => {
-                  setActiveMenu('INCHAT');
-                }}
-              />
+              <>
+                <Button
+                  color={activeMenu === 'INCHAT' ? 'gradient' : 'white'}
+                  text="채팅방유저"
+                  width={120}
+                  height={40}
+                  onClick={() => {
+                    setActiveMenu('INCHAT');
+                  }}
+                />
+              </>
             ) : (
-              <Button
-                color={activeMenu === 'ALL' ? 'gradient' : 'white'}
-                text="전체유저"
-                width={120}
-                height={40}
-                onClick={() => {
-                  setActiveMenu('ALL');
-                }}
-              />
+              <>
+                <Button
+                  color={activeMenu === 'ALL' ? 'gradient' : 'white'}
+                  text="전체유저"
+                  width={120}
+                  height={40}
+                  onClick={() => {
+                    setActiveMenu('ALL');
+                  }}
+                />
+              </>
             )}
             <Button
               color={activeMenu === 'FRIEND' ? 'gradient' : 'white'}
@@ -94,10 +102,25 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId }) => {
           </ButtonBox>
           <UserContainer>
             <ul>
-              {userList.map(
-                (targetUser: IGetUser, index: number) =>
-                  user.userId !== targetUser.userId && <UserItem key={index} user={targetUser} />,
-              )}
+              {activeMenu !== 'ALL'
+                ? userList.map(
+                    (targetUser: IGetUser, index: number) =>
+                      user.userId !== targetUser.userId && (
+                        <UserItem
+                          key={index}
+                          loginUserRole={loginUserRole}
+                          targetUser={targetUser}
+                          menuType={activeMenu}
+                          roomId={roomId}
+                        />
+                      ),
+                  )
+                : userList.map(
+                    (targetUser: IGetUser, index: number) =>
+                      user.userId !== targetUser.userId && (
+                        <UserItem key={index} targetUser={targetUser} menuType={activeMenu} />
+                      ),
+                  )}
             </ul>
           </UserContainer>
         </ListBox>

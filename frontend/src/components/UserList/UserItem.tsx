@@ -1,26 +1,47 @@
 import React, { useContext } from 'react';
 import styled from '@emotion/styled';
 import { AllContext } from '../../store';
-import { IGetUser, PLAY, ON, OFF, SHOW_PROFILE } from '../../utils/interface';
+import {
+  IGetUser,
+  PLAY,
+  ON,
+  OFF,
+  SHOW_PROFILE,
+  ActiveMenuType,
+  SHOW_OWNER_PROFILE,
+  SHOW_MANAGER_PROFILE,
+  UserRole,
+} from '../../utils/interface';
 
 interface UserItemProps {
-  user: IGetUser;
+  targetUser: IGetUser;
+  loginUserRole?: UserRole;
+  menuType: ActiveMenuType;
+  roomId?: string;
 }
 
-const UserItem: React.FC<UserItemProps> = ({ user }) => {
+const UserItem: React.FC<UserItemProps> = ({ targetUser, loginUserRole, menuType, roomId }) => {
   const { setModal } = useContext(AllContext).modalData;
   const { setTargetId } = useContext(AllContext).targetItem;
 
   return (
     <>
       <UserItemContainer
-        status={user.status}
+        status={targetUser.status}
         onClick={() => {
-          setTargetId(user.userId);
-          setModal(SHOW_PROFILE, user.userId);
+          setTargetId(targetUser.userId);
+          if (menuType !== 'ALL' && roomId) {
+            if (loginUserRole === 'owner') {
+              setModal(SHOW_OWNER_PROFILE, targetUser.userId, +roomId);
+            } else if (loginUserRole === 'manager') {
+              setModal(SHOW_MANAGER_PROFILE, targetUser.userId, +roomId);
+            } else {
+              setModal(SHOW_PROFILE, targetUser.userId, +roomId);
+            }
+          } else setModal(SHOW_PROFILE, targetUser.userId);
         }}
       >
-        {user.nickname}
+        {targetUser.nickname}
       </UserItemContainer>
     </>
   );
