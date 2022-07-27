@@ -144,10 +144,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   /**
    * 채팅 프로세스
-   * 1. 채팅 페이지 진입 시 소켓 연결
-   * 2. 클라이언트에서 채팅 보내면 서버에서 받고 db에 저장 후 채팅방 참여자에게 메세지 리턴
-   * 3. 클라이언트에서 받은 메세지의 userId가 클라이언트의 userId와 같으면 내가보낸 메세지 이므로 출력
-   * 4. 클라이언트에서 받은 메세지의 userId가 클라이언트의 userId와 다르면 차단한 유저인지 isMessageFromBlockedUser 로 확인 후 리턴값이 false이면 출력
+   * 채팅 페이지 진입 시 소켓 연결
+   * 클라이언트에서 채팅 보내면 서버에서 받고 db에 저장 후 채팅방 참여자에게 메세지 리턴
+   * 클라이언트에서 받은 메세지의 userId가 클라이언트의 userId와 같으면 내가보낸 메세지로 출력
+   * 클라이언트에서 받은 메세지의 userId가 클라이언트의 userId와 다르면 다른 사용자가 보낸 메세지로 출력
+   * 채팅 페이지 이탈 시 소켓 연결 해제
    */
   // 채팅을 보냈을 때 채팅방 참여자에게 메세지 전달
   @SubscribeMessage('sendMessage')
@@ -157,8 +158,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ): Promise<void> {
     this.logger.log(`roomId: ${data.roomId}, on sendMessage`);
 
-    // 음소거 상태일 경우 얼리 리턴
+    // 음소거, 강퇴 상태일 경우 얼리 리턴
     if (await this.chatService.isMutedUser(data.roomId, data.userId)) {
+      return;
+    }
+    if (await this.chatService.isBannedUser(data.roomId, data.userId)) {
       return;
     }
 

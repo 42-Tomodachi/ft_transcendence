@@ -129,6 +129,9 @@ export class ChatService {
     if (!chatParticipant) {
       throw new BadRequestException('존재하지 않는 참여자입니다.');
     }
+    if (chatParticipant.isBanned) {
+      throw new BadRequestException('이미 강퇴당한 유저입니다.');
+    }
     if (room.isDm === true) {
       throw new BadRequestException('DM방 입니다.');
     }
@@ -141,6 +144,27 @@ export class ChatService {
     }
     chatParticipant.isBanned = true;
     await chatParticipant.save();
+
+    // 강퇴 취소 스케줄러
+    this.addBanTimeout(
+      `banTimeout${chatParticipant.id}`,
+      10 * 1000,
+      chatParticipant,
+    );
+
+    // 강퇴 메세지 db에 저장
+    const { id: createdChatContentId } = await this.chatContentsRepo.save({
+      chatRoomId: roomId,
+      userId: targetUserId,
+      content: `님이 강퇴당했습니다.`,
+      isNotice: true,
+    });
+
+    // 채널 유저들에게 강퇴 메세지 전송
+    this.chatGateway.sendNoticeMessage(
+      roomId,
+      await this.getChatContentDtoForEmit(createdChatContentId),
+    );
   }
 
   async getParticipatingChatRooms(
@@ -150,11 +174,20 @@ export class ChatService {
     if (user.id !== userId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
-    const chatRooms = await this.chatRoomRepo
+    let chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chatRoom')
       .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
-      .where('chatParticipant.userId = :userId', { userId })
       .getMany();
+
+    chatRooms = chatRooms.filter((chatRoom) => {
+      const chatParticipantIds = chatRoom.chatParticipant.map(
+        (chatParticipant) => chatParticipant.userId,
+      );
+      if (chatParticipantIds.includes(userId)) {
+        return true;
+      }
+      return false;
+    });
 
     return chatRooms.map((chatRoom) => {
       return chatRoom.toChatRoomDto();
@@ -450,7 +483,24 @@ export class ChatService {
 
     if (chatParticipant.isMuted) {
       chatParticipant.isMuted = false;
-      this.deleteMuteTimeout(`muteTimeout${chatParticipant.id}`);
+      this.deleteMuteTimeout(
+        `muteTimeout${chatParticipant.id}`,
+        chatParticipant,
+      );
+
+      // 음소거 해제 메세지 db에 저장
+      const { id: createdChatContentId } = await this.chatContentsRepo.save({
+        chatRoomId: chatParticipant.chatRoomId,
+        userId: chatParticipant.userId,
+        content: `님의 채팅 금지가 해제되었습니다.`,
+        isNotice: true,
+      });
+
+      // 채널 유저들에게 음소거해제 메세지 전송
+      this.chatGateway.sendNoticeMessage(
+        chatParticipant.chatRoomId,
+        await this.getChatContentDtoForEmit(createdChatContentId),
+      );
     } else {
       chatParticipant.isMuted = true;
       this.addMuteTimeout(
@@ -460,6 +510,20 @@ export class ChatService {
       );
     }
     await chatParticipant.save();
+
+    // 음소거 메세지 db에 저장
+    const { id: createdChatContentId } = await this.chatContentsRepo.save({
+      chatRoomId: chatParticipant.chatRoomId,
+      userId: chatParticipant.userId,
+      content: `님은 채팅이 금지되었습니다.`,
+      isNotice: true,
+    });
+
+    // 채널 유저들에게 음소거해제 메세지 전송
+    this.chatGateway.sendNoticeMessage(
+      chatParticipant.chatRoomId,
+      await this.getChatContentDtoForEmit(createdChatContentId),
+    );
 
     this.chatGateway.wss
       .to(roomId.toString())
@@ -760,26 +824,90 @@ export class ChatService {
     return chatParticipant.isMuted;
   }
 
+  async isBannedUser(roomId: number, userId: number): Promise<boolean> {
+    const chatParticipant = await this.chatParticipantRepo.findOneBy({
+      chatRoomId: roomId,
+      userId,
+    });
+
+    if (!chatParticipant) {
+      throw new BadRequestException(
+        `해당하는 채팅방에 참여중인 유저가 아닙니다.`,
+      );
+    }
+
+    return chatParticipant.isBanned;
+  }
+
   addMuteTimeout(
     name: string,
     milliseconds: number,
     chatParticipant: ChatParticipant,
-  ) {
-    const callback = () => {
+  ): void {
+    const callback = async () => {
       chatParticipant.isMuted = false;
       chatParticipant.save();
       this.logger.warn(
-        `Timeout ${name}(name) executed. Now ${chatParticipant.id}(chatParticipantId) is unMuted.`,
+        `Scheduler ${name}(name) executed. Now ${chatParticipant.id}(chatParticipantId) is unmuted.`,
       );
       this.schedulerRegistry.deleteTimeout(name);
+      // 음소거 해제 메세지 db에 저장
+      const { id: createdChatContentId } = await this.chatContentsRepo.save({
+        chatRoomId: chatParticipant.chatRoomId,
+        userId: chatParticipant.userId,
+        content: `님의 채팅 금지가 해제되었습니다.`,
+        isNotice: true,
+      });
+
+      // 채널 유저들에게 음소거해제 메세지 전송
+      this.chatGateway.sendNoticeMessage(
+        chatParticipant.chatRoomId,
+        await this.getChatContentDtoForEmit(createdChatContentId),
+      );
     };
 
     const timeout = setTimeout(callback, milliseconds);
     this.schedulerRegistry.addTimeout(name, timeout);
   }
 
-  deleteMuteTimeout(name: string) {
+  deleteMuteTimeout(name: string, chatParticipant: ChatParticipant): void {
     this.schedulerRegistry.deleteTimeout(name);
-    this.logger.warn(`Timeout ${name}(name) deleted!`);
+    this.logger.warn(`Scheduler ${name}(name) deleted!`);
   }
+
+  addBanTimeout(
+    name: string,
+    milliseconds: number,
+    chatParticipant: ChatParticipant,
+  ): void {
+    const callback = async () => {
+      await this.chatParticipantRepo.delete(chatParticipant.id);
+      this.logger.warn(
+        `Scheduler ${name}(name) executed. Now ${chatParticipant.id}(chatParticipantId) is unbaned.`,
+      );
+      this.schedulerRegistry.deleteTimeout(name);
+
+      // 강퇴 해제 메세지 db에 저장
+      const { id: createdChatContentId } = await this.chatContentsRepo.save({
+        chatRoomId: chatParticipant.chatRoomId,
+        userId: chatParticipant.userId,
+        content: `님의 채팅방 입장 금지가 해제되었습니다.`,
+        isNotice: true,
+      });
+
+      // 채널 유저들에게 강퇴해제 메세지 전송
+      this.chatGateway.sendNoticeMessage(
+        chatParticipant.chatRoomId,
+        await this.getChatContentDtoForEmit(createdChatContentId),
+      );
+    };
+
+    const timeout = setTimeout(callback, milliseconds);
+    this.schedulerRegistry.addTimeout(name, timeout);
+  }
+
+  // deleteBanTimeout(name: string): void {
+  //   this.schedulerRegistry.deleteTimeout(name);
+  //   this.logger.warn(`Scheduler ${name}(name) deleted!`);
+  // }
 }
