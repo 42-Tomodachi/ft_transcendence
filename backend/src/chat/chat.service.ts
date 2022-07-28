@@ -610,7 +610,6 @@ export class ChatService {
         partnerId,
       })
       .getMany();
-    console.log('### cohtRooms: ', chatRooms);
 
     const chatRoom = chatRooms.find((chatRoom) => {
       let isCorrectMember = 0;
@@ -627,7 +626,6 @@ export class ChatService {
         return false;
       }
     });
-    console.log('### chatRoom: ', chatRoom);
 
     if (chatRoom) {
       return { roomId: chatRoom.id };
@@ -658,7 +656,6 @@ export class ChatService {
       chatParticipantForPartner.userId = partnerId;
       await t.save(chatParticipantForPartner);
     });
-    console.log('### chatRoomDataDto: ', chatRoomDataDto);
 
     return { roomId: chatRoomDataDto.roomId };
   }
@@ -871,7 +868,7 @@ export class ChatService {
     this.schedulerRegistry.addTimeout(name, timeout);
   }
 
-  deleteMuteTimeout(name: string, chatParticipant: ChatParticipant): void {
+  deleteMuteTimeout(name: string): void {
     this.schedulerRegistry.deleteTimeout(name);
     this.logger.warn(`Scheduler ${name}(name) deleted!`);
   }
