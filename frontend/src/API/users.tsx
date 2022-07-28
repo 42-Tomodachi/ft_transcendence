@@ -124,7 +124,7 @@ const usersAPI = {
     myId: number,
     nickname: string,
     jwt: string,
-  ): Promise<string | null> => {
+  ): Promise<IUserData | null> => {
     try {
       const url = usersPath(`/${myId}/nickname`);
       const res = await instance.put(

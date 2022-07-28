@@ -7,6 +7,7 @@ import { AllContext } from '../../../store';
 import { CHECK_SCORE, IUserData } from '../../../utils/interface';
 import { chatsAPI, usersAPI } from '../../../API';
 import { useNavigate } from 'react-router-dom';
+import defaultProfile from '../../../assets/default-image.png';
 
 const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
   const { setModal } = useContext(AllContext).modalData;
@@ -18,7 +19,10 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
         const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
-        setTarget(data);
+        if (data) {
+          if (data.avatar) setTarget(data);
+          else setTarget({ ...data, avatar: defaultProfile });
+        }
       }
     };
     getUserInfo();
@@ -29,7 +33,6 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
   const onSendDm = async () => {
     if (user && target) {
       const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
-
       if (res && res.roomId) {
         setModal(null);
         navigate(`/chatroom/${res.roomId}`);

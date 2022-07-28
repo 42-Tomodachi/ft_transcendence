@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
-
+import defaultProfile from '../../../assets/default-image.png';
 import { CHECK_SCORE, IUserData } from '../../../utils/interface';
 import { AllContext } from '../../../store';
 import { chatsAPI, usersAPI } from '../../../API';
@@ -18,7 +18,10 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
     const getUserInfo = async () => {
       if (user && user.jwt) {
         const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
-        setTarget(data);
+        if (data) {
+          if (data.avatar) setTarget(data);
+          else setTarget({ ...data, avatar: defaultProfile });
+        }
       }
     };
     getUserInfo();
@@ -58,7 +61,7 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   };
   const onToggleMute = async () => {
     if (target && user) {
-      const res = await chatsAPI.setUpMuteUser(roomId, user.jwt);
+      const res = await chatsAPI.setUpMuteUser(roomId, target.userId, user.jwt);
       console.log('Toggle Mute', res);
     }
   };

@@ -84,7 +84,7 @@ const NicknamePage: React.FC = () => {
     }
   };
 
-  const onClickSubmit = () => {
+  const onClickSubmit = async () => {
     if (!isEnabled) {
       setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
     } else if (user) {
@@ -93,11 +93,10 @@ const NicknamePage: React.FC = () => {
 
       if (convertImg) {
         formData.append('image', convertImg);
-        usersAPI.uploadAvatarImg(userId, formData, jwt);
+        await usersAPI.uploadAvatarImg(userId, formData, jwt);
       }
-      usersAPI.updateUserNickname(userId, nickName, jwt);
-      // console.dir(profileImg);
-      setUser(LOGIN, { ...user, jwt: jwt, nickname: nickName, avatar: profileImg }); // TODO: update user avatar info
+      const updateUser = await usersAPI.updateUserNickname(userId, nickName, jwt);
+      if (updateUser) setUser(LOGIN, { ...updateUser, jwt: jwt });
       setUserStatus(LOGIN);
     } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
   };

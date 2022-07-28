@@ -6,6 +6,7 @@ import { AllContext } from '../../../store';
 import { CHECK_SCORE, IUserData } from '../../../utils/interface';
 import { useNavigate } from 'react-router-dom';
 import { chatsAPI, usersAPI } from '../../../API';
+import defaultProfile from '../../../assets/default-image.png';
 
 const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId, userId }) => {
   const { modal, setModal } = useContext(AllContext).modalData;
@@ -17,7 +18,10 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
     const getUserInfo = async () => {
       if (user && user.jwt) {
         const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
-        setTarget(data);
+        if (data) {
+          if (data.avatar) setTarget(data);
+          else setTarget({ ...data, avatar: defaultProfile });
+        }
       }
     };
     getUserInfo();
@@ -57,7 +61,7 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   };
   const onToggleMute = async () => {
     if (target && user) {
-      const res = await chatsAPI.setUpMuteUser(roomId, user.jwt);
+      const res = await chatsAPI.setUpMuteUser(roomId, target.userId, user.jwt);
       console.log('Toggle Mute', res);
     }
   };
