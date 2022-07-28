@@ -6,6 +6,7 @@ import { GameService } from './game.service';
 import { GameGateway } from './game.gateway';
 import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from 'src/auth/auth.module';
+import { GameEnv } from './game.gameenv';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { AuthModule } from 'src/auth/auth.module';
     AuthModule,
   ],
   controllers: [GameController],
-  providers: [GameService, GameGateway],
+  providers: [GameService, GameGateway, GameEnv],
   exports: [PassportModule],
 })
 export class GameModule {}

@@ -11,7 +11,8 @@ import {
 import { Server, Socket } from 'socket.io';
 import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
-import { GameInfo, GameService, Player } from './game.service';
+import { GameInfo, GameService } from './game.service';
+import { Player } from './game.gameenv';
 
 const HERTZ = 60;
 
