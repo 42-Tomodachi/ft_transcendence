@@ -207,13 +207,12 @@ class GameRoomAttribute {
     }
   }
 
-  updateRtData(data: GameInfo | number) {
-    if (typeof data === 'number') {
-      this.rtData.updatePaddleRtData(data);
-    } else {
-      this.rtData.updateRtData(data);
-    }
-    // this.rtData.updateRtData(data);
+  updateRtData(data: GameInfo) {
+    this.rtData.updateRtData(data);
+  }
+
+  updatePaddleRtData(data: number) {
+    this.rtData.updatePaddleRtData(data);
   }
 
   streamRtData(gateway: GameGateway) {

@@ -169,7 +169,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const player = this.socketMap[client.id];
     const game = this.gameService.getGameRoom(player.gameId);
 
-    game.updateRtData(data);
+    game.updatePaddleRtData(data);
     game.streamRtData(this);
   }
 }
