@@ -605,11 +605,12 @@ export class ChatService {
       .createQueryBuilder('chatRoom')
       .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
       .where('chatRoom.isDm = true')
-      .andWhere('chatRoom.ownerId = :myId or chatRoom.ownerId = :partnerId', {
+      .andWhere('(chatRoom.ownerId = :myId or chatRoom.ownerId = :partnerId)', {
         myId,
         partnerId,
       })
       .getMany();
+    console.log('### cohtRooms: ', chatRooms);
 
     const chatRoom = chatRooms.find((chatRoom) => {
       let isCorrectMember = 0;
@@ -626,6 +627,7 @@ export class ChatService {
         return false;
       }
     });
+    console.log('### chatRoom: ', chatRoom);
 
     if (chatRoom) {
       return { roomId: chatRoom.id };
@@ -656,6 +658,7 @@ export class ChatService {
       chatParticipantForPartner.userId = partnerId;
       await t.save(chatParticipantForPartner);
     });
+    console.log('### chatRoomDataDto: ', chatRoomDataDto);
 
     return { roomId: chatRoomDataDto.roomId };
   }
