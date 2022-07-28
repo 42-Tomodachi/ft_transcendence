@@ -477,10 +477,7 @@ export class ChatService {
 
     if (chatParticipant.isMuted) {
       chatParticipant.isMuted = false;
-      this.deleteMuteTimeout(
-        `muteTimeout${chatParticipant.id}`,
-        chatParticipant,
-      );
+      this.deleteMuteTimeout(`muteTimeout${chatParticipant.id}`);
 
       // 음소거 해제 메세지 db에 저장
       const { id: createdChatContentId } = await this.chatContentsRepo.save({
