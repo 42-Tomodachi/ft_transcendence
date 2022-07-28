@@ -108,8 +108,10 @@ const chatsAPI = {
       );
       return res.data;
     } catch (e) {
-      if (e instanceof Error) console.error(e.message);
-      else console.error(e);
+      if (e instanceof Error) {
+        console.error(e.message);
+        if (e.message.includes('403')) return -403;
+      } else console.error(e);
       return -1;
     }
   },
@@ -212,15 +214,19 @@ const chatsAPI = {
     }
   },
   // PUT chats/{roomid}/mute_toggle - setUpMuteUser
-  setUpMuteUser: async (roomId: number, jwt: string): Promise<boolean> => {
+  setUpMuteUser: async (
+    roomId: number,
+    targetUserId: number,
+    jwt: string,
+  ): Promise<{ isMuted: boolean }> => {
     try {
-      const url = chatsPath(`/${roomId}/muteToggle`);
+      const url = chatsPath(`/${roomId}/muteToggle?targetUserId=${targetUserId}`);
       const res = await instance.put(url, null, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data; // INFO: isMuted : boolean
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
-      return false;
+      return { isMuted: false };
     }
   },
   // POST chats/{roomid}/users/{userId}/messages - enrollChat

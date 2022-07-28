@@ -9,7 +9,7 @@ import { chatsAPI } from '../../API';
 interface ChatRoomProps {
   item: IChatRooms;
 }
-let timer: NodeJS.Timer;
+
 const ChatRooms: React.FC<ChatRoomProps> = ({ item }) => {
   const navigate = useNavigate();
   const { modal, setModal } = useContext(AllContext).modalData;
@@ -21,10 +21,10 @@ const ChatRooms: React.FC<ChatRoomProps> = ({ item }) => {
         setModal(ENTER_CHAT_ROOM, item.roomId, user.userId);
       } else {
         const res = await chatsAPI.enterChatRoom(item.roomId, user.userId, '', user.jwt);
-        if (res !== -1) {
-          navigate(`/chatroom/${item.roomId}`);
-        } else {
+        if (res === -403) {
           setModal(BAN_THIS_CHATROOM);
+        } else if (res !== -1) {
+          navigate(`/chatroom/${item.roomId}`);
         }
       }
     }
