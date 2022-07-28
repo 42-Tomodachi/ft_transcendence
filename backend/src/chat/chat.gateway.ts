@@ -1,5 +1,4 @@
 import { forwardRef, Inject, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import {
   ConnectedSocket,
   MessageBody,
@@ -11,12 +10,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UsersService } from 'src/users/users.service';
-import { CLIENT_RENEG_WINDOW } from 'tls';
-import { Repository } from 'typeorm';
 import { ChatService } from './chat.service';
 import { ChatContentDto } from './dto/chatContents.dto';
-import { ChatParticipant } from './entities/chatParticipant.entity';
-import { ChatRoom } from './entities/chatRoom.entity';
 
 /**
  * recieveMessage

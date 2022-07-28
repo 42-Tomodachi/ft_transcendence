@@ -23,18 +23,12 @@ import {
   IsMutedDto,
   ChatParticipantProfileDto,
 } from './dto/chatParticipant.dto';
-import {
-  ChatContentDto,
-  CreateChatContentDto,
-  FromWhomDto,
-  MessageDto,
-} from './dto/chatContents.dto';
+import { ChatContentDto, MessageDto } from './dto/chatContents.dto';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
 import * as bcrypt from 'bcryptjs';
-import { EmailService } from 'src/emails/email.service';
-import { Cron, SchedulerRegistry, Timeout } from '@nestjs/schedule';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 @Injectable()
 export class ChatService {
@@ -669,13 +663,17 @@ export class ChatService {
   async getChatContentsForEmit(
     roomId: number,
     userId: number,
-  ): Promise<ChatContentDto[]> {
+  ): Promise<ChatContentDto[] | string> {
     const participant = await this.chatParticipantRepo.findOneBy({
       chatRoomId: roomId,
       userId,
     });
+
     if (!participant) {
-      throw new BadRequestException('참여중인 채팅방이 아닙니다.');
+      this.logger.error(
+        `getChatContentsForEmit: 참여중인 채팅방이 아닙니다. userId: ${userId}, roomId: ${roomId}`,
+      );
+      return '참여중인 채팅방이 아닙니다.';
     }
 
     const { createdTime: participatedTime } = participant;
