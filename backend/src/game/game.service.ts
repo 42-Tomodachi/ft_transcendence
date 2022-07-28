@@ -51,8 +51,8 @@ export interface GameInfo {
   ballP_Y: number;
   ballVelo_X: number;
   ballVelo_Y: number;
-  myPaddlePos: number;
-  otherPaddlePos: number;
+  leftPaddlePos: number;
+  rightPaddlePos: number;
   player: number;
   turn: number;
   myScore: number;
@@ -123,9 +123,9 @@ class GameRTData {
     this.ball_vec = [data.ballVelo_X, data.ballVelo_Y];
     this.turn = data.turn;
     if (this.turn == 1) {
-      this.paddle_L_pos = data.myPaddlePos;
+      this.paddle_L_pos = data.leftPaddlePos;
     } else {
-      this.paddle_R_pos = data.myPaddlePos;
+      this.paddle_R_pos = data.rightPaddlePos;
     }
     this.lostPoint = data.checkPoint;
     this.updateScore();
