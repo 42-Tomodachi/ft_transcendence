@@ -157,7 +157,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    * 채팅 페이지 이탈 시 소켓 연결 해제
    */
   // 채팅을 보냈을 때 채팅방 참여자에게 메세지 전달
-  @SubscribeMessage('sendMessage')
+  @SubscribeMessage('refreshChatRoom')
   async reloadChatHistoryForSpecificUser(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { roomId: number; userId: number },
