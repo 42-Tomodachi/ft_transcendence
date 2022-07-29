@@ -53,7 +53,9 @@ export class ChatRoom extends BaseEntity {
     chatRoomsDto.title = this.title;
     chatRoomsDto.isPublic = this.password ? false : true;
     chatRoomsDto.ownerId = this.ownerId;
-    chatRoomsDto.numberOfParticipants = this.chatParticipant.length;
+    chatRoomsDto.numberOfParticipants = this.chatParticipant.filter(
+      (person) => !person.isBanned,
+    ).length;
     chatRoomsDto.isDm = this.isDm;
 
     return chatRoomsDto;

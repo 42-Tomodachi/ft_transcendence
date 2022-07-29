@@ -172,6 +172,7 @@ export class ChatService {
     let chatRooms = await this.chatRoomRepo
       .createQueryBuilder('chatRoom')
       .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
+      .where('chatParticipant.isBanned = false')
       .getMany();
 
     chatRooms = chatRooms.filter((chatRoom) => {
