@@ -69,6 +69,8 @@ class GameRTData {
       this.paddle_R_pos,
       this.turn,
       this.lostPoint,
+      this.scoreLeft,
+      this.scoreRight,
     ];
 
     return data;
