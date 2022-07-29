@@ -95,6 +95,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   //   this.logger.log(`roomId: ${roomId}, emit recieveChatHistory`);
   //   this.wss.to(roomId.toString()).emit('recieveChatHistory', chatContentDtos);
   // }
+  getParticipatingChatSocketId(roomId: string, userId: string) {
+    return this.connectedSocketMap.get(roomId).get(userId);
+  }
 
   getParticipatingChatRoomIds(userId: number): string[] {
     const participatingChatRoomIds = [];
@@ -137,6 +140,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  disconnectUser(roomId: number, userId: number) {
+    const socketId = this.getParticipatingChatSocketId(
+      roomId.toString(),
+      userId.toString(),
+    );
+
+    this.wss.to(socketId).disconnectSockets();
+  }
   /**
    * 채팅 프로세스
    * 채팅 페이지 진입 시 소켓 연결

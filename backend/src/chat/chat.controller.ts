@@ -17,7 +17,6 @@ import {
   SetChatRoomDto,
   RoomPasswordDto,
   ChatRoomIdDto,
-  BooleanDto,
   ChatRoomDto,
 } from './dto/chatRoom.dto';
 import {
