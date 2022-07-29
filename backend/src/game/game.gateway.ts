@@ -11,8 +11,8 @@ import {
 import { Server, Socket } from 'socket.io';
 import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
-import { GameInfo, GameService } from './game.service';
-import { Player } from './game.gameenv';
+import { GameService } from './game.service';
+import { GameEnv, GameInfo, Player } from './game.gameenv';
 
 const HERTZ = 60;
 
@@ -26,6 +26,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly gameService: GameService,
+    private readonly gameEnv: GameEnv,
   ) {}
   @WebSocketServer()
   server: Server;
@@ -61,6 +62,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleDisconnect(socket: Socket) {
     console.log(`Client disconnected: ${socket.id}`);
     this.socketMap.delete(socket.id);
+    // 해당 유저 퇴장 알림
   }
 
   @SubscribeMessage('test')
@@ -83,7 +85,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     if (!player) {
       // player = new Player(client, userId, null); // player 생성
-      player = this.gameService.newPlayer(client, userId, null);
+      player = this.gameEnv.newPlayer(client, userId, null);
     }
     this.socketMap[client.id] = player; // socketMap에 유저 등록
     return player;
@@ -93,7 +95,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async newLadderGame(client: Socket, userId: number): Promise<void> {
     const player = this.setSocketToPlayer(client, userId);
     console.log(`newLadderGame: ${userId}`);
-    const matchMade = this.gameService.enlistLadderQueue(player);
+    const matchMade = this.gameEnv.enlistLadderQueue(player);
     if (matchMade) {
       this.server
         .to(matchMade.roomId.toString())
@@ -106,15 +108,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('cancelLadderQueue')
   async cancleLadderQueue(client: Socket) {
     this.socketMap.delete(client.id);
-    this.gameService.removeFromLadderQueue(
-      this.gameService.getPlayerById(this.socketMap[client.id]),
+    this.gameEnv.removeFromLadderQueue(
+      this.gameEnv.getPlayerById(this.socketMap[client.id]),
     );
     client.disconnect();
   }
 
   @SubscribeMessage('onMatchingScreen')
   async onMatchingScreen(client: Socket, roomId: number): Promise<void> {
-    const gameRoom = this.gameService.getGameRoom(roomId);
+    const gameRoom = this.gameEnv.getGameRoom(roomId);
     const player1asUser: User = await this.userRepo.findOne({
       where: { id: gameRoom.firstPlayer.userId },
     });
@@ -152,7 +154,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // console.log(`calculatedRTData: ${data}`); // for test only
 
     const player = this.socketMap[client.id];
-    const game = this.gameService.getGameRoom(player.gameId);
+    const game = this.gameEnv.getGameRoom(player.gameId);
 
     game.updateRtData(data);
     if (game.isFinished()) {
@@ -168,7 +170,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // console.log(`paddleRTData: ${data}`); // for test only
 
     const player = this.socketMap[client.id];
-    const game = this.gameService.getGameRoom(player.gameId);
+    const game = this.gameEnv.getGameRoom(player.gameId);
 
     game.updatePaddleRtData(data);
     game.streamRtData(this);

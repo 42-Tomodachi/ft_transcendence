@@ -1,5 +1,26 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
+import { randomInt } from 'crypto';
+import {
+  CreateGameRoomDto,
+  GameResultDto,
+  GameRoomProfileDto,
+} from './dto/game.dto';
+import { GameGateway } from './game.gateway';
+
+export interface GameInfo {
+  ballP_X: number;
+  ballP_Y: number;
+  ballVelo_X: number;
+  ballVelo_Y: number;
+  leftPaddlePos: number;
+  rightPaddlePos: number;
+  player: number;
+  turn: number;
+  myScore: number;
+  otherScore: number;
+  checkPoint: boolean;
+}
 
 export class Player {
   socket: Socket;
@@ -74,9 +95,9 @@ class GameRTData {
     this.ball_vec = [data.ballVelo_X, data.ballVelo_Y];
     this.turn = data.turn;
     if (this.turn == 1) {
-      this.paddle_L_pos = data.myPaddlePos;
+      this.paddle_L_pos = data.leftPaddlePos;
     } else {
-      this.paddle_R_pos = data.myPaddlePos;
+      this.paddle_R_pos = data.rightPaddlePos;
     }
     this.lostPoint = data.checkPoint;
     this.updateScore();
@@ -92,7 +113,7 @@ class GameRTData {
   }
 }
 
-class GameRoomAttribute {
+export class GameRoomAttribute {
   roomId: number;
   roomTitle: string;
   password: string | null;
@@ -176,7 +197,7 @@ class GameRoomAttribute {
       return;
     }
     // console.log(`sending ${rtData.toRtData()}`); // this line test only
-    rtLogger.log(500, `sending ${rtData.toRtData()}`);
+    // rtLogger.log(500, `sending ${rtData.toRtData()}`);
     gateway.server.to(this.roomId.toString()).emit('rtData', rtData.toRtData());
     rtData.lastSent = currentTime;
     rtData.updateFlag = false;
@@ -199,9 +220,35 @@ class GameRoomAttribute {
 @Injectable()
 export class GameEnv {
   gameRoomIdList: number[] = new Array(10000).fill(0);
-  private gameRoomTable: GameRoomAttribute[] = [];
+  gameRoomTable: GameRoomAttribute[] = [];
   playerList: Player[] = new Array(10000).fill(0);
   ladderQueue: Player[] = [];
+
+  getFreeRoomIndex(): number {
+    let index = 0;
+
+    for (const x of this.gameRoomIdList) {
+      if (x == 0) {
+        this.gameRoomIdList[index] = 1;
+        return index;
+      }
+      index++;
+    }
+    throw new BadRequestException('생성 가능한 방 개수를 초과하였습니다.');
+  }
+
+  getRoomIndexOfGame(gameId: number): number {
+    for (const item of this.gameRoomTable) {
+      if (item.roomId == gameId) {
+        return this.gameRoomTable.indexOf(item);
+      }
+    }
+    return null;
+  }
+
+  getGameRoom(gameId: number): GameRoomAttribute {
+    return this.gameRoomTable[gameId];
+  }
 
   newPlayer(socket: Socket, userId: number, gameId: number): Player {
     const newOne = new Player(socket, userId, gameId);
