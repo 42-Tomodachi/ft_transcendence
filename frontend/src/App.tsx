@@ -22,6 +22,7 @@ import { usersAPI } from './API';
 // 테스트테스트테스트테스트
 import GamePage from './pages/GamePage';
 import GameStart from './pages/GameStart';
+import GameExit from './pages/GameExit';
 
 function App() {
   const { setJwt } = useContext(AllContext).jwtData;
@@ -75,6 +76,7 @@ function App() {
           {/* Tester */}
           <Route path="/gameroom" element={<GamePage />} />
           <Route path="/gameroom/1" element={<GameStart />} />
+          <Route path="/gameroom/1/gameexit/" element={<GameExit />} />
           {/* ====== */}
 
           <Route path="*" element={<Navigate to="/" replace />} />

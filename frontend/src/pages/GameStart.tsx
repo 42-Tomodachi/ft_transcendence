@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import Header from '../components/Header';
 import { CHAT } from '../utils/interface';
 import { AllContext } from '../store';
+import { useNavigate } from 'react-router-dom'; //네비
 
 const HERTZ = 60;
 const PLAYERONE = 1;
@@ -31,6 +32,7 @@ interface GameInfo {
 const GameStart: React.FC = () => {
   let turn22: any;
   turn22 = 1;
+  const navigate = useNavigate();
 
   //console.log('re-render');
 
@@ -47,30 +49,30 @@ const GameStart: React.FC = () => {
     rightScore: 0,
     checkPoint: false,
   }); // 공의 현재위치 (어떤 클라이언트던지 같음11)
-  const { user } = useContext(AllContext).userData;
-
-  const player = user ? user.player : 'g1'; // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
-  const [mousePoint, setMousePoint] = useState<number>();
-  const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
   const ballball = [50, 50];
   const paddlepaddle = [50, 50];
+  const point = [0, 0];
+  const { user } = useContext(AllContext).userData;
+  let playing = true;
+  const player = user ? user.player : 'g1'; // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
+  const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
 
   const paddle = function paddle(ctx: CanvasRenderingContext2D): void {
     ctx.font = '32px Roboto';
     ctx.textAlign = 'center';
     if (player == 'p1') {
       ctx.fillStyle = '#3AB0FF';
-      ctx.fillText(` ${user?.nickname} : ${gameInfo.leftScore}`, 250, 50);
+      ctx.fillText(` ${user?.nickname} : ${point[0]}`, 250, 50);
       ctx.fillRect(0.05 * 1000, gameInfo.leftPaddlePos * 7, 0.015 * 1000, 0.2 * 750);
       ctx.fillStyle = '#F87474';
-      ctx.fillText(`${user?.oppnickname} : ${gameInfo.rightScore}`, 750, 50);
+      ctx.fillText(`${user?.oppnickname} : ${point[1]}`, 750, 50);
       ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
     } else if (player == 'p2') {
       ctx.fillStyle = '#3AB0FF';
-      ctx.fillText(` ${user?.oppnickname} : ${gameInfo.rightScore}`, 250, 50);
+      ctx.fillText(` ${user?.oppnickname} : ${point[0]}`, 250, 50);
       ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 750);
       ctx.fillStyle = '#F87474';
-      ctx.fillText(`${user?.nickname} : ${gameInfo.leftScore}`, 750, 50);
+      ctx.fillText(`${user?.nickname} : ${point[1]}`, 750, 50);
       ctx.fillRect(0.945 * 1000, test * 7, 0.015 * 1000, 0.2 * 700);
     }
   };
@@ -82,6 +84,12 @@ const GameStart: React.FC = () => {
 
   const clear = function clear(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = '#f9f2ed';
+    ctx.clearRect(0, 0, 1000, 700);
+    ctx.fillRect(0, 0, 1000, 700);
+  };
+
+  const exit = function exit(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = 'balck';
     ctx.clearRect(0, 0, 1000, 700);
     ctx.fillRect(0, 0, 1000, 700);
   };
@@ -144,20 +152,19 @@ const GameStart: React.FC = () => {
     if (info.ballP_Y <= 0) return 'upHit';
     if (info.ballP_Y >= 100) return 'downHit';
     if (
-      mousePoint &&
       player == 'p1' &&
       info.ballP_X >= 2 &&
       info.ballP_X <= 9 &&
-      info.ballP_Y >= mousePoint &&
-      info.ballP_Y <= mousePoint + 20
+      info.ballP_Y >= gameInfo.leftPaddlePos &&
+      info.ballP_Y <= gameInfo.leftPaddlePos + 20
     )
       return 'leftHit';
     if (
-      player == 'p2' &&
+      player == 'p1' &&
       info.ballP_X >= 93 &&
       info.ballP_X <= 98 &&
-      info.ballP_Y >= 40 &&
-      info.ballP_Y <= 60
+      info.ballP_Y >= paddlepaddle[1] &&
+      info.ballP_Y <= paddlepaddle[1] + 20
     )
       return 'rightHit';
     if (gameInfo.ballP_X > 100) {
@@ -228,7 +235,18 @@ const GameStart: React.FC = () => {
   document.addEventListener('mousemove', mouseMoveHandler, false);
   function mouseMoveHandler(e: any) {
     test = e.clientY / 7 - 17;
-  }
+  } //역시 이벤트 리스너보단 온무브가 좋은듯? -> 놉 클라이언트 껏다키니까 다시 안되네?
+
+  // const mouseUpdate = () => {
+  //   const canvas = canvasRef.current;
+  //   if (canvas)
+  //     canvas.onmousemove = (e: any) => {
+  //       test = e.clientY / 7 - 17;
+  //     };
+  // };
+
+  // mouseUpdate();
+  // mouseUpdate();
 
   const cal_basic = (canvas: any) => {
     // 사용하면 React는 이 내부 함수에서 제공하는 상태 스냅샷이 항상 최신 상태 스냅샷이 되도록 보장하며 모든 예약된 상태 업데이트를 염두에 두고 있다.
@@ -246,6 +264,7 @@ const GameStart: React.FC = () => {
           ballVelo_Y: YveloTest(),
           // turn: turnTest(),
           turn: 1,
+          checkPoint: testReturn(gameInfo) == 'leftgoal' ? true : false,
         };
       });
       if (user && player == 'p1') user.socket.emit('calculatedRTData', gameInfo);
@@ -259,20 +278,27 @@ const GameStart: React.FC = () => {
     return () => {
       if (user)
         if (user.socket) {
-          console.log('홈버튼 눌렀어? 바로 디스커넥트 해버려. :' + user.socket.id);
+          console.log('게임끝났어? 바로 디스커넥트 해버려. :' + user.socket.id);
           user.socket.disconnect();
         }
     };
   }, [user?.socket]);
 
   // 왜이렇게 많이 받아오지.. 페이지자체는 또 렌더링 안됨. 얘만 엄청 돌리네.
+
   const get_data = () => {
     user?.socket.on('rtData', (data: any) => {
       ballball[0] = data[0];
       ballball[1] = data[1];
       paddlepaddle[0] = data[4];
       paddlepaddle[1] = data[5];
-      turn22 = data[6];
+      point[0] = data[8];
+      point[1] = data[9];
+      if (data[8] == 10 || data[9] == 10) playing = false;
+      if (data[8] == 11 || data[9] == 11) {
+        if (user) user.socket.disconnect();
+        navigate(`/gameroom/1/gameexit/`); //GamePage.tsx
+      }
       // console.log('받는속도좀보자 : 왜케빠르냐구..');
       // console.log(' 받는p:' + player + ' turn22: ' + turn22 + ' turn: ' + gameInfo.turn);
       // console.log('pos_x:' + data[0]);
@@ -283,21 +309,20 @@ const GameStart: React.FC = () => {
       // console.log('right_p:' + data[5]);
       // console.log('turn:' + data[6]);
       // console.log('point:' + data[7]);
+      //console.log('leftScore:' + data[8]);
+      //console.log('lightScore: ' + data[9]);
     });
   };
 
   // 데이터 실시간으로 받아서 갱신하기
   // 갱신해야 제대로 그림
-  // useEffect(() => {
-  //   if (player == 'p2') {
   get_data();
-  //   }
-  // }, [get_data]); // 반영
 
   // 실시간으로 계산하기 && 그리기.(받아그릴거 갱신한것도 여기서 곧 잘 그림.)
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
+    //  드로잉 컨텍스트를 만들 때 alpha 옵션을 false로 설정합니다. 이 정보는 렌더링을 최적화하기 위해 브라우저에서 내부적으로 사용할 수 있습니다.
+    const ctx = canvas?.getContext('2d', { alpha: false });
 
     if (user && canvas) {
       if (ctx) {
