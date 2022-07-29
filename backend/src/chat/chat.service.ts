@@ -159,7 +159,7 @@ export class ChatService {
       roomId,
       await this.getChatContentDtoForEmit(createdChatContentId),
     );
-    this.chatGateway.disconnectUser(roomId, user.id);
+    this.chatGateway.disconnectUser(roomId, targetUserId);
   }
 
   async getParticipatingChatRooms(
