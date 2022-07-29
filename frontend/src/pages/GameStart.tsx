@@ -5,10 +5,14 @@ import { CHAT } from '../utils/interface';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom'; //네비
 
+const ballball = [50, 50];
+const paddlepaddle = [50, 50];
+const point = [0, 0];
 const HERTZ = 60;
 const PLAYERONE = 1;
 const PLAYERTWO = 2;
 
+console.log('hihi');
 /*
  * 캔버스로 게임이 실시간으로 그려지는 페이지입니다.
  * 캔버스를 사용하기위해 useRef를 이용한 기본셋팅이 되어있습니다.
@@ -29,8 +33,8 @@ interface GameInfo {
   checkPoint: boolean;
 }
 
+let turn22: any;
 const GameStart: React.FC = () => {
-  let turn22: any;
   turn22 = 1;
   const navigate = useNavigate();
 
@@ -49,11 +53,7 @@ const GameStart: React.FC = () => {
     rightScore: 0,
     checkPoint: false,
   }); // 공의 현재위치 (어떤 클라이언트던지 같음11)
-  const ballball = [50, 50];
-  const paddlepaddle = [50, 50];
-  const point = [0, 0];
   const { user } = useContext(AllContext).userData;
-  let playing = true;
   const player = user ? user.player : 'g1'; // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
 
@@ -128,7 +128,7 @@ const GameStart: React.FC = () => {
       const relativeIntersectY =
         type == 'leftHit'
           ? gameInfo.leftPaddlePos + 10 - gameInfo.ballP_Y - 1
-          : gameInfo.rightPaddlePos + 10 - gameInfo.ballP_Y - 1;
+          : paddlepaddle[1] + 10 - gameInfo.ballP_Y - 1;
       const normalizedRelativeIntersectionY = relativeIntersectY / 10;
       switch (type) {
         case 'upHit':
@@ -263,8 +263,13 @@ const GameStart: React.FC = () => {
           ballVelo_X: XveloTest(),
           ballVelo_Y: YveloTest(),
           // turn: turnTest(),
-          turn: 1,
-          checkPoint: testReturn(gameInfo) == 'leftgoal' ? true : false,
+          turn: testReturn(gameInfo) == 'rightgoal' ? 2 : 1,
+          checkPoint:
+            testReturn(gameInfo) == 'leftgoal'
+              ? true
+              : testReturn(gameInfo) == 'rightgoal'
+              ? true
+              : false,
         };
       });
       if (user && player == 'p1') user.socket.emit('calculatedRTData', gameInfo);
@@ -294,8 +299,7 @@ const GameStart: React.FC = () => {
       paddlepaddle[1] = data[5];
       point[0] = data[8];
       point[1] = data[9];
-      if (data[8] == 10 || data[9] == 10) playing = false;
-      if (data[8] == 11 || data[9] == 11) {
+      if (data[8] == 10 || data[9] == 10) {
         if (user) user.socket.disconnect();
         navigate(`/gameroom/1/gameexit/`); //GamePage.tsx
       }
@@ -308,9 +312,9 @@ const GameStart: React.FC = () => {
       // console.log('left_p:' + data[4]);
       // console.log('right_p:' + data[5]);
       // console.log('turn:' + data[6]);
-      // console.log('point:' + data[7]);
-      //console.log('leftScore:' + data[8]);
-      //console.log('lightScore: ' + data[9]);
+      // // console.log('point:' + data[7]);
+      // console.log('leftScore:' + data[8]);
+      // console.log('lightScore: ' + data[9]);
     });
   };
 
@@ -331,7 +335,6 @@ const GameStart: React.FC = () => {
           clear(ctx);
           paddle(ctx);
           ball(ctx);
-          // console.log(gameInfo);
         }, 1000 / HERTZ);
         return () => {
           clearInterval(test);
