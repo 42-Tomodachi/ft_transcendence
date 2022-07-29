@@ -158,6 +158,19 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
    */
   // 채팅을 보냈을 때 채팅방 참여자에게 메세지 전달
   @SubscribeMessage('sendMessage')
+  async reloadChatHistoryForSpecificUser(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: number; userId: number },
+  ): Promise<void> {
+    const chatContentDtos = await this.chatService.getChatContentsForEmit(
+      data.roomId,
+      data.userId,
+    );
+
+    client.emit('reloadChatHistory', chatContentDtos);
+  }
+
+  @SubscribeMessage('sendMessage')
   async handleMessage(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: ChatToServerDto,
