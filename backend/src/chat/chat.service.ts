@@ -308,14 +308,13 @@ export class ChatService {
     userId: number,
     roomPassword: string | null,
   ): Promise<ChatRoomIdDto> {
-    if (!(await this.isCorrectPasswordOfChatRoom(roomId, roomPassword))) {
-      throw new BadRequestException('채팅방의 비밀번호가 일치하지 않습니다.');
-    }
-    if (user.id !== userId) {
-      throw new BadRequestException('잘못된 유저의 접근입니다.');
-    }
-
     if (!(await this.isExistMember(roomId, userId))) {
+      if (!(await this.isCorrectPasswordOfChatRoom(roomId, roomPassword))) {
+        throw new BadRequestException('채팅방의 비밀번호가 일치하지 않습니다.');
+      }
+      if (user.id !== userId) {
+        throw new BadRequestException('잘못된 유저의 접근입니다.');
+      }
       const chatParticipant = new ChatParticipant();
       chatParticipant.chatRoomId = roomId;
       chatParticipant.userId = userId;
