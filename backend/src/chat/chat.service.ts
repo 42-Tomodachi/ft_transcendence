@@ -355,7 +355,15 @@ export class ChatService {
     }
 
     room.title = updateChatRoomDto.title;
-    room.password = updateChatRoomDto.password;
+    if (updateChatRoomDto.password) {
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(
+        updateChatRoomDto.password,
+        salt,
+      );
+      room.password = hashedPassword;
+    }
+    room.password = null;
 
     const updatedRoom = await this.chatRoomRepo.save(room);
     return updatedRoom.toChatRoomDataDto();
