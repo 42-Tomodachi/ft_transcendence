@@ -145,7 +145,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       roomId.toString(),
       userId.toString(),
     );
-
+    this.wss.to(socketId).emit('disconnectSocket', null);
     this.wss.to(socketId).disconnectSockets();
   }
   /**
