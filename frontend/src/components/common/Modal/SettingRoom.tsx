@@ -121,7 +121,7 @@ const ErrMsg = styled.span`
 
 //BtnSection
 const BtnBlock = styled.div`
-  margin-top: 40px;
+  margin-top: 20px;
   & button {
     border-radius: 5px;
   }
