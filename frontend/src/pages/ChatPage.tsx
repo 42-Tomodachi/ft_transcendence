@@ -33,6 +33,34 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (user) {
+      socket = io(`${process.env.REACT_APP_BACK_API}/ws-chat`, {
+        transports: ['websocket'],
+        query: {
+          userId: user.userId,
+          roomId: roomId,
+        },
+      });
+      socket.on('reloadChatHistory', (data: IMessage[]) => {
+        setMessages(data);
+      });
+      socket.on('recieveMessage', (data: IMessage) => {
+        console.log('recieve msg');
+        setMessages(pre => [...pre, data]);
+      });
+      socket.on('disconnectSocket', () => {
+        console.log('강퇴');
+        navigate('/');
+      });
+    }
+    return () => {
+      socket.off('reloadChatHistory');
+      socket.off('recieveMessage');
+      socket.disconnect();
+    };
+  }, [roomId]);
+
+  useEffect(() => {
     // TODO : 채팅방 참여 인원 불러와서 있으면 그대로, 없으면 루트로 navigate
     if (roomId && user) {
       const getRoomData = async () => {
@@ -41,38 +69,9 @@ const ChatPage: React.FC = () => {
           setRoomName(res.title);
         }
       };
-
-      if (user) {
-        socket = io(`${process.env.REACT_APP_BACK_API}/ws-chat`, {
-          transports: ['websocket'],
-          query: {
-            userId: user.userId,
-            roomId: roomId,
-          },
-        });
-      }
       getRoomData();
     }
-  }, [roomId, user, socket]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('reloadChatHistory', (data: IMessage[]) => {
-        setMessages(data);
-      });
-      socket.on('recieveMessage', (data: IMessage) => {
-        setMessages([...messages, data]);
-      });
-    }
-  }, [messages, user, socket]);
-
-  useEffect(() => {
-    return () => {
-      socket.off('reloadChatHistory');
-      socket.off('recieveMessage');
-      socket.disconnect();
-    };
-  }, []);
+  }, [user, roomId]);
 
   return (
     <Background>
