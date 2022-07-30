@@ -13,20 +13,22 @@ const ProfileImage: React.FC<ProfileImageProps> = ({ src, size }) => {
   };
 
   return (
-    <ProfileImageContainer size={size}>
+    <ProfileImageContainer size={size} src={src}>
       <ProfileImageImg src={src || defaultImage} alt="ProfileImage" onError={handleError} />
     </ProfileImageContainer>
   );
 };
 
-const ProfileImageContainer = styled.div<{ size: number }>`
+const ProfileImageContainer = styled.div<{ size: number; src: string }>`
   width: ${({ size }) => size}px;
   height: ${({ size }) => size}px;
   border-radius: 50%;
-  background-image: url(${defaultImage});
+  ${src =>
+    !src &&
+    `background-image: url(${defaultImage});
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
+  background-repeat: no-repeat;`}
   overflow: hidden;
 `;
 
