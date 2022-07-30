@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'; //네비
 
 const ballball = [50, 50];
 const paddlepaddle = [50, 50];
-const point = [0, 80];
+const point = [0, 0];
 const HERTZ = 60;
 const PLAYERONE = 1;
 const PLAYERTWO = 2;
@@ -37,7 +37,7 @@ let turn22: any;
 const GameStart: React.FC = () => {
   const navigate = useNavigate();
   turn22 = 1;
-  //console.log('re-render');
+  console.log('re-render');
   const { user } = useContext(AllContext).userData;
   const player = user ? user.player : 'g1'; // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
 
@@ -73,7 +73,7 @@ const GameStart: React.FC = () => {
       ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 750);
       ctx.fillStyle = '#F87474';
       ctx.fillText(`${user?.nickname} : ${point[1]}`, 750, 50);
-      ctx.fillRect(0.945 * 1000, test * 7, 0.015 * 1000, 0.2 * 700);
+      ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
     }
   };
 
@@ -225,7 +225,6 @@ const GameStart: React.FC = () => {
   };
 
   let test: number;
-
   document.addEventListener('mousemove', mouseMoveHandler, false);
   function mouseMoveHandler(e: any) {
     test = e.clientY / 7 - 17;
@@ -247,12 +246,17 @@ const GameStart: React.FC = () => {
     // 이것은 항상 최신 상태 스냅샷에서 작업하도록 하는 더 안전한 방법이다.
     // 따라서 상태 업데이트가 이전 상태에 따라 달라질 때마다 여기에서 이 함수 구문을 사용하는 것이 좋다.
     if (user && player == 'p1') {
+      // console.log('로그 : ' + player);
+      // 일단 왜 패들의 조건이 test ? 냐 player == p2냐로 반영하는 값이 달라지는지 난 이해가 안됨.
+      // p1만 도는데..?
+      // 아 설마 p1인데, test가, 값이 없을때가 있어서 그럼? 사실 무슨 클라이언트든 test를 사용할거라 분기가 상관없긴함.
       setGameInfo(gameInfo => {
         return {
           ...gameInfo,
           ballP_X: resetTest(gameInfo.ballP_X, gameInfo.ballVelo_X),
           ballP_Y: resetTest(gameInfo.ballP_Y, gameInfo.ballVelo_Y),
           leftPaddlePos: test ? test : gameInfo.leftPaddlePos,
+          rightPaddlePos: paddlepaddle[1],
           player: player == 'p1' ? 1 : 2,
           ballVelo_X: XveloTest(),
           ballVelo_Y: YveloTest(),
@@ -274,6 +278,7 @@ const GameStart: React.FC = () => {
   // 유즈이펙트로 소켓의 변화가 감지되면 끊어버린다. (블로그 참조)
   //https://obstinate-developer.tistory.com/entry/React-socket-io-client-%EC%A0%81%EC%9A%A9-%EB%B0%A9%EB%B2%95
   useEffect(() => {
+    get_data();
     return () => {
       if (user)
         if (user.socket) {
@@ -281,63 +286,76 @@ const GameStart: React.FC = () => {
           user.socket.disconnect();
         }
     };
-  }, [user?.socket]);
+  }, [user && user.socket]);
 
-  // 왜이렇게 많이 받아오지.. 페이지자체는 또 렌더링 안됨. 얘만 엄청 돌리네.
-
+  // 얘가 조건을 어케 분기해야되냐,
+  // 지금 수신을 하는건 p1, 2 둘다인데, 계산하는쪽은 얘를 신경쓸필요가 없고, 받는 쪽은 얘를 받아서 그려줘야댐
+  // 그 상태변화를 확인할수 있는건 turn이 왔을때고, p1입장에서는 turn이 2면 계산을 종료하고 여기서 받아그리고
+  // p2는 계속 받다가 turn이 자기 자신이 되면, useState를 갱신하고, 그값으로 계산을 시작한다.
   const get_data = () => {
-    user?.socket.on('rtData', (data: any) => {
-      ballball[0] = data[0];
-      ballball[1] = data[1];
-      paddlepaddle[0] = data[4];
-      paddlepaddle[1] = data[5];
-      point[0] = data[8];
-      point[1] = data[9];
-      // if (data[6] == 2 && player == 'p2') {
-      //   setGameInfo(gameInfo => {
-      //     return {
-      //       ...gameInfo,
-      //       ballP_X: data[0],
-      //       ballP_Y: data[1],
-      //       leftPaddlePos: data[4],
-      //       rightPaddlePos: test,
-      //       player: 2,
-      //     };
-      //   });
-      //   console.log('커먼');
-      //   user.socket.emit('calculatedRTData', gameInfo);
-      // }
-
-      if (data[8] == 10 || data[9] == 10) {
-        console.log('결과 나왔어? 바로 디스커넥트 해버려. :' + user.socket.id);
-        if (user) user.socket.disconnect();
-        navigate(`/gameroom/1/gameexit/`); //GamePage.tsx
-      }
-      // console.log('받는속도좀보자 : 왜케빠르냐구..');
-      // console.log(' 받는p:' + player + ' turn22: ' + turn22 + ' turn: ' + gameInfo.turn);
-      // console.log('pos_x:' + data[0]);
-      // console.log('pos_y:' + data[1]);
-      // console.log('velo_x:' + data[2]);
-      // console.log('velo_y:' + data[3]);
-      // console.log('left_p:' + data[4]);
-      // console.log('right_p:' + data[5]);
-      // console.log('turn:' + data[6]);
-      // // console.log('point:' + data[7]);
-      // console.log('leftScore:' + data[8]);
-      // console.log('lightScore: ' + data[9]);
-    });
+    if (user) {
+      user.socket.on('rtData', (data: any) => {
+        ballball[0] = data[0];
+        ballball[1] = data[1];
+        paddlepaddle[0] = data[4];
+        paddlepaddle[1] = data[5];
+        point[0] = data[8];
+        point[1] = data[9];
+        // 서버에서 보내준 마우스포인터(오른쪽 패들)의 값이 0이 된다.
+        // turn이 2면, 서버는 p2가 계산했을거라고 생각할거란 말이지
+        // 그럼 left 패들을 무시할거고 , rightPaddle을 받아서, right에다 담아보내줄텐데,
+        // 그걸 지금 p1이 쏴주고 있고, p1의 라이트패들값은, 0이니까 턴이 바껴있는순간에는 0을 담아서 라이트에 쏴준다.! 가설 .
+        // 근데 확인해본결과 최초 렌더시에 그리질 않고 움직여야 그리는게 문제다
+        // 결국 얘가 리렌더링을 발생시킨다는건데,
+        if (data[6] == 2 && player == 'p2') {
+          setGameInfo(gameInfo => {
+            paddlepaddle[1] = data[5];
+            return {
+              ...gameInfo,
+              ballP_X: data[0],
+              ballP_Y: data[1],
+              leftPaddlePos: data[4],
+              rightPaddlePos: data[5],
+              player: 2,
+            };
+          });
+          console.log('커먼 paddle22: ' + paddlepaddle[1]);
+          //user.socket.emit('calculatedRTData', gameInfo);
+        }
+        if (data[8] == 10 || data[9] == 10) {
+          console.log('결과 나왔어? 바로 디스커넥트 해버려 :' + user.socket.id);
+          if (user) user.socket.disconnect();
+          navigate(`/gameroom/1/gameexit/`); //GamePage.tsx
+        }
+      });
+    } else console.log('ERROR: user undefined');
   };
+  // console.log('받는속도좀보자 : 왜케빠르냐구..');
+  // console.log(' 받는p:' + player + ' turn22: ' + turn22 + ' turn: ' + gameInfo.turn);
+  // console.log('pos_x:' + data[0]);
+  // console.log('pos_y:' + data[1]);
+  // console.log('velo_x:' + data[2]);
+  // console.log('velo_y:' + data[3]);
+  // console.log('left_p:' + data[4]);
+  // console.log('right_p:' + data[5]);
+  // console.log('turn:' + data[6]);
+  // // console.log('point:' + data[7]);
+  // console.log('leftScore:' + data[8]);
+  // console.log('lightScore: ' + data[9]);
 
   // 데이터 실시간으로 받아서 갱신하기
   // 갱신해야 제대로 그림
-  get_data();
+
+  // 결국 패들값 연동때문에 감싸야되네, 갱신되면, 렌더링해야 반영됨
+  // useEffect(() => {
+  //   get_data();
+  // }, []);
 
   // 실시간으로 계산하기 && 그리기.(받아그릴거 갱신한것도 여기서 곧 잘 그림.)
   useEffect(() => {
     const canvas = canvasRef.current;
     //  드로잉 컨텍스트를 만들 때 alpha 옵션을 false로 설정합니다. 이 정보는 렌더링을 최적화하기 위해 브라우저에서 내부적으로 사용할 수 있습니다.
     const ctx = canvas?.getContext('2d', { alpha: false });
-
     if (user && canvas) {
       if (ctx) {
         const test = setInterval(() => {
@@ -351,7 +369,7 @@ const GameStart: React.FC = () => {
         };
       }
     }
-  }, [ball]); // 반영
+  }, [ball, paddle]); // 반영
 
   return (
     <Background>
