@@ -43,26 +43,35 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
 
   const onClickBlock = async () => {
     if (user && user.jwt && target) {
-      await usersAPI.toggleBanUser(user.userId, target.userId, user.jwt);
+      const res = await usersAPI.toggleBlockUser(user.userId, target.userId, user.jwt);
       setTarget({
         ...target,
         isFriend: false,
         isBlocked: !target.isBlocked,
       });
+      if (res) {
+        setModal(null);
+      }
     }
     console.log('block');
   };
 
   const onClickBan = async () => {
     if (target && user) {
-      await chatsAPI.banUserInChatRoom(roomId, user.userId, target.userId, user.jwt);
+      const res = await chatsAPI.banUserInChatRoom(roomId, user.userId, target.userId, user.jwt);
       console.log('ban');
+      if (res) {
+        setModal(null);
+      }
     }
   };
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, target.userId, user.jwt);
       console.log('Toggle Mute', res);
+      if (res) {
+        setModal(null);
+      }
     }
   };
   const onToggleRole = async () => {

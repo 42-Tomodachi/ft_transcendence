@@ -56,12 +56,15 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
 
   const onClickBlock = async () => {
     if (user && user.jwt && target) {
-      await usersAPI.toggleBanUser(user.userId, target.userId, user.jwt);
+      const res = await usersAPI.toggleBlockUser(user.userId, target.userId, user.jwt);
       setTarget({
         ...target,
         isFriend: false,
         isBlocked: !target.isBlocked,
       });
+      if (res) {
+        setModal(null);
+      }
     }
   };
 
