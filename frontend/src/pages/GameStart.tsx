@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'; //네비
 
 const ballball = [50, 50];
 const paddlepaddle = [50, 50];
-const point = [0, 0];
+const point = [0, 80];
 const HERTZ = 60;
 const PLAYERONE = 1;
 const PLAYERTWO = 2;
@@ -35,10 +35,11 @@ interface GameInfo {
 
 let turn22: any;
 const GameStart: React.FC = () => {
-  turn22 = 1;
   const navigate = useNavigate();
-
+  turn22 = 1;
   //console.log('re-render');
+  const { user } = useContext(AllContext).userData;
+  const player = user ? user.player : 'g1'; // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
 
   const [gameInfo, setGameInfo] = useState<GameInfo>({
     ballP_X: 50,
@@ -53,8 +54,7 @@ const GameStart: React.FC = () => {
     rightScore: 0,
     checkPoint: false,
   }); // 공의 현재위치 (어떤 클라이언트던지 같음11)
-  const { user } = useContext(AllContext).userData;
-  const player = user ? user.player : 'g1'; // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
+
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
 
   const paddle = function paddle(ctx: CanvasRenderingContext2D): void {
@@ -84,12 +84,6 @@ const GameStart: React.FC = () => {
 
   const clear = function clear(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = '#f9f2ed';
-    ctx.clearRect(0, 0, 1000, 700);
-    ctx.fillRect(0, 0, 1000, 700);
-  };
-
-  const exit = function exit(ctx: CanvasRenderingContext2D): void {
-    ctx.fillStyle = 'balck';
     ctx.clearRect(0, 0, 1000, 700);
     ctx.fillRect(0, 0, 1000, 700);
   };
@@ -252,7 +246,7 @@ const GameStart: React.FC = () => {
     // 사용하면 React는 이 내부 함수에서 제공하는 상태 스냅샷이 항상 최신 상태 스냅샷이 되도록 보장하며 모든 예약된 상태 업데이트를 염두에 두고 있다.
     // 이것은 항상 최신 상태 스냅샷에서 작업하도록 하는 더 안전한 방법이다.
     // 따라서 상태 업데이트가 이전 상태에 따라 달라질 때마다 여기에서 이 함수 구문을 사용하는 것이 좋다.
-    if (player == 'p1') {
+    if (user && player == 'p1') {
       setGameInfo(gameInfo => {
         return {
           ...gameInfo,
@@ -272,7 +266,7 @@ const GameStart: React.FC = () => {
               : false,
         };
       });
-      if (user && player == 'p1') user.socket.emit('calculatedRTData', gameInfo);
+      user.socket.emit('calculatedRTData', gameInfo);
     } else if (user && player == 'p2') user.socket.emit('paddleRTData', test);
     // console.log('보내는속도좀보자'); // 60번씩 쏘잖아. 근데 왜..?
   };
@@ -299,7 +293,23 @@ const GameStart: React.FC = () => {
       paddlepaddle[1] = data[5];
       point[0] = data[8];
       point[1] = data[9];
+      // if (data[6] == 2 && player == 'p2') {
+      //   setGameInfo(gameInfo => {
+      //     return {
+      //       ...gameInfo,
+      //       ballP_X: data[0],
+      //       ballP_Y: data[1],
+      //       leftPaddlePos: data[4],
+      //       rightPaddlePos: test,
+      //       player: 2,
+      //     };
+      //   });
+      //   console.log('커먼');
+      //   user.socket.emit('calculatedRTData', gameInfo);
+      // }
+
       if (data[8] == 10 || data[9] == 10) {
+        console.log('결과 나왔어? 바로 디스커넥트 해버려. :' + user.socket.id);
         if (user) user.socket.disconnect();
         navigate(`/gameroom/1/gameexit/`); //GamePage.tsx
       }
