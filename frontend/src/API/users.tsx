@@ -167,7 +167,7 @@ const usersAPI = {
     }
   },
   // 유저 차단하기 토글
-  toggleBanUser: async (myId: number, targetId: number, jwt: string): Promise<boolean> => {
+  toggleBlockUser: async (myId: number, targetId: number, jwt: string): Promise<boolean> => {
     // TODO: return type definine plz....
     try {
       const url = usersPath(`/${myId}`);

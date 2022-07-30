@@ -201,16 +201,22 @@ const chatsAPI = {
     }
   },
   // PUT chats/{roomid}/ban/{userId} - banUserInChatRoom
-  banUserInChatRoom: async (roomId: number, userId: number, targetUserId: number, jwt: string) => {
+  banUserInChatRoom: async (
+    roomId: number,
+    userId: number,
+    targetUserId: number,
+    jwt: string,
+  ): Promise<boolean> => {
     try {
       const url = chatsPath(`/${roomId}/ban/${userId}?targetUserId=${targetUserId}`);
-      const res = await instance.put(url, null, {
+      await instance.put(url, null, {
         headers: { Authorization: `Bearer ${jwt}` },
       });
-      return res.data;
+      return true;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
+      return false;
     }
   },
   // PUT chats/{roomid}/mute_toggle - setUpMuteUser
