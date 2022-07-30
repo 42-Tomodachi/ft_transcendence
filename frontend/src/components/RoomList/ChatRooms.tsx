@@ -12,20 +12,31 @@ interface ChatRoomProps {
 
 const ChatRooms: React.FC<ChatRoomProps> = ({ item }) => {
   const navigate = useNavigate();
-  const { modal, setModal } = useContext(AllContext).modalData;
+  const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
+
+  const enterRoom = async () => {
+    if (user) {
+      const res = await chatsAPI.enterChatRoom(item.roomId, user.userId, '', user.jwt);
+      if (res === -403) {
+        setModal(BAN_THIS_CHATROOM);
+      } else if (res !== -1) {
+        navigate(`/chatroom/${item.roomId}`);
+      }
+    }
+  };
 
   const handleEnterRoom = async () => {
     if (user) {
       if (!item.isPublic) {
-        setModal(ENTER_CHAT_ROOM, item.roomId, user.userId);
+        const participants = await chatsAPI.getUsersInChatRoom(item.roomId, user.jwt);
+        const participant = await participants.filter(participant => {
+          return participant.userId === user.userId;
+        });
+        if (participant.length) await enterRoom();
+        else setModal(ENTER_CHAT_ROOM, user.userId, item.roomId);
       } else {
-        const res = await chatsAPI.enterChatRoom(item.roomId, user.userId, '', user.jwt);
-        if (res === -403) {
-          setModal(BAN_THIS_CHATROOM);
-        } else if (res !== -1) {
-          navigate(`/chatroom/${item.roomId}`);
-        }
+        await enterRoom();
       }
     }
   };
