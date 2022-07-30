@@ -121,8 +121,13 @@ const EditMyProfile: React.FC = () => {
             <BtnBlock>
               <ProfileImgLabel htmlFor="profile">프로필 변경</ProfileImgLabel>
             </BtnBlock>
-            {/* TODO: 프로필 변경만 파일 브라우저가 열리지 않음 */}
-            <ProfileImgButton type="file" id="profile" ref={profileIamge} onChange={onFindImage} />
+            <ProfileImgButton
+              type="file"
+              accept="image/*"
+              id="profile"
+              ref={profileIamge}
+              onChange={onFindImage}
+            />
             <Nick>
               <Nickguide>닉네임 :</Nickguide>
               <NickInput

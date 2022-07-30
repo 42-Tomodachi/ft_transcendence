@@ -7,9 +7,10 @@ import { CHECK_SCORE, IUserData } from '../../../utils/interface';
 import { AllContext } from '../../../store';
 import { chatsAPI, usersAPI } from '../../../API';
 import { useNavigate } from 'react-router-dom';
+import ProfileImage from '../ProfileImage';
 
 const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId, userId }) => {
-  const { modal, setModal } = useContext(AllContext).modalData;
+  const { setModal } = useContext(AllContext).modalData;
   const [target, setTarget] = useState<IUserData | null>(null);
   const { user } = useContext(AllContext).userData;
   const navigate = useNavigate();
@@ -101,7 +102,7 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
           <MainBlock>
             <ProfileBlock>
               <PictureBlock>
-                <ProfilePicture src={target.avatar} alt="UserProfileImage" />
+                <ProfileImage src={target.avatar} size={100} />
               </PictureBlock>
               <UserInfo>
                 <UserName>{target.nickname}</UserName>
