@@ -1,21 +1,68 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
+import { chatsAPI } from '../../../API';
+import { useContext } from 'react';
+import { AllContext } from '../../../store';
+import { IChatRoomInfo } from '../../../utils/interface';
 
-const SettingRoom: React.FC = () => {
+const SettingRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
+  const { user } = useContext(AllContext).userData;
+  const { setModal } = useContext(AllContext).modalData;
+  const [roomName, setRoomName] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [errMsg, setErrMsg] = useState<string>('');
+  const roomSettingValues = {
+    MAXROOMNAMESIZE: 10,
+    MAXPASSWORDSIZE: 10,
+  };
+
+  const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (errMsg.length) setErrMsg('');
+    if (e.target.name === 'roomName') {
+      if (e.target.value.length <= roomSettingValues.MAXROOMNAMESIZE) setRoomName(e.target.value);
+      else setErrMsg(`방 제목은 최대 ${roomSettingValues.MAXROOMNAMESIZE} 글자 입니다.`);
+    } else if (e.target.name === 'password') {
+      if (e.target.value.length <= roomSettingValues.MAXPASSWORDSIZE)
+        setPassword(e.target.value.trim());
+      else setErrMsg(`방 비밀번호는 최대 ${roomSettingValues.MAXPASSWORDSIZE} 글자 입니다.`);
+    }
+  };
+
+  const editRoomInfo = async () => {
+    if (roomName.trim().length === 0) {
+      setErrMsg('방 제목은 최소 한 글자 이상 입력해주세요.');
+      return;
+    }
+    if (user) {
+      const roomInfo = await chatsAPI.getChatRoomStatus(roomId, user.jwt);
+      if (roomInfo && roomInfo.ownerId === user.userId) {
+        const res = await chatsAPI.setUpChatRoom(roomId, user.userId, roomName, password, user.jwt);
+        setModal(null);
+      }
+    }
+  };
+
   return (
     // TODO: 따로 게임방, 채팅방 설정으로 구분?
     <Modal width={570} height={300} title={'방 설정'}>
       <MainBlock>
         <TextGridBlock>
           <RoomNPwd>방 제목</RoomNPwd>
-          <InputRoomName spellCheck={false} />
+          <InputRoomName
+            type="text"
+            onChange={onChangeInput}
+            value={roomName}
+            name="roomName"
+            spellCheck={false}
+          />
           <RoomNPwd>비밀번호</RoomNPwd>
-          <InputPwd type="password" />
+          <InputPwd type="password" name="password" onChange={onChangeInput} value={password} />
         </TextGridBlock>
+        <ErrMsg>{errMsg}</ErrMsg>
         <BtnBlock>
-          <Button color="gradient" text="설정" width={200} height={40} />
+          <Button color="gradient" text="설정" width={200} height={40} onClick={editRoomInfo} />
         </BtnBlock>
       </MainBlock>
     </Modal>
@@ -60,6 +107,16 @@ const InputPwd = styled(InputRoomName)`
   &[type='password'] {
   }
 `;
+
+const ErrMsg = styled.span`
+  display: block;
+  height: 16px;
+  font-size: 14px;
+  color: ${({ theme }) => theme.colors.red};
+  text-align: center;
+  margin: 20px 0 10px;
+`;
+
 //============================================
 
 //BtnSection

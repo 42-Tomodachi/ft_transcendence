@@ -13,12 +13,19 @@ const MakeChatRoom: React.FC = () => {
   const [password, setPassword] = useState<string>('');
   const [errMsg, setErrMsg] = useState<string>('');
   const navigate = useNavigate();
+  const roomSettingValues = {
+    MAXROOMNAMESIZE: 10,
+    MAXPASSWORDSIZE: 10,
+  };
 
   const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.name === 'roomName') {
-      if (roomName.length <= 10) setRoomName(e.target.value);
+      if (e.target.value.length <= roomSettingValues.MAXROOMNAMESIZE) setRoomName(e.target.value);
+      else setErrMsg(`방 제목은 최대 ${roomSettingValues.MAXROOMNAMESIZE} 글자 입니다.`);
     } else if (e.target.name === 'password') {
-      if (password.length <= 10) setPassword(e.target.value.trim());
+      if (e.target.value.length <= roomSettingValues.MAXPASSWORDSIZE)
+        setPassword(e.target.value.trim());
+      else setErrMsg(`방 비밀번호는 최대 ${roomSettingValues.MAXPASSWORDSIZE} 글자 입니다.`);
     }
   };
 

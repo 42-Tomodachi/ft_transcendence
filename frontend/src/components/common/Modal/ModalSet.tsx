@@ -43,7 +43,7 @@ const ModalSet: React.FC = () => {
           ENTER_GAME_ROOM: <EnterGameRoom />, // 비밀 게임방 입장
           ENTER_CHAT_ROOM: <EnterChatRoom roomId={modal.roomId} />, // 비밀 채팅방 입장
           CHECK_SCORE: <CheckScore userId={modal.userId} />, // 전적 확인
-          EDIT_CHAT_ROOM: <SettingRoom />, // 채팅방 수정
+          EDIT_CHAT_ROOM: <SettingRoom roomId={modal.roomId} />, // 채팅방 수정
           SHOW_OWNER_PROFILE: <ShowOwnerProfile roomId={modal.roomId} userId={modal.userId} />, // 채팅방 소유자 프로필
           SHOW_MANAGER_PROFILE: <ShowManagerProfile roomId={modal.roomId} userId={modal.userId} />, // 채팅방 관리자 프로필
           EDIT_MY_PROFILE: <EditMyProfile />, // 채팅방 관리자 프로필

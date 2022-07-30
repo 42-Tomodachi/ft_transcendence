@@ -1,7 +1,15 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import LogoImg from '../../assets/logo-white.png';
-import { MenuType, GAME, CHAT, HOME, CHECK_LOGOUT, EDIT_CHAT_ROOM } from '../../utils/interface';
+import {
+  MenuType,
+  GAME,
+  CHAT,
+  HOME,
+  CHECK_LOGOUT,
+  EDIT_CHAT_ROOM,
+  IChatRoomInfo,
+} from '../../utils/interface';
 import { AllContext } from '../../store';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../common/Button';
@@ -16,6 +24,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
   const { user } = useContext(AllContext).userData;
   const navigate = useNavigate();
   const { roomId } = useParams();
+  const [roomInfo, setRoomInfo] = useState<IChatRoomInfo | null>();
 
   const onClickMenu = (menu: MenuType | 'HOME') => {
     switch (menu) {
@@ -40,6 +49,22 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
     }
   };
 
+  const onSetupRoom = () => {
+    if (user && roomId) {
+      setModal(EDIT_CHAT_ROOM, user.userId, +roomId);
+    }
+  };
+
+  useEffect(() => {
+    const getRoomInfo = async () => {
+      if (roomId && user) {
+        const roomInfo = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
+        setRoomInfo(roomInfo);
+      }
+    };
+    getRoomInfo();
+  }, []);
+
   return (
     <HeaderContainer>
       <LogoWrap onClick={() => onClickMenu(HOME)}>
@@ -57,13 +82,15 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
           CHAT: (
             <Menus>
               {/* TODO : 나중에 role 받아와서 소유자만 버튼 표시되도록 해야함 */}
-              <Button
-                color="white"
-                text="방 설정"
-                width={140}
-                height={50}
-                onClick={() => setModal(EDIT_CHAT_ROOM)}
-              />
+              {roomInfo && user && roomInfo.ownerId === user.userId && (
+                <Button
+                  color="white"
+                  text="방 설정"
+                  width={140}
+                  height={50}
+                  onClick={onSetupRoom}
+                />
+              )}
               <Button
                 color="white"
                 text="방 나가기"
