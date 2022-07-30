@@ -362,8 +362,7 @@ export class ChatService {
         salt,
       );
       room.password = hashedPassword;
-    }
-    room.password = null;
+    } else room.password = null;
 
     const updatedRoom = await this.chatRoomRepo.save(room);
     return updatedRoom.toChatRoomDataDto();
