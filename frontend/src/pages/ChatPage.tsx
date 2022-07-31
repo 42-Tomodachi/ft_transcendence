@@ -54,11 +54,13 @@ const ChatPage: React.FC = () => {
       });
     }
     return () => {
-      socket.off('reloadChatHistory');
-      socket.off('recieveMessage');
-      socket.disconnect();
+      if (socket) {
+        socket.off('reloadChatHistory');
+        socket.off('recieveMessage');
+        socket.disconnect();
+      }
     };
-  }, [roomId]);
+  }, [roomId, user]);
 
   useEffect(() => {
     // TODO : 채팅방 참여 인원 불러와서 있으면 그대로, 없으면 루트로 navigate
@@ -79,7 +81,6 @@ const ChatPage: React.FC = () => {
         <Header type={CHAT} />
         <ChatRoomBody>
           <ChatArea>
-            {/* TODO: 뒤로가기 클릭시 짧게나마 제일 첫 페이지가 렌더링됨 */}
             <ChatTitle>
               <BackawayWrap
                 onClick={() => {
