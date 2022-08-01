@@ -66,7 +66,12 @@ const GameStart: React.FC = () => {
       ctx.fillRect(0.05 * 1000, gameInfo.leftPaddlePos * 7, 0.015 * 1000, 0.2 * 750);
       ctx.fillStyle = '#F87474';
       ctx.fillText(`${user?.oppnickname} : ${point[1]}`, 750, 50);
-      ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
+      ctx.fillRect(
+        0.945 * 1000,
+        paddlepaddle[1] ? paddlepaddle[1] * 7 : gameInfo.rightPaddlePos * 7,
+        0.015 * 1000,
+        0.2 * 700,
+      );
     } else if (player == 'p2') {
       ctx.fillStyle = '#3AB0FF';
       ctx.fillText(` ${user?.oppnickname} : ${point[0]}`, 250, 50);
@@ -246,13 +251,12 @@ const GameStart: React.FC = () => {
   //     };
   // };
 
-  // mouseUpdate();
-  // mouseUpdate();
-
   const cal_basic = (canvas: any) => {
     // 사용하면 React는 이 내부 함수에서 제공하는 상태 스냅샷이 항상 최신 상태 스냅샷이 되도록 보장하며 모든 예약된 상태 업데이트를 염두에 두고 있다.
     // 이것은 항상 최신 상태 스냅샷에서 작업하도록 하는 더 안전한 방법이다.
     // 따라서 상태 업데이트가 이전 상태에 따라 달라질 때마다 여기에서 이 함수 구문을 사용하는 것이 좋다.
+
+    // 자기턴일때만 여기 들어와야댐.
     if (user && player == 'p1') {
       // console.log('로그 : ' + player);
       // 일단 왜 패들의 조건이 test ? 냐 player == p2냐로 반영하는 값이 달라지는지 난 이해가 안됨.
@@ -280,7 +284,6 @@ const GameStart: React.FC = () => {
       });
       user.socket.emit('calculatedRTData', gameInfo);
     } else if (user && player == 'p2') user.socket.emit('paddleRTData', test);
-    // console.log('보내는속도좀보자'); // 60번씩 쏘잖아. 근데 왜..?
   };
 
   // 유즈이펙트로 소켓의 변화가 감지되면 끊어버린다. (블로그 참조)
@@ -300,16 +303,16 @@ const GameStart: React.FC = () => {
   // 지금 수신을 하는건 p1, 2 둘다인데, 계산하는쪽은 얘를 신경쓸필요가 없고, 받는 쪽은 얘를 받아서 그려줘야댐
   // 그 상태변화를 확인할수 있는건 turn이 왔을때고, p1입장에서는 turn이 2면 계산을 종료하고 여기서 받아그리고
   // p2는 계속 받다가 turn이 자기 자신이 되면, useState를 갱신하고, 그값으로 계산을 시작한다.
+
   const get_data = () => {
     if (user) {
       user.socket.on('rtData', (data: any) => {
-        ballball[0] = data[0];
-        ballball[1] = data[1];
-        paddlepaddle[0] = data[4];
-        //유즈스테이트로 매번갱신하는건 너무 느려지고,,
-        // 흐...미..
-        if (data[5]) paddlepaddle[1] = data[5];
-        else paddlepaddle[1] = gameInfo.rightPaddlePos;
+        ballball[0] = data[0]; // 계산 안하는쪽에 반드시 필요한 데이터,
+        ballball[1] = data[1]; // 계산 안하는쪽에 반드시 필요한 데이터,
+        paddlepaddle[0] = data[4]; // 왼쪽패들 위치, p2가 계산하지 않을때 반드시 필요,
+        if (data[5])
+          paddlepaddle[1] = data[5]; // 오른쪽패들 위치, p1가 계산하지 않을때 반드시 필요,
+        else paddlepaddle[1] = gameInfo.rightPaddlePos; // 근데 이제 고려해줘야할껀, 보내는 쪽이 어딘지를 알고 그값만 읽어오도록 로직이 짜여져야함,
         point[0] = data[8];
         point[1] = data[9];
         // 서버에서 보내준 마우스포인터(오른쪽 패들)의 값이 0이 된다.
