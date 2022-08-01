@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import { CHAT } from '../utils/interface';
 
 const GameExit: React.FC = () => {
+  console.log('게임종료화면 컴포넌트');
   return (
     <Background>
       <GameRoomContainer>

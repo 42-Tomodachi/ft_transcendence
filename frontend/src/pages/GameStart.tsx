@@ -37,7 +37,7 @@ let turn22: any;
 const GameStart: React.FC = () => {
   const navigate = useNavigate();
   turn22 = 1;
-  console.log('re-render');
+  //console.log('re-render');
   const { user } = useContext(AllContext).userData;
   const player = user ? user.player : 'g1'; // 여기는 내가 전역에 저장해둔.. 변수를 읽어와서 사용해야지.
 
@@ -73,7 +73,12 @@ const GameStart: React.FC = () => {
       ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 750);
       ctx.fillStyle = '#F87474';
       ctx.fillText(`${user?.nickname} : ${point[1]}`, 750, 50);
-      ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
+      ctx.fillRect(
+        0.945 * 1000,
+        paddlepaddle[1] ? paddlepaddle[1] * 7 : gameInfo.rightPaddlePos * 7,
+        0.015 * 1000,
+        0.2 * 700,
+      );
     }
   };
 
@@ -122,7 +127,9 @@ const GameStart: React.FC = () => {
       const relativeIntersectY =
         type == 'leftHit'
           ? gameInfo.leftPaddlePos + 10 - gameInfo.ballP_Y - 1
-          : paddlepaddle[1] + 10 - gameInfo.ballP_Y - 1;
+          : paddlepaddle[1]
+          ? paddlepaddle[1] + 10 - gameInfo.ballP_Y - 1
+          : gameInfo.rightPaddlePos + 10 - gameInfo.ballP_Y - 1;
       const normalizedRelativeIntersectionY = relativeIntersectY / 10;
       switch (type) {
         case 'upHit':
@@ -157,8 +164,8 @@ const GameStart: React.FC = () => {
       player == 'p1' &&
       info.ballP_X >= 93 &&
       info.ballP_X <= 98 &&
-      info.ballP_Y >= paddlepaddle[1] &&
-      info.ballP_Y <= paddlepaddle[1] + 20
+      info.ballP_Y >= gameInfo.rightPaddlePos &&
+      info.ballP_Y <= gameInfo.rightPaddlePos + 20
     )
       return 'rightHit';
     if (gameInfo.ballP_X > 100) {
@@ -225,6 +232,7 @@ const GameStart: React.FC = () => {
   };
 
   let test: number;
+  //const [test, setTest] = useState<number>(50);
   document.addEventListener('mousemove', mouseMoveHandler, false);
   function mouseMoveHandler(e: any) {
     test = e.clientY / 7 - 17;
@@ -234,7 +242,7 @@ const GameStart: React.FC = () => {
   //   const canvas = canvasRef.current;
   //   if (canvas)
   //     canvas.onmousemove = (e: any) => {
-  //       test = e.clientY / 7 - 17;
+  //      return test = e.clientY / 7 - 17;
   //     };
   // };
 
@@ -256,7 +264,7 @@ const GameStart: React.FC = () => {
           ballP_X: resetTest(gameInfo.ballP_X, gameInfo.ballVelo_X),
           ballP_Y: resetTest(gameInfo.ballP_Y, gameInfo.ballVelo_Y),
           leftPaddlePos: test ? test : gameInfo.leftPaddlePos,
-          rightPaddlePos: paddlepaddle[1],
+          rightPaddlePos: paddlepaddle[1] ? paddlepaddle[1] : gameInfo.rightPaddlePos,
           player: player == 'p1' ? 1 : 2,
           ballVelo_X: XveloTest(),
           ballVelo_Y: YveloTest(),
@@ -298,7 +306,10 @@ const GameStart: React.FC = () => {
         ballball[0] = data[0];
         ballball[1] = data[1];
         paddlepaddle[0] = data[4];
-        paddlepaddle[1] = data[5];
+        //유즈스테이트로 매번갱신하는건 너무 느려지고,,
+        // 흐...미..
+        if (data[5]) paddlepaddle[1] = data[5];
+        else paddlepaddle[1] = gameInfo.rightPaddlePos;
         point[0] = data[8];
         point[1] = data[9];
         // 서버에서 보내준 마우스포인터(오른쪽 패들)의 값이 0이 된다.
@@ -308,14 +319,14 @@ const GameStart: React.FC = () => {
         // 근데 확인해본결과 최초 렌더시에 그리질 않고 움직여야 그리는게 문제다
         // 결국 얘가 리렌더링을 발생시킨다는건데,
         if (data[6] == 2 && player == 'p2') {
+          paddlepaddle[1] = data[5];
           setGameInfo(gameInfo => {
-            paddlepaddle[1] = data[5];
             return {
               ...gameInfo,
               ballP_X: data[0],
               ballP_Y: data[1],
               leftPaddlePos: data[4],
-              rightPaddlePos: data[5],
+              rightPaddlePos: data[5] ? data[5] : gameInfo.rightPaddlePos,
               player: 2,
             };
           });
@@ -412,4 +423,4 @@ const GameArea = styled.div`
   // 자식이 부모태그를 넘어가지 않도록 하면, 부모가 보더를 가지고 있을때 자식도 같은 효과를 보니까.
 `;
 
-export default GameStart;
+export default React.memo(GameStart);
