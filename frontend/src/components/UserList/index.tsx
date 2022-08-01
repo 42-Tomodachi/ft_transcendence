@@ -57,7 +57,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId }) => {
     setUserList(data);
   };
   useEffect(() => {
-    getUserList();
+    if (user && user.jwt) getUserList();
   }, [activeMenu, user]);
 
   return (

@@ -14,7 +14,7 @@ const EnterChatRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
   const navigate = useNavigate();
 
   const checkPwd = async () => {
-    if (user) {
+    if (user && user.jwt) {
       const res = await chatsAPI.enterChatRoom(roomId, user.userId, inputPwd, user.jwt);
       if (res !== -1) {
         setErrMsg('');

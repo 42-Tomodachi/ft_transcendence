@@ -63,12 +63,14 @@ const ChatPage: React.FC = () => {
   }, [roomId, user]);
 
   useEffect(() => {
-    // TODO : 채팅방 참여 인원 불러와서 있으면 그대로, 없으면 루트로 navigate
-    if (roomId && user) {
+    if (roomId && user && user.jwt) {
       const getRoomData = async () => {
         const res = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
         if (res) {
           setRoomName(res.title);
+        } else {
+          // TODO: 경고 모달 띄우기
+          navigate('/');
         }
       };
       getRoomData();
