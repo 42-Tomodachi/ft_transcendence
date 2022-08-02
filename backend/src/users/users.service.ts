@@ -116,7 +116,8 @@ export class UsersService {
     user.avatar = `${process.env.SERVER_ADDRESS}/image/${fileName}`;
     await user.save();
 
-    this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
+    this.chatGateway.updateUserInfoToJoinedChatRooms(user, userId);
+    // this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
     return user.avatar;
   }
 
@@ -229,7 +230,8 @@ export class UsersService {
     user.nickname = nicknameForUpdate;
     const updatedUser = await this.userRepo.save(user);
 
-    this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
+    this.chatGateway.updateUserInfoToJoinedChatRooms(user, userId);
+    // this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
 
     return updatedUser.toUserProfileDto();
   }

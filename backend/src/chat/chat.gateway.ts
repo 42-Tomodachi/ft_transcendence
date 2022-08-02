@@ -9,6 +9,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { User } from 'src/users/entities/users.entity';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import { ChatContentDto } from './dto/chatContents.dto';
@@ -119,6 +120,28 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return participatingChatRoomIds;
   }
 
+  async updateUserInfoToJoinedChatRooms(
+    user: User,
+    userId: number,
+  ): Promise<void> {
+    const joinedChatRooms = await this.chatService.getParticipatingChatRooms(
+      user,
+      userId,
+    );
+    joinedChatRooms.forEach((roomInfo) => {
+      this.connectedSocketMap
+        .get(roomInfo.roomId.toString())
+        .forEach(async (socketId, userIdInRoom) => {
+          const chatContentDtos = await this.chatService.getChatContentsForEmit(
+            +roomInfo.roomId,
+            +userIdInRoom,
+          );
+
+          this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
+        });
+    });
+  }
+
   emitChatHistoryToParticipatingChatRooms(
     userIdOfupdatedNickname: number,
   ): void {
@@ -134,8 +157,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             +roomId,
             +userIdInRoom,
           );
-
-          this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
+          if (chatContentDtos === '참여중인 채팅방이 아닙니다.')
+            this.wss.to(socketId).emit('disconnectSocket', chatContentDtos);
+          else this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
         });
     });
   }
@@ -166,8 +190,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.roomId,
       data.userId,
     );
-
-    client.emit('reloadChatHistory', chatContentDtos);
+    if (chatContentDtos instanceof String) {
+      client.emit('disconnectSocket', chatContentDtos);
+    } else client.emit('reloadChatHistory', chatContentDtos);
   }
 
   @SubscribeMessage('sendMessage')
