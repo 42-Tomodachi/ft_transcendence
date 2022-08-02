@@ -4,7 +4,7 @@ import Button from '../Button';
 import Modal from '.';
 import { AllContext } from '../../../store';
 import { authAPI, usersAPI } from '../../../API';
-import { LOGIN, SET_NICKNAME } from '../../../utils/interface';
+import { LOGIN } from '../../../utils/interface';
 import ProfileImage from '../ProfileImage';
 import imageCompression from 'browser-image-compression';
 import DefaultProfile from '../../../assets/default-image.png';
@@ -16,10 +16,9 @@ const maxNickName = 8;
 const EditMyProfile: React.FC = () => {
   const [nickName, setNickName] = useState<string>('');
   const [checkNickMsg, setCheckNickMsg] = useState<string>('');
-  const [isEnabled, setIsEnabled] = useState<boolean>(false);
-  const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
+  const [enabledNickname, setEnabledNickname] = useState<boolean>(false);
+  const { user, setUser } = useContext(AllContext).userData;
   const { setModal } = useContext(AllContext).modalData;
-  const { jwt } = useContext(AllContext).jwtData; // TODO: JWT 유지를 위해 사용
   const profileIamge = useRef<HTMLInputElement>(null);
   const [profileImg, setProfileImg] = useState<string>(DefaultProfile);
   const [convertImg, setConvertImg] = useState<File | string>('');
@@ -33,7 +32,7 @@ const EditMyProfile: React.FC = () => {
         setCheckNickMsg('한글, 영어, 숫자로만 작성해주세요');
       else setCheckNickMsg(`최소 2자, 최대 8자로 작성해주세요`);
     } else setCheckNickMsg('');
-    setIsEnabled(false);
+    setEnabledNickname(false);
     setNickName(inputNickValue);
   };
 
@@ -68,45 +67,64 @@ const EditMyProfile: React.FC = () => {
   const onCheck = async () => {
     if (!regex.test(nickName)) {
       setCheckNickMsg(`2자 ~ 8자의 한글, 영어, 숫자로 작성해주세요`);
-      setIsEnabled(false);
+      setEnabledNickname(false);
       return;
     }
-    const res = await authAPI.checkNickname(nickName, jwt);
+    if (user) {
+      const res = await authAPI.checkNickname(nickName, user.jwt);
 
-    if (res === null) {
-      setCheckNickMsg(`다시 시도해주세요.`);
-      setIsEnabled(false);
-    } else if (res.isDuplicate) {
-      if (user && user.nickname === nickName) setCheckNickMsg(`기존 닉네임입니다.`);
-      else setCheckNickMsg(`중복된 닉네임입니다.`);
-      setIsEnabled(false);
-    } else {
-      setCheckNickMsg(`사용 가능한 닉네임입니다.`);
-      setIsEnabled(true);
+      if (res === null) {
+        setCheckNickMsg(`다시 시도해주세요.`);
+        setEnabledNickname(false);
+      } else if (res.isDuplicate) {
+        if (user && user.nickname === nickName) setCheckNickMsg(`기존 닉네임입니다.`);
+        else setCheckNickMsg(`중복된 닉네임입니다.`);
+        setEnabledNickname(false);
+      } else {
+        setCheckNickMsg(`사용 가능한 닉네임입니다.`);
+        setEnabledNickname(true);
+      }
     }
   };
 
-  const onClickSubmit = () => {
-    if (!isEnabled) {
-      setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
-    } else if (user) {
-      const formData = new FormData();
-      const userId = user.userId;
+  // TODO: code refactoring
+  const onClickSubmit = async () => {
+    if (user) {
+      if (user.nickname !== nickName) {
+        if (!enabledNickname) {
+          setCheckNickMsg(`닉네임 중복 체크를 먼저 해주세요.`);
+        } else {
+          const userId = user.userId;
+          if (convertImg) {
+            const formData = new FormData();
 
-      if (convertImg) {
+            formData.append('image', convertImg);
+            const res = await usersAPI.uploadAvatarImg(userId, formData, user.jwt);
+            const updateUser = await usersAPI.updateUserNickname(userId, nickName, user.jwt);
+            if (res && updateUser)
+              setUser(LOGIN, { ...user, avatar: res.UpdateImg, nickname: nickName });
+          } else {
+            const updateUser = await usersAPI.updateUserNickname(userId, nickName, user.jwt);
+            if (updateUser) setUser(LOGIN, { ...user, nickname: nickName });
+          }
+          setModal(null);
+        }
+      } else if (convertImg) {
+        const formData = new FormData();
+        const userId = user.userId;
+
         formData.append('image', convertImg);
-        usersAPI.uploadAvatarImg(userId, formData, user.jwt);
-        setUser(LOGIN, { ...user, avatar: profileImg });
-      }
-      usersAPI.updateUserNickname(userId, nickName, user.jwt);
-      setUser(LOGIN, { ...user, nickname: nickName });
-      setModal(null);
-    } else console.error('user 정보를 못불러 왔습니다.');
+        const res = await usersAPI.uploadAvatarImg(userId, formData, user.jwt);
+        if (res) setUser(LOGIN, { ...user, avatar: res.UpdateImg });
+        setModal(null);
+      } else setModal(null);
+    }
   };
 
   useEffect(() => {
     if (user) {
       setProfileImg(user.avatar);
+      setNickName(user.nickname);
     }
   }, []);
 
