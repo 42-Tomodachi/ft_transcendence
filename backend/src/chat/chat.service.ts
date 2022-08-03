@@ -64,6 +64,7 @@ export class ChatService {
     chatRoomData.roomId = roomId;
     chatRoomData.title = chatRoom.title;
     chatRoomData.ownerId = chatRoom.ownerId;
+    chatRoomData.isDm = chatRoom.isDm;
 
     return chatRoomData;
   }
@@ -244,6 +245,7 @@ export class ChatService {
     chatRoomDataDto.roomId = createdChatRoom.id;
     chatRoomDataDto.title = createdChatRoom.title;
     chatRoomDataDto.ownerId = createdChatRoom.ownerId;
+    chatRoomDataDto.isDm = createdChatRoom.isDm;
 
     return chatRoomDataDto;
   }

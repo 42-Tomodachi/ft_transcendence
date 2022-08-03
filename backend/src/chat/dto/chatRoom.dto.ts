@@ -18,6 +18,7 @@ class ChatRoomBaseDto {
   numberOfParticipants: number;
 
   @ApiProperty({ description: 'dm방 여부' })
+  @IsOptional()
   isDm: boolean;
 
   @ApiProperty({ description: '채팅방 비밀번호' })
@@ -39,6 +40,7 @@ export class ChatRoomDataDto extends PickType(ChatRoomBaseDto, [
   'roomId',
   'title',
   'ownerId',
+  'isDm',
 ]) {}
 
 export class SetChatRoomDto extends PickType(ChatRoomBaseDto, [

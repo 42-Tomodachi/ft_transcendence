@@ -66,6 +66,7 @@ export class ChatRoom extends BaseEntity {
     chatRoomDataDto.roomId = this.id;
     chatRoomDataDto.title = this.title;
     chatRoomDataDto.ownerId = this.ownerId;
+    chatRoomDataDto.isDm = this.isDm;
 
     return chatRoomDataDto;
   }
