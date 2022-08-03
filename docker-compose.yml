@@ -14,19 +14,19 @@ services:
     container_name: postgresql
     hostname: postgresql
 
-  front:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    # depends_on:
-    #   - back
-    networks:
-      - webapp
-    ports:
-      - 3000:3000
-    restart: always
-    container_name: front
-    # hostname: front
+  # front:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   # depends_on:
+  #   #   - back
+  #   networks:
+  #     - webapp
+  #   ports:
+  #     - 3000:3000
+  #   restart: always
+  #   container_name: front
+  #   # hostname: front
 
   back:
     build:
