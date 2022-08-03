@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 const calculateOn = [true, false];
 const ballball = [50, 50];
-const paddlepaddle = [50, 50];
+const paddlepaddle = [40, 40];
 const point = [0, 0];
 const HERTZ = 60;
 const PLAYERONE = 1;
@@ -190,7 +190,7 @@ const GameStart: React.FC = () => {
   const ballAction = (pos: number, velo: number) => {
     if (gameInfo.ballP_X > 100) return 50;
     else if (gameInfo.ballP_X < 0) return 50;
-    return pos + velo;
+    else return pos + velo;
   };
 
   // 어떤 플레이어가 계산할 차례인지를 반환합니다.
@@ -254,7 +254,7 @@ const GameStart: React.FC = () => {
   // 문제는 마우스좌표가 움직이지 않을때는 null이라 그대로 사용할순없습니다.
   let mouseY: number;
   document.addEventListener('mousemove', mouseMoveHandler, false);
-  function mouseMoveHandler(e: any) {
+  function mouseMoveHandler(e: MouseEvent) {
     mouseY = e.clientY / 7 - 17;
   }
 
@@ -290,7 +290,7 @@ const GameStart: React.FC = () => {
         (player === 'p1' && calculateOn[0] === true) ||
         (player === 'p2' && calculateOn[1] === true)
       ) {
-        console.log('계산중 : ' + player + ' turn : ' + gameInfo.turn);
+        // console.log('계산중 : ' + player + ' turn : ' + gameInfo.turn);
         setGameInfo(gameInfo => {
           return {
             ...gameInfo,
@@ -319,7 +319,7 @@ const GameStart: React.FC = () => {
     return () => {
       if (user)
         if (user.socket) {
-          console.log('socket disconnect:' + user.socket.id);
+          // console.log('socket disconnect:' + user.socket.id);
           user.socket.disconnect();
         }
     };
@@ -345,14 +345,7 @@ const GameStart: React.FC = () => {
           (data[6] == 2 && player === 'p2' && calculateOn[1] === false) ||
           (data[6] == 1 && player === 'p1' && calculateOn[0] === false)
         ) {
-          if (player === 'p2') {
-            calculateOn[0] = false;
-            calculateOn[1] = true;
-          } else {
-            calculateOn[0] = true;
-            calculateOn[1] = false;
-          }
-          console.log('다음턴부터 계산 : ' + player + ' turn : ' + gameInfo.turn);
+          //console.log('다음턴부터 계산 : ' + player + ' turn : ' + gameInfo.turn);
           setGameInfo(gameInfo => {
             return {
               ...gameInfo,
@@ -366,6 +359,13 @@ const GameStart: React.FC = () => {
               turn: data[6],
             };
           });
+          if (player === 'p2') {
+            calculateOn[0] = false;
+            calculateOn[1] = true;
+          } else if (player === 'p1') {
+            calculateOn[0] = true;
+            calculateOn[1] = false;
+          }
         }
         if (data[8] == 10 || data[9] == 10) {
           console.log('10점획득 disconnect:' + user.socket.id);
