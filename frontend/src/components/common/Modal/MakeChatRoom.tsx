@@ -41,7 +41,13 @@ const MakeChatRoom: React.FC = () => {
       <MainBlock>
         <TextGridBlock>
           <RoomNPwd>방 제목</RoomNPwd>
-          <InputRoomName type="text" onChange={onChangeInput} value={roomName} name="roomName" />
+          <InputRoomName
+            type="text"
+            onChange={onChangeInput}
+            value={roomName}
+            name="roomName"
+            spellCheck={false}
+          />
           <RoomNPwd>비밀번호</RoomNPwd>
           <InputPwd type="password" name="password" onChange={onChangeInput} value={password} />
         </TextGridBlock>
@@ -88,6 +94,7 @@ const InputRoomName = styled.input`
 `;
 
 const InputPwd = styled(InputRoomName)`
+  text-align: center;
   &[type='password'] {
   }
 `;

@@ -35,6 +35,10 @@ export const AllContext = createContext<stateType>({
     jwt: '',
     setJwt: () => null,
   },
+  targetItem: {
+    targetId: 0,
+    setTargetId: () => null,
+  },
 });
 
 type stateType = {
@@ -54,6 +58,10 @@ type stateType = {
     jwt: string;
     setJwt: (type: 'SET_JWT' | 'REMOVE_JWT', jwt?: string) => void;
   };
+  targetItem: {
+    targetId: number;
+    setTargetId: (type: number) => void;
+  };
 };
 
 interface AllContextApiProps {
@@ -68,6 +76,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
   const [user, setUser] = useState<IUserData | null>(null);
   const [userStatus, setUserStatus] = useState<UserStatusType>(LOADING);
   const [jwt, setJwt] = useState<string>('');
+  const [targetId, setTargetId] = useState<number>(0);
 
   const handleJwt = (type: 'SET_JWT' | 'REMOVE_JWT', jwt?: string) => {
     switch (type) {
@@ -127,8 +136,12 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
   };
 
   const handleUserStatus = (type: UserStatusType) => {
-    console.log('store', type);
+    // console.log('store', type);
     setUserStatus(type);
+  };
+
+  const handleTargetId = (type: number) => {
+    setTargetId(type);
   };
 
   const data = {
@@ -147,6 +160,10 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     jwtData: {
       jwt,
       setJwt: handleJwt,
+    },
+    targetItem: {
+      targetId,
+      setTargetId: handleTargetId,
     },
   };
   return <AllContext.Provider value={data}>{children}</AllContext.Provider>;

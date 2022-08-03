@@ -26,6 +26,9 @@ const OauthPage: React.FC = () => {
             ladderWinCount: 0,
             ladderLoseCount: 0,
             ladderLevel: 0,
+            isSecondAuthOn: false,
+            isFriend: false,
+            isBlocked: false,
           });
           // NOTE: 임시로 LocalStorage에 jwt 저장
           window.localStorage.setItem('jwt', res.jwt);

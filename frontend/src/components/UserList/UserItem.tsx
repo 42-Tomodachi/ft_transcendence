@@ -1,29 +1,27 @@
 import React, { useContext } from 'react';
 import styled from '@emotion/styled';
 import { AllContext } from '../../store';
-import { ActiveMenuType, IUserList, PLAY, ON, OFF, SHOW_PROFILE } from '../../utils/interface';
+import { IGetUser, PLAY, ON, OFF, SHOW_PROFILE } from '../../utils/interface';
 
 interface UserItemProps {
-  user: IUserList;
-  activeMenu: ActiveMenuType;
+  user: IGetUser;
 }
 
-const UserItem: React.FC<UserItemProps> = ({ user, activeMenu }) => {
+const UserItem: React.FC<UserItemProps> = ({ user }) => {
   const { setModal } = useContext(AllContext).modalData;
+  const { setTargetId } = useContext(AllContext).targetItem;
 
   return (
     <>
-      {activeMenu === 'ALL' ? (
-        <UserItemContainer status={user.status} onClick={() => setModal(SHOW_PROFILE)}>
-          {user.nickname}
-        </UserItemContainer>
-      ) : (
-        user.isfriend && (
-          <UserItemContainer status={user.status} onClick={() => setModal(SHOW_PROFILE)}>
-            {user.nickname}
-          </UserItemContainer>
-        )
-      )}
+      <UserItemContainer
+        status={user.status}
+        onClick={() => {
+          setTargetId(user.userId);
+          setModal(SHOW_PROFILE, user.userId);
+        }}
+      >
+        {user.nickname}
+      </UserItemContainer>
     </>
   );
 };

@@ -212,7 +212,7 @@ const chatsAPI = {
     try {
       const url = chatsPath(`/${roomId}/muteToggle`);
       const res = await instance.put(url, { headers: { Authorization: `Bearer ${jwt}` } });
-      return res.data;
+      return res.data; // INFO: isMuted : boolean
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
@@ -228,12 +228,8 @@ const chatsAPI = {
   ): Promise<boolean> => {
     try {
       const url = chatsPath(`/${roomId}/users/${userId}/messages`);
-      const res = await instance.post(
-        url,
-        { data: chatLog },
-        { headers: { Authorization: `Bearer ${jwt}` } },
-      );
-      return res.data;
+      await instance.post(url, { data: chatLog }, { headers: { Authorization: `Bearer ${jwt}` } });
+      return true;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
