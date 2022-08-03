@@ -20,6 +20,7 @@ const ChatPage: React.FC = () => {
   const { user } = useContext(AllContext).userData;
   const { roomId } = useParams();
   const [roomName, setRoomName] = useState<string>('');
+  const [isDm, setRoomtype] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const submitMessage = (message: string) => {
@@ -41,17 +42,21 @@ const ChatPage: React.FC = () => {
           roomId: roomId,
         },
       });
-      socket.on('reloadChatHistory', (data: IMessage[]) => {
-        setMessages(data);
-      });
-      socket.on('recieveMessage', (data: IMessage) => {
-        console.log('recieve msg');
-        setMessages(pre => [...pre, data]);
-      });
-      socket.on('disconnectSocket', () => {
-        console.log('강퇴');
-        navigate('/');
-      });
+      if (socket) {
+        socket.on('reloadChatHistory', (data: IMessage[]) => {
+          setMessages(data);
+        });
+        socket.on('recieveMessage', (data: IMessage) => {
+          setMessages(pre => [...pre, data]);
+        });
+        socket.on('disconnectSocket', data => {
+          // TODO: 경고 모달 띄우기
+          if (data) {
+            console.log(data);
+          }
+          navigate('/');
+        });
+      }
     }
     return () => {
       if (socket) {
@@ -68,15 +73,16 @@ const ChatPage: React.FC = () => {
         const res = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
         if (res) {
           setRoomName(res.title);
+          if (res.isDm) setRoomtype(res.isDm);
         } else {
           // TODO: 경고 모달 띄우기
-          navigate('/');
+          // TODO: API연결이라서 navigate가 disconnectSocket과 중복됨
+          // navigate('/chat');
         }
       };
       getRoomData();
     }
   }, [user, roomId]);
-
   return (
     <Background>
       <ChatRoomContainer>
@@ -86,7 +92,7 @@ const ChatPage: React.FC = () => {
             <ChatTitle>
               <BackawayWrap
                 onClick={() => {
-                  navigate(-1);
+                  navigate('/');
                 }}
               >
                 <Backaway src={backaway} alt="backaway" />
@@ -97,7 +103,7 @@ const ChatPage: React.FC = () => {
             <MessageInput submitMessage={submitMessage} />
           </ChatArea>
           <ChatSideMenu>
-            <UserList menuType={'INCHAT'} roomId={roomId} />
+            <UserList menuType={'INCHAT'} roomId={roomId} isDm={isDm} />
             <UserProfile />
           </ChatSideMenu>
         </ChatRoomBody>

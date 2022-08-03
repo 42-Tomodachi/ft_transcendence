@@ -22,9 +22,10 @@ import { Interface } from 'readline';
 interface UserListType {
   menuType: ActiveMenuType;
   roomId?: string;
+  isDm?: boolean;
 }
 
-const UserList: React.FC<UserListType> = ({ menuType, roomId }) => {
+const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm }) => {
   const { user } = useContext(AllContext).userData;
   const [activeMenu, setActiveMenu] = useState<ActiveMenuType>(menuType);
   const [userList, setUserList] = useState<IGetUser[] | []>([]);
@@ -112,6 +113,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId }) => {
                           targetUser={targetUser}
                           menuType={activeMenu}
                           roomId={roomId}
+                          isDm={isDm}
                         />
                       ),
                   )

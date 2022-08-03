@@ -18,9 +18,16 @@ interface UserItemProps {
   loginUserRole?: UserRole;
   menuType: ActiveMenuType;
   roomId?: string;
+  isDm?: boolean;
 }
 
-const UserItem: React.FC<UserItemProps> = ({ targetUser, loginUserRole, menuType, roomId }) => {
+const UserItem: React.FC<UserItemProps> = ({
+  targetUser,
+  loginUserRole,
+  menuType,
+  roomId,
+  isDm,
+}) => {
   const { setModal } = useContext(AllContext).modalData;
   const { setTargetId } = useContext(AllContext).targetItem;
 
@@ -31,9 +38,9 @@ const UserItem: React.FC<UserItemProps> = ({ targetUser, loginUserRole, menuType
         onClick={() => {
           setTargetId(targetUser.userId);
           if (menuType !== 'ALL' && roomId) {
-            if (loginUserRole === 'owner') {
+            if (loginUserRole === 'owner' && !isDm && menuType !== 'FRIEND') {
               setModal(SHOW_OWNER_PROFILE, targetUser.userId, +roomId);
-            } else if (loginUserRole === 'manager') {
+            } else if (loginUserRole === 'manager' && !isDm && menuType !== 'FRIEND') {
               setModal(SHOW_MANAGER_PROFILE, targetUser.userId, +roomId);
             } else {
               setModal(SHOW_PROFILE, targetUser.userId, +roomId);
