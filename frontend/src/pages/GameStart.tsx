@@ -9,7 +9,7 @@ const calculateOn = [true, false];
 const ballball = [50, 50];
 const paddlepaddle = [50, 50];
 const point = [0, 0];
-const HERTZ = 10;
+const HERTZ = 60;
 const PLAYERONE = 1;
 const PLAYERTWO = 2;
 
@@ -163,18 +163,18 @@ const GameStart: React.FC = () => {
 
   // 밸로시티가 바뀌는 조건
   const testReturn = (info: GameInfo) => {
-    if (info.ballP_Y <= 0) return 'upHit';
-    if (info.ballP_Y >= 100) return 'downHit';
+    if (info.ballP_Y <= 2) return 'upHit';
+    if (info.ballP_Y >= 97) return 'downHit';
     if (
-      info.ballP_X >= 2 &&
+      info.ballP_X >= 4 &&
       info.ballP_X <= 9 &&
       info.ballP_Y >= gameInfo.leftPaddlePos &&
       info.ballP_Y <= gameInfo.leftPaddlePos + 20
     )
       return 'leftHit';
     if (
-      info.ballP_X >= 93 &&
-      info.ballP_X <= 98 &&
+      info.ballP_X >= 92 &&
+      info.ballP_X <= 96 &&
       info.ballP_Y >= gameInfo.rightPaddlePos &&
       info.ballP_Y <= gameInfo.rightPaddlePos + 20
     )
@@ -319,7 +319,7 @@ const GameStart: React.FC = () => {
     return () => {
       if (user)
         if (user.socket) {
-          console.log('게임끝났어? 바로 디스커넥트 해버려. :' + user.socket.id);
+          console.log('socket disconnect:' + user.socket.id);
           user.socket.disconnect();
         }
     };
