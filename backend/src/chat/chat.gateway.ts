@@ -64,6 +64,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.join(roomId);
     if (this.connectedSocketMap.has(roomId)) {
+      this.disconnectUser(+roomId, +userId);
       this.connectedSocketMap.get(roomId).set(userId, client.id);
     } else {
       const socketUser = new Map<string, string>();
