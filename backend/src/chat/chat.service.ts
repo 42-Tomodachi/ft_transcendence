@@ -394,7 +394,8 @@ export class ChatService {
 
     if (room.ownerId === userId) {
       // 방 폭파 + 방에서 다 내보내기
-      this.chatGateway.wss.socketsLeave(roomId.toString());
+      this.chatGateway.wss.to(roomId.toString()).emit('disconnectSocket', null);
+      this.chatGateway.wss.to(roomId.toString()).disconnectSockets();
       await this.chatRoomRepo.delete({ id: roomId });
     } else {
       await this.chatParticipantRepo.delete({ chatRoomId: roomId, userId });
