@@ -60,6 +60,9 @@ export class ChatService {
   async getChatRoomData(roomId: number): Promise<ChatRoomDataDto> {
     const chatRoom = await this.chatRoomRepo.findOne({ where: { id: roomId } });
 
+    if (!chatRoom) {
+      throw new BadRequestException('존재하지 않는 채팅방입니다.');
+    }
     const chatRoomData = new ChatRoomDataDto();
     chatRoomData.roomId = roomId;
     chatRoomData.title = chatRoom.title;
