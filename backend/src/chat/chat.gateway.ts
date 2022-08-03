@@ -125,21 +125,22 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     user: User,
     userId: number,
   ): Promise<void> {
-    const joinedChatRooms = await this.chatService.getParticipatingChatRooms(
-      user,
-      userId,
-    );
-    joinedChatRooms.forEach((roomInfo) => {
-      this.connectedSocketMap
-        .get(roomInfo.roomId.toString())
-        .forEach(async (socketId, userIdInRoom) => {
+    const joinedChatRoomIds = (
+      await this.chatService.getParticipatingChatRooms(user, userId)
+    ).map((chatRoom) => chatRoom.roomId);
+    joinedChatRoomIds.forEach((chatRoomId) => {
+      const userSocket = this.connectedSocketMap.get(chatRoomId.toString());
+
+      if (userSocket) {
+        userSocket.forEach(async (socketId, userIdInRoom) => {
           const chatContentDtos = await this.chatService.getChatContentsForEmit(
-            +roomInfo.roomId,
+            chatRoomId,
             +userIdInRoom,
           );
 
           this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
         });
+      }
     });
   }
 
