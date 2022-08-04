@@ -6,23 +6,21 @@ import { AllContext } from '../../store';
 import {
   CHECK_SCORE,
   EDIT_MY_PROFILE,
-  IUserData,
-  LOGIN,
   OFF_SECOND_AUTH,
   ON_SECOND_AUTH,
+  UPDATE_USER,
 } from '../../utils/interface';
 import { usersAPI } from '../../API';
 
 const ProfilePage: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const { user, setUser } = useContext(AllContext).userData;
-
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
         const data = await usersAPI.getLoginUserProfile(user.jwt);
         if (data && data.nickname) {
-          setUser(LOGIN, { ...data, jwt: user.jwt });
+          setUser(UPDATE_USER, { ...data, jwt: user.jwt });
         }
       }
     };
@@ -76,10 +74,10 @@ const ProfilePage: React.FC = () => {
             />
             <Button
               color="gradient"
-              text={user?.isSecondAuthOn ? '2차 인증 해제' : '2차 인증 활성화'}
+              text={user.isSecondAuthOn ? '2차 인증 해제' : '2차 인증 활성화'}
               width={120}
               height={30}
-              onClick={() => setModal(user?.isSecondAuthOn ? OFF_SECOND_AUTH : ON_SECOND_AUTH)}
+              onClick={() => setModal(user.isSecondAuthOn ? OFF_SECOND_AUTH : ON_SECOND_AUTH)}
             />
           </OtherBtnBlock>
         </MainBlock>
