@@ -14,8 +14,6 @@ import { Repository } from 'typeorm';
 import { GameService } from './game.service';
 import { GameEnv, GameInfo, Player } from './game.gameenv';
 
-const HERTZ = 60;
-
 // @UseGuards(AuthGuard())
 @WebSocketGateway({
   cors: true,

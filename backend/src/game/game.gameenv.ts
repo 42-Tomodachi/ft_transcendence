@@ -26,6 +26,7 @@ export class Player {
   socket: Socket;
   userId: number;
   gameId: number | null;
+  games: GameRoomAttribute[];
   inRoom: boolean;
   inLadderQ: boolean;
 
@@ -33,6 +34,7 @@ export class Player {
     this.socket = socket;
     this.userId = userId;
     this.gameId = gameId;
+    this.games = [];
     this.inRoom = false;
     this.inLadderQ = false;
   }
@@ -265,17 +267,17 @@ export class GameEnv {
     return this.gameRoomTable.at(gameId);
   }
 
-  createGameRoom(createGameRoomDto: CreateGameRoomDto): boolean {
+  createGameRoom(createGameRoomDto: CreateGameRoomDto): number | null {
     const index: number = this.getFreeRoomIndex();
     if (index == null) {
-      return false;
+      return null;
     }
     const player = this.getPlayerById(createGameRoomDto.ownerId);
 
     const gameRoomAtt = new GameRoomAttribute(index, createGameRoomDto, player);
     gameRoomAtt.enroll(this.gameRoomTable);
     player.inRoom = true;
-    return true;
+    return index;
   }
 
   joinGameRoom(
@@ -344,7 +346,7 @@ export class GameEnv {
 
   removePlayer(player: Player) {
     if (player.inRoom) {
-      this.leaveGameRoom(player);
+      this.leaveGameRoom(this.getGameRoom(player.gameId), player);
     }
     if (player.inLadderQ) {
       this.removeFromLadderQueue(player);
