@@ -60,6 +60,18 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const roomId = client.handshake.query.roomId as string;
     const userId = client.handshake.query.userId as string;
 
+    try {
+      if (!(await this.chatService.isExistMember(+roomId, +userId))) {
+        this.wss.to(client.id).emit('disconnectSocket', null);
+        client.disconnect();
+        return;
+      }
+    } catch (error) {
+      this.wss.to(client.id).emit('disconnectSocket', null);
+      client.disconnect();
+      return;
+    }
+
     this.logger.log(`socket id: ${client.id}, userId: ${userId} connected`);
 
     client.join(roomId);
