@@ -89,6 +89,7 @@ const ModalHeader = styled.div`
 const ModalTitle = styled.h4`
   font-size: 20px;
   font-weight: bold;
+  margin-bottom: 0px;
   color: ${({ theme }) => theme.colors.main};
 `;
 const ModalCloseBtn = styled.button`
@@ -107,6 +108,8 @@ const CloseIcon = styled.img`
   width: 100%;
   height: 100%;
   object-fit: contain;
+  top: 50%;
+  transform: translate(0, -50%);
 `;
 
 export default Modal;
