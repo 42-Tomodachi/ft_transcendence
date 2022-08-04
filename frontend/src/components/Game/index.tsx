@@ -5,17 +5,21 @@ import Button from '../common/Button';
 import GameList from '../RoomList';
 import { AllContext } from '../../store';
 import { LOADING_LADDER_GAME, IGameRooms, MAKE_GAME_ROOM, GAME } from '../../utils/interface';
+import { gameAPI } from '../../API';
 
 const Game: React.FC = () => {
   const [gameList, setGameList] = useState<IGameRooms[] | []>([]);
+  const { user } = useContext(AllContext).userData;
   const { setModal } = useContext(AllContext).modalData;
 
   useEffect(() => {
-    const getGameList = async () => {
-      const { data } = await axios('http://localhost:4000/gameList');
-      setGameList(data);
-    };
-    getGameList();
+    if (user && user.jwt) {
+      const getAllGameList = async () => {
+        const res = await gameAPI.getGameRooms(user.jwt); //
+        setGameList(res);
+      };
+      getAllGameList();
+    }
   }, []);
 
   return (

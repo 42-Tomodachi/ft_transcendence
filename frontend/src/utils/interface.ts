@@ -24,6 +24,7 @@ export interface IChatRoomInfo {
   isDm?: boolean;
 }
 export interface IChatDMRoom extends IChatRoomInfo {}
+export interface IGameRoomInfo extends IChatRoomInfo {}
 export interface IChatRooms {
   roomId: number;
   title: string;

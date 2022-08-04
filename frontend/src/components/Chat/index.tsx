@@ -17,19 +17,18 @@ import { chatsAPI } from '../../API';
 const Chat: React.FC = () => {
   const [chatList, setChatList] = useState<IChatRooms[] | IGameRooms[]>([]);
   const [roomType, setRoomType] = useState<ChatRoomType>(ALL);
-  const { jwt, setJwt } = useContext(AllContext).jwtData;
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
 
   useEffect(() => {
-    if (user) {
+    if (user && user.jwt) {
       getAllChatList(user.jwt);
     }
   }, []);
 
   const onGetJoinedChatRooms = async () => {
-    if (user) {
-      const res = await chatsAPI.getJoinedChatRooms(user.userId, jwt);
+    if (user && user.jwt) {
+      const res = await chatsAPI.getJoinedChatRooms(user.userId, user.jwt);
       setChatList(res);
     } else console.error('not get user');
   };
@@ -45,7 +44,7 @@ const Chat: React.FC = () => {
       onGetJoinedChatRooms();
     } else {
       setRoomType(ALL);
-      getAllChatList(jwt);
+      if (user && user.jwt) getAllChatList(user.jwt);
     }
   };
 
