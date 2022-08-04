@@ -12,6 +12,23 @@ import { chatsAPI } from '../API';
 import backaway from '../assets/backaway.png';
 import { useNavigate } from 'react-router-dom';
 import io, { Socket } from 'socket.io-client';
+import 'antd/dist/antd.min.css';
+import { notification } from 'antd';
+import type { NotificationPlacement } from 'antd/es/notification';
+
+type NotificationType = 'success' | 'info' | 'warning' | 'error';
+// TODO: 상황별 노티가 나타나도록 분기 타줄 것
+const disconnectSocketNoti = (
+  type: NotificationType,
+  placement: NotificationPlacement,
+  msg: string,
+) => {
+  notification[type]({
+    message: msg,
+    description: `원인 : ${msg}`,
+    placement,
+  });
+};
 
 let socket: Socket;
 
@@ -50,10 +67,11 @@ const ChatPage: React.FC = () => {
           setMessages(pre => [...pre, data]);
         });
         socket.on('disconnectSocket', data => {
+          // TODO: owner아이디랑
           // TODO: 경고 모달 띄우기
           if (data) {
-            console.log(data);
-          }
+            disconnectSocketNoti('error', 'top', data);
+          } else disconnectSocketNoti('error', 'top', '강퇴당한 방입니다'); // TODO: 방 폭파한 방장한테도 disconnect가 가는건 문제인듯
           navigate('/');
         });
       }
@@ -75,6 +93,8 @@ const ChatPage: React.FC = () => {
           setRoomName(res.title);
           if (res.isDm) setRoomtype(res.isDm);
         } else {
+          console.log('강퇴');
+          disconnectSocketNoti('error', 'top', 'X');
           // TODO: 경고 모달 띄우기
           // TODO: API연결이라서 navigate가 disconnectSocket과 중복됨
           // navigate('/chat');
