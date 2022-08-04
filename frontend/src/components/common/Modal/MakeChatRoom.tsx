@@ -112,14 +112,14 @@ const ErrMsg = styled.span`
   font-size: 14px;
   color: ${({ theme }) => theme.colors.red};
   text-align: center;
-  margin: 10px 0 10px;
+  margin: 20px 0 10px;
 `;
 
 //============================================
 
 //BtnSection
 const BtnBlock = styled.div`
-  /* margin-top: 20px; */
+  margin-top: 20px;
   & button {
     border-radius: 5px;
   }

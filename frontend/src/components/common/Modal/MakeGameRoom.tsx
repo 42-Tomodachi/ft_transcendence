@@ -5,8 +5,8 @@ import Modal from '.';
 import { useNavigate } from 'react-router-dom';
 import { AllContext } from '../../../store';
 import { gameAPI } from '../../../API';
-import { Radio } from 'antd';
-import type { RadioChangeEvent } from 'antd';
+// import { Radio } from 'antd';
+// import type { RadioChangeEvent } from 'antd';
 
 const MakeGameRoom: React.FC = () => {
   const { user } = useContext(AllContext).userData;
@@ -48,20 +48,20 @@ const MakeGameRoom: React.FC = () => {
     }
   };
 
-  const onChange3 = (e: RadioChangeEvent) => {
-    console.log('radio3 checked', e.target.value);
-    setValues(e.target.value);
-  };
+  // const onChange3 = (e: RadioChangeEvent) => {
+  //   console.log('radio3 checked', e.target.value);
+  //   setValues(e.target.value);
+  // };
   return (
     <Modal width={570} height={300} title={'게임방 만들기'}>
       <MainBlock>
         <TextGridBlock>
           <RoomNPwd>게임모드</RoomNPwd>
-          <Radio.Group onChange={onChange3} value={values} defaultValue="Normal">
+          {/* <Radio.Group onChange={onChange3} value={values} defaultValue="Normal">
             <RadioButton value="Obstacle">장애물</RadioButton>
             <RadioButton value="SpeedUp">스피드업</RadioButton>
             <RadioButton value="Normal">일반</RadioButton>
-          </Radio.Group>
+          </Radio.Group> */}
           <RoomNPwd>방 제목</RoomNPwd>
           <InputRoomName
             type="text"
@@ -86,7 +86,7 @@ const MakeGameRoom: React.FC = () => {
 // Main Block
 const MainBlock = styled.div`
   padding: 13px;
-  /* margin-top: 50px; */
+  margin-top: 23px;
   width: 100%;
 `;
 //============================================
@@ -127,14 +127,14 @@ const ErrMsg = styled.span`
   font-size: 14px;
   color: ${({ theme }) => theme.colors.red};
   text-align: center;
-  margin: 10px 0 10px;
+  margin: 20px 0 10px;
 `;
 
 //============================================
 
 //BtnSection
 const BtnBlock = styled.div`
-  /* margin-top: 20px; */
+  /* margin-top: 40px; */
   & button {
     border-radius: 5px;
   }
@@ -142,13 +142,13 @@ const BtnBlock = styled.div`
 //============================================
 
 // TODO: radio button style
-const RadioButton = styled(Radio.Button)`
-  color: black;
-  margin-right: 5px;
-  &:hover {
-    color: ${props => props.theme.colors.main};
-    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.25);
-  }
-`;
+// const RadioButton = styled(Radio.Button)`
+//   color: black;
+//   margin-right: 5px;
+//   &:hover {
+//     color: ${props => props.theme.colors.main};
+//     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.25);
+//   }
+// `;
 
 export default MakeGameRoom;
