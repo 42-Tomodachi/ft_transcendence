@@ -239,7 +239,7 @@ export class GameEnv {
     throw new BadRequestException('생성 가능한 방 개수를 초과하였습니다.');
   }
 
-  getRoomIndexOfGame(gameId: number): number {
+  getRoomIndexOfGame(gameId: number): number | null {
     for (const item of this.gameRoomTable) {
       if (item.roomId == gameId) {
         return this.gameRoomTable.indexOf(item);

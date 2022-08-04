@@ -48,10 +48,18 @@ export class CreateGameRoomDto extends PickType(GameRoomProfileDto, [
   @IsOptional()
   password: string | null;
 }
+export class SimpleGameRoomDto extends PickType(GameRoomProfileDto, [
+  'gameId',
+  'gameMode',
+  'ownerId',
+  'roomTitle',
+]) {}
 
 export class GameRoomPasswordDto extends PickType(CreateGameRoomDto, [
   'password',
 ]) {}
+
+export class GameRoomIdDto extends PickType(GameRoomProfileDto, ['gameId']) {}
 
 export class GameResultDto {
   @ApiProperty({ description: '래더게임 여부' })

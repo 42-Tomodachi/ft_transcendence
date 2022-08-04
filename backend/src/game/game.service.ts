@@ -8,6 +8,8 @@ import {
   CreateGameRoomDto,
   GameRoomProfileDto,
   GameResultDto,
+  GameRoomIdDto,
+  SimpleGameRoomDto,
 } from './dto/game.dto';
 import { GameGateway } from './game.gateway';
 import { Socket } from 'socket.io';
@@ -57,32 +59,38 @@ export class GameService {
     gateway: GameGateway,
     user: User,
     createGameRoomDto: CreateGameRoomDto,
-  ) {
+  ): SimpleGameRoomDto {
     if (user.id !== createGameRoomDto.ownerId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
     // 같은 유저가 게임방을 여럿 만들 수 없도록 수정
 
     const index: number = this.gameEnv.getFreeRoomIndex();
+    const player: Player = this.gameEnv.getPlayerById(user.id);
 
-    const gameRoomAtt = new GameRoomAttribute(
-      index,
-      createGameRoomDto,
-      this.gameEnv.getPlayerById(user.id),
-    );
+    const gameRoomAtt = new GameRoomAttribute(index, createGameRoomDto, player);
     gameRoomAtt.save(this.gameEnv.gameRoomTable);
 
     // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
     // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
+
+    const gameRoomDto = new SimpleGameRoomDto();
+    gameRoomDto.gameMode = createGameRoomDto.gameMode;
+    gameRoomDto.ownerId = createGameRoomDto.ownerId;
+    gameRoomDto.roomTitle = createGameRoomDto.roomTitle;
+    gameRoomDto.gameId = index;
+
+    return gameRoomDto;
   }
 
   async getPlayersInfo(gameId: number): Promise<PlayerInfoDto[]> {
     const players: PlayerInfoDto[] = [];
-    const index = this.gameEnv.getRoomIndexOfGame(gameId);
-    if (index == null)
-      throw new BadRequestException('방 정보를 찾을 수 없습니다.');
+    // const index = this.gameEnv.getRoomIndexOfGame(gameId);
+    // if (index == null)
+    //   throw new BadRequestException('방 정보를 찾을 수 없습니다.');
 
-    const gameRoom = this.gameEnv.gameRoomTable[index];
+    const gameRoom = this.gameEnv.getGameRoom(gameId);
+    if (!gameRoom) throw new BadRequestException('방 정보를 찾을 수 없습니다.');
 
     const firstPlayerUserId = gameRoom.firstPlayer.userId;
     const firstPlayer = await this.userRepo.findOneBy({
@@ -109,7 +117,7 @@ export class GameService {
     gameId: number,
     userId: number,
     gamePassword: string | null,
-  ): Promise<string> {
+  ): Promise<GameRoomIdDto> {
     const index = this.gameEnv.getRoomIndexOfGame(gameId);
     if (user.id != userId)
       throw new BadRequestException('잘못된 유저의 접근입니다.');
@@ -137,8 +145,8 @@ export class GameService {
       this.gameEnv.gameRoomTable[index].playerCount++;
       // 소켓: 관전자 설정
     }
-
-    return this.gameEnv.gameRoomTable[index].roomTitle;
+    // return this.gameEnv.gameRoomTable[index].roomTitle;
+    return { gameId: gameId };
   }
 
   async exitGameRoom(
