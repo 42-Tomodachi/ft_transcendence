@@ -33,8 +33,22 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   socketMap = new Map<string, Player>();
 
-  sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  setSocketToPlayer(client: Socket, userId: number) {
+    let player: Player = null;
+
+    for (const playerr of this.socketMap.values()) {
+      if (playerr.userId === userId) {
+        player = playerr;
+        player.socket = client;
+        this.socketMap.delete(player.socket.id);
+        break;
+      }
+    }
+    if (!player) {
+      player = this.gameEnv.newPlayer(client, userId, null);
+    }
+    this.socketMap[client.id] = player; // socketMap에 유저 등록
+    return player;
   }
 
   async getUserBySocket(socket: Socket): Promise<User> {
@@ -52,17 +66,21 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
     if (!userId) {
       console.log(`New client has no userId`);
+      socket.emit('message', 'no userId');
       socket.disconnect();
     }
-    this.socketMap[socket.id] = new Player(socket, userId, null);
+    this.setSocketToPlayer(socket, userId);
 
     socket.emit('message', 'message you connect success okok');
+    // 유저 상태 게임중으로 변경
   }
 
   handleDisconnect(socket: Socket) {
     console.log(`Client disconnected: ${socket.id}`);
+    this.gameEnv.removePlayer(this.socketMap[socket.id]);
     this.socketMap.delete(socket.id);
     // 해당 유저 퇴장 알림
+    // 유저 상태 접속중으로 변경
   }
 
   @SubscribeMessage('test')
@@ -72,28 +90,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return 'iswork';
   }
 
-  setSocketToPlayer(client: Socket, userId: number) {
-    let player: Player = null;
-
-    for (const playerr of this.socketMap.values()) {
-      if (playerr.userId === userId) {
-        player = playerr;
-        player.socket = client;
-        this.socketMap.delete(player.socket.id);
-        break;
-      }
-    }
-    if (!player) {
-      // player = new Player(client, userId, null); // player 생성
-      player = this.gameEnv.newPlayer(client, userId, null);
-    }
-    this.socketMap[client.id] = player; // socketMap에 유저 등록
-    return player;
-  }
-
   @SubscribeMessage('newLadderGame')
   async newLadderGame(client: Socket, userId: number): Promise<void> {
     const player = this.setSocketToPlayer(client, userId);
+    // const player = this.setSocketToPlayer(client, userId);
     console.log(`newLadderGame: ${userId}`);
     const matchMade = this.gameEnv.enlistLadderQueue(player);
     if (matchMade) {
@@ -102,6 +102,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
         .emit('matchingGame', matchMade.roomId.toString());
       // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
       // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
+    } else {
+      this.server.to(client.id).emit('message', '래더 대기열 부족');
     }
   }
 

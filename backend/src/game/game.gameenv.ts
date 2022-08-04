@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { randomInt } from 'crypto';
 import {
@@ -26,11 +26,15 @@ export class Player {
   socket: Socket;
   userId: number;
   gameId: number | null;
+  inRoom: boolean;
+  inLadderQ: boolean;
 
   constructor(socket: Socket, userId: number, gameId: number | null) {
     this.socket = socket;
     this.userId = userId;
     this.gameId = gameId;
+    this.inRoom = false;
+    this.inLadderQ = false;
   }
 }
 
@@ -122,6 +126,7 @@ export class GameRoomAttribute {
   gameMode: 'normal' | 'speed' | 'obstacle';
   firstPlayer: Player;
   secondPlayer: Player | null;
+  spectators: Player[];
   playerCount: number;
   isPublic: boolean;
   isStart: boolean;
@@ -139,6 +144,7 @@ export class GameRoomAttribute {
     this.gameMode = createGameRoomDto.gameMode;
     this.firstPlayer = player1;
     this.secondPlayer = null;
+    this.spectators = [];
     this.isStart = false;
     this.rtData = new GameRTData();
     this.playerCount = 1;
@@ -173,7 +179,7 @@ export class GameRoomAttribute {
     return gameResultDto;
   }
 
-  save(gameRoomTable: GameRoomAttribute[]) {
+  enroll(gameRoomTable: GameRoomAttribute[]) {
     if (gameRoomTable.length == this.roomId) {
       gameRoomTable.push(this);
     } else {
@@ -221,12 +227,12 @@ export class GameRoomAttribute {
 
 @Injectable()
 export class GameEnv {
-  gameRoomIdList: number[] = new Array(10000).fill(0);
+  gameRoomIdList: number[] = new Array(10).fill(0);
   gameRoomTable: GameRoomAttribute[] = [];
-  playerList: Player[] = new Array(10000).fill(0);
+  playerList: Player[] = new Array(50).fill(0);
   ladderQueue: Player[] = [];
 
-  getFreeRoomIndex(): number {
+  getFreeRoomIndex(): number | null {
     let index = 0;
 
     for (const x of this.gameRoomIdList) {
@@ -236,10 +242,10 @@ export class GameEnv {
       }
       index++;
     }
-    throw new BadRequestException('생성 가능한 방 개수를 초과하였습니다.');
+    return null;
   }
 
-  getRoomIndexOfGame(gameId: number): number {
+  getRoomIndexOfGame(gameId: number): number | null {
     for (const item of this.gameRoomTable) {
       if (item.roomId == gameId) {
         return this.gameRoomTable.indexOf(item);
@@ -248,14 +254,102 @@ export class GameEnv {
     return null;
   }
 
-  getGameRoom(gameId: number): GameRoomAttribute {
-    return this.gameRoomTable[gameId];
+  checkGameRoomPassword(
+    gameRoom: GameRoomAttribute,
+    gamePassword: string,
+  ): boolean {
+    return gameRoom.password == gamePassword;
   }
 
-  newPlayer(socket: Socket, userId: number, gameId: number): Player {
+  getGameRoom(gameId: number): GameRoomAttribute | null {
+    return this.gameRoomTable.at(gameId);
+  }
+
+  createGameRoom(createGameRoomDto: CreateGameRoomDto): boolean {
+    const index: number = this.getFreeRoomIndex();
+    if (index == null) {
+      return false;
+    }
+    const player = this.getPlayerById(createGameRoomDto.ownerId);
+
+    const gameRoomAtt = new GameRoomAttribute(index, createGameRoomDto, player);
+    gameRoomAtt.enroll(this.gameRoomTable);
+    player.inRoom = true;
+    return true;
+  }
+
+  joinGameRoom(
+    player: Player,
+    gameId: number,
+    gamePassword: string,
+  ): 'player' | 'spectator' {
+    const game = this.getGameRoom(gameId);
+    this.checkGameRoomPassword(game, gamePassword);
+
+    player.inRoom = true;
+    if (!game.secondPlayer) {
+      game.secondPlayer = player;
+      game.playerCount++;
+      return 'player';
+    } else {
+      game.spectators.push(player);
+      game.playerCount++;
+      return 'spectator';
+    }
+  }
+
+  gameRoomClear(game: GameRoomAttribute) {
+    game.firstPlayer.gameId = null;
+    game.firstPlayer.inRoom = false;
+    game.secondPlayer.gameId = null;
+    game.secondPlayer.inRoom = false;
+    for (const player of game.spectators) {
+      player.gameId = null;
+      player.inRoom = false;
+    }
+    const index = this.gameRoomTable.indexOf(game);
+    this.gameRoomTable.splice(index, 1);
+  }
+
+  leaveGameRoom(
+    game: GameRoomAttribute,
+    player: Player,
+  ): 'clear' | 'okay' | 'failed' {
+    if (game.roomId != player.gameId) {
+      return 'failed';
+    }
+
+    if (game.firstPlayer == player) {
+      this.gameRoomClear(game);
+      return 'clear';
+    } else if (game.secondPlayer == player) {
+      game.secondPlayer = null;
+    } else {
+      game.spectators.splice(game.spectators.indexOf(player), 1);
+    }
+    player.inRoom = false;
+    return 'okay';
+  }
+
+  newPlayer(socket: Socket, userId: number, gameId: number): Player | null {
+    for (const player of this.playerList) {
+      if (player.userId == userId) {
+        return null;
+      }
+    }
     const newOne = new Player(socket, userId, gameId);
     this.playerList.push(newOne);
     return newOne;
+  }
+
+  removePlayer(player: Player) {
+    if (player.inRoom) {
+      this.leaveGameRoom(player);
+    }
+    if (player.inLadderQ) {
+      this.removeFromLadderQueue(player);
+    }
+    this.playerList.splice(this.playerList.indexOf(player), 1);
   }
 
   getPlayerById(userId: number): Player {
@@ -266,12 +360,8 @@ export class GameEnv {
 
   enlistLadderQueue(player: Player): GameRoomAttribute | null {
     this.ladderQueue.push(player);
-    if (this.ladderQueue.length > 1) {
-      console.log(`enlistLadderQueue: length: ${this.ladderQueue.length}`);
-      return this.makeLadderMatch();
-    } else {
-      return null;
-    }
+    console.log(`enlistLadderQueue: length: ${this.ladderQueue.length}`);
+    return this.makeLadderMatch();
   }
 
   removeFromLadderQueue(player: Player) {
@@ -279,11 +369,10 @@ export class GameEnv {
     this.ladderQueue.splice(index, 1);
   }
 
-  makeLadderMatch(): GameRoomAttribute {
-    // if (user.id !== createGameRoomDto.ownerId) {
-    //   throw new BadRequestException('잘못된 유저의 접근입니다.');
-    // }
-    // 같은 유저가 게임방을 여럿 만들 수 없도록 수정
+  makeLadderMatch(): GameRoomAttribute | null {
+    if (this.ladderQueue.length < 2) {
+      return null;
+    }
     const player1 = this.ladderQueue.shift();
     const player2 = this.ladderQueue.shift();
     const index: number = this.getFreeRoomIndex();
@@ -303,7 +392,7 @@ export class GameEnv {
     gameRoomAtt.playerCount = 2;
     gameRoomAtt.isPublic = false;
 
-    gameRoomAtt.save(this.gameRoomTable);
+    gameRoomAtt.enroll(this.gameRoomTable);
 
     player1.gameId = index;
     player2.gameId = index;
