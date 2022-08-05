@@ -7,6 +7,7 @@ import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
 import { useNavigate } from 'react-router-dom'; //네비
 
 let socket: Socket;
+const test = [true];
 
 const LadderModal: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
@@ -34,12 +35,17 @@ const LadderModal: React.FC = () => {
 
     // 매치가 완료됐다고 서버한테 연락받으면
     socket.on('matchingGame', (roomId: number) => {
+      test[0] = false;
       setModal(null);
       if (user) user.roomid = roomId;
       navigate(`/gameroom/`); //GamePage.tsx
     });
     return () => {
-      socket.emit('cancelLadderQueue');
+      // 매칭도 아니고, 취소도 아니면 ! 백그라운드일 뿐이니까 !!
+      if (test[0] === true) {
+        socket.emit('cancelLadderQueue');
+        setModal(null);
+      }
     };
   }, []);
   return (
@@ -53,6 +59,7 @@ const LadderModal: React.FC = () => {
             color="white"
             text="취소"
             onClick={() => {
+              test[0] = false;
               socket.emit('cancelLadderQueue');
               setModal(null);
             }}
