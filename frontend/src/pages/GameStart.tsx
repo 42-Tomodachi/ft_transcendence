@@ -35,7 +35,7 @@ const GameStart: React.FC = () => {
   const { user } = useContext(AllContext).userData;
   const player = user ? user.player : 'g1';
   const navigate = useNavigate();
-
+  const roomid = user && user.roomid;
   //console.log('re-render');
   // 서버와 통신하기 위한 정보변수들을 useState로 관리
   const [gameInfo, setGameInfo] = useState<GameInfo>({
@@ -319,7 +319,7 @@ const GameStart: React.FC = () => {
     return () => {
       if (user)
         if (user.socket) {
-          // console.log('socket disconnect:' + user.socket.id);
+          console.log('socket disconnect:' + user.socket.id);
           user.socket.disconnect();
         }
     };
@@ -370,7 +370,7 @@ const GameStart: React.FC = () => {
         if (data[8] == 10 || data[9] == 10) {
           console.log('10점획득 disconnect:' + user.socket.id);
           if (user) user.socket.disconnect();
-          navigate(`/gameroom/1/gameexit/`); //GamePage.tsx
+          navigate(`/gameroom/${roomid}/gameexit/`); //GamePage.tsx
         }
       });
     } else console.log('ERROR: user undefined');

@@ -48,8 +48,8 @@ const GamePage: React.FC = () => {
       console.log('countdown:' + data);
       setCount(data);
       if (data == 0) {
-        console.log('이제 장면을 전환하자 !!!!! <<<<<<<< ');
-        navigate('/gameroom/1');
+        console.log(`장면전환 /gameroom/${roomid}`);
+        navigate(`/gameroom/${roomid}`);
       }
     });
     // const timer = setInterval(() => {
