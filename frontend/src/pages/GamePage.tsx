@@ -5,6 +5,19 @@ import { CHAT } from '../utils/interface';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom';
 
+interface GameInfoDto {
+  nicknameOne: any;
+  avatarOne: any;
+  winCountOne: any;
+  loseCountOne: any;
+  ladderLevelOne: any;
+  nicknameTwo: any;
+  avatarTwo: any;
+  winCountTwo: any;
+  loseCountTwo: any;
+  ladderLevelTwo: any;
+}
+
 /*
  * 모달 페이지로 큐에 게임매칭을 수행하게 되면, 이 페이지로 이동합니다.
  * 매칭이 이루어졌다면, 서버에서 매칭유저에 대한 정보를 보내주기로 합의되어있다.
@@ -15,7 +28,26 @@ const GamePage: React.FC = () => {
 
   const navigate = useNavigate();
   const [count, setCount] = useState(5); //오피셜은 10초
-  const [check, setCheck] = useState(['p1', 'p2']);
+  const [info, setInfo] = useState<GameInfoDto>({
+    nicknameOne: null,
+    avatarOne: null,
+    winCountOne: null,
+    loseCountOne: null,
+    ladderLevelOne: null,
+    nicknameTwo: null,
+    avatarTwo: null,
+    winCountTwo: null,
+    loseCountTwo: null,
+    ladderLevelTwo: null,
+  });
+
+  // window.addEventListener('beforeunload', event => {
+  //   event.preventDefault();
+  //   navigate(`/`);
+  //   // 문자열 반환
+  //   return '';
+  // });
+
   useEffect(() => {
     console.log('onMatchingScreen? ㅇㅇㅇ gogo ');
     // 게임방 화면으로 넘어왔다고 서버에게 알려줄거고, 서버는 .. matchData를 넘겨줄것임
@@ -23,13 +55,25 @@ const GamePage: React.FC = () => {
     const roomid = user?.roomid;
     user?.socket.emit('onMatchingScreen', roomid);
 
+    //   return gamerInfoDto;
     //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
     user?.socket.on('matchData', (p1: any, p2: any) => {
       // 합의하기로는 첫번째 데이터에 left유저, 즉 p1이고, 두번째 데이터가 p2를 보내면, 내가 알아서 기억하는걸로
       // 그렇게하는것으로.. 되어있다!!! 제발 한번에 돼라 !
       console.log('player111:' + p1.nickname);
       console.log('player222:' + p2.nickname);
-      setCheck([p1.nickname, p2.nickname]);
+      setInfo({
+        nicknameOne: p1.nickname,
+        avatarOne: p1.avatar,
+        winCountOne: p1.winCount,
+        loseCountOne: p1.loseCount,
+        ladderLevelOne: p1.ladderLevel,
+        nicknameTwo: p2.nickname,
+        avatarTwo: p2.nickname,
+        winCountTwo: p2.winCount,
+        loseCountTwo: p2.loseCount,
+        ladderLevelTwo: p2.ladderLevel,
+      });
       //난잘못없음 내아이디어는 아니고 !
       // 아무튼 내 유저아이디가 player1인지 2인지를 확인해서 기록해두고, 상대방의 닉네임도 기억해둘것
       // 왜냐면 캔버스에서 그려야하는데, 상대방이름을 알수있는 ...유일한 방법이라 (내가 생각하는)
@@ -68,9 +112,13 @@ const GamePage: React.FC = () => {
         <GameRoomBody>
           <GameArea>
             <InfoArea>
-              <UserInfo>{check[0]}</UserInfo>
+              <UserInfo>
+                <span>{`${info.nicknameOne} Lv. ${info.ladderLevelOne}`}</span>
+              </UserInfo>
               <Count>{count}</Count>
-              <UserInfo>{check[1]}</UserInfo>
+              <UserInfo>
+                <span>{`${info.nicknameTwo} Lv. ${info.ladderLevelTwo}`}</span>
+              </UserInfo>
             </InfoArea>
             <Message>게임이 곧 시작됩니다</Message>
           </GameArea>
@@ -117,6 +165,9 @@ const Count = styled.p`
 
 const UserInfo = styled.div`
   display: flex;
+  flex-direction: column;
+  font-size: 30px;
+  /* text-align: center; */
   align-items: center;
   justify-content: space-around;
   width: 260px;
