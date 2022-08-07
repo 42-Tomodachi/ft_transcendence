@@ -46,7 +46,7 @@ export const AllContext = createContext<stateType>({
       oppNickname: '',
       gameRoomId: -1,
     },
-    setGameInfo: () => null,
+    setPlayingGameInfo: () => null,
   },
 });
 
@@ -195,7 +195,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     },
     playingGameInfo: {
       playingGameInfo,
-      setGameInfo: handlePlayingGameInfo,
+      setPlayingGameInfo: handlePlayingGameInfo,
     },
   };
   return <AllContext.Provider value={data}>{children}</AllContext.Provider>;
