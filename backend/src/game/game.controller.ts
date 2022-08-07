@@ -18,6 +18,8 @@ import {
   GameRoomPasswordDto,
   GameRoomProfileDto,
   GameResultDto,
+  GameRoomIdDto,
+  SimpleGameRoomDto,
 } from './dto/game.dto';
 import { GameService } from './game.service';
 import { GameGateway } from './game.gateway';
@@ -39,12 +41,19 @@ export class GameController {
   }
 
   @ApiOperation({ summary: 'seungyel✅ 게임방 만들기' })
-  @Post('/')
+  @Post('/:userId')
   createGameRoom(
     @GetJwtUser() user: User,
+    @Param('userId') userId: number,
     @Body() createGameRoomDto: CreateGameRoomDto,
-  ) {
-    this.gameService.createGameRoom(this.gameGateway, user, createGameRoomDto);
+  ): SimpleGameRoomDto {
+    const gameRoom = this.gameService.createGameRoom(
+      this.gameGateway,
+      user,
+      createGameRoomDto,
+    );
+
+    return gameRoom;
   }
 
   @ApiOperation({ summary: 'seungyel✅ 게임방 참여자(플레이어) 정보 가져오기' })
@@ -62,7 +71,7 @@ export class GameController {
     @Param('gameId', ParseIntPipe) gameId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() gamePasswordDto: GameRoomPasswordDto,
-  ): Promise<string> {
+  ): Promise<GameRoomIdDto> {
     return await this.gameService.enterGameRoom(
       this.gameGateway,
       user,
