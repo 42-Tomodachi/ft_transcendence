@@ -41,7 +41,6 @@ services:
       - db
     restart: always
     command: ["./wait-for-it.sh", "postgresql:5432", "--", "npm", "start"]
-    # command: ["./wait-for-it.sh", "postgresql:5432", "--", "npm", "start:dev"]
     container_name: backend
     hostname: backend
 
