@@ -344,7 +344,7 @@ export class GameEnv {
   newPlayer(socket: Socket, userId: number, gameId: number): Player | null {
     for (const player of this.playerList) {
       if (player.userId == userId) {
-        return null;
+        return player;
       }
     }
     const newOne = new Player(socket, userId, gameId);

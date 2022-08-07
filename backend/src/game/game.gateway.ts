@@ -92,7 +92,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async newLadderGame(client: Socket, userId: number): Promise<void> {
     const player = this.setSocketToPlayer(client, userId);
     // const player = this.setSocketToPlayer(client, userId);
-    console.log(`newLadderGame: ${userId}`);
+    console.log(`newLadderGame: ${userId}, ${player}`);
     const matchMade = this.gameEnv.enlistLadderQueue(player);
     if (matchMade) {
       this.server
