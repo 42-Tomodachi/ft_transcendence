@@ -33,9 +33,10 @@ interface GameInfo {
 const GameStart: React.FC = () => {
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
   const { user } = useContext(AllContext).userData;
-  const player = user ? user.player : 'g1';
+  const { playingGameInfo } = useContext(AllContext).playingGameInfo;
+  const player = user ? playingGameInfo.player : 'g1';
   const navigate = useNavigate();
-  const roomid = user && user.roomid;
+  const roomid = user && playingGameInfo.gameRoomId;
   //console.log('re-render');
   // 서버와 통신하기 위한 정보변수들을 useState로 관리
   const [gameInfo, setGameInfo] = useState<GameInfo>({
@@ -68,7 +69,7 @@ const GameStart: React.FC = () => {
         0.2 * 750,
       );
       ctx.fillStyle = '#F87474';
-      ctx.fillText(`${user?.oppnickname} : ${point[1]}`, 750, 50);
+      ctx.fillText(`${playingGameInfo?.oppNickname} : ${point[1]}`, 750, 50);
       ctx.fillRect(
         0.945 * 1000,
         paddlepaddle[1] ? paddlepaddle[1] * 7 : gameInfo.rightPaddlePos * 7,
@@ -77,7 +78,7 @@ const GameStart: React.FC = () => {
       );
     } else if (player == 'p2') {
       ctx.fillStyle = '#3AB0FF';
-      ctx.fillText(` ${user?.oppnickname} : ${point[0]}`, 250, 50);
+      ctx.fillText(` ${playingGameInfo?.oppNickname} : ${point[0]}`, 250, 50);
       ctx.fillRect(
         0.05 * 1000,
         paddlepaddle[0] ? paddlepaddle[0] * 7 : gameInfo.leftPaddlePos * 7,

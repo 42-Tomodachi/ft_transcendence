@@ -13,6 +13,7 @@ const LadderModal: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const navigate = useNavigate();
   const { user } = useContext(AllContext).userData;
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   useEffect(() => {
     console.log('modal!!!!!!!!!');
@@ -37,7 +38,9 @@ const LadderModal: React.FC = () => {
     socket.on('matchingGame', (roomId: number) => {
       test[0] = false;
       setModal(null);
-      if (user) user.roomid = roomId;
+      if (user) {
+        setPlayingGameInfo({ ...playingGameInfo, gameRoomId: roomId });
+      }
       navigate(`/gameroom/`); //GamePage.tsx
     });
     return () => {

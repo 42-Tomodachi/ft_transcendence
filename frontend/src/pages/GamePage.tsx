@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { CHAT } from '../utils/interface';
+import { CHAT, IUserData } from '../utils/interface';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,6 +25,7 @@ interface GameInfoDto {
 const GamePage: React.FC = () => {
   //const socket = io('http://10.19.226.170:5500/');
   const { user } = useContext(AllContext).userData;
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   const navigate = useNavigate();
   const [count, setCount] = useState(5); //오피셜은 10초
@@ -52,12 +53,12 @@ const GamePage: React.FC = () => {
     console.log('onMatchingScreen? ㅇㅇㅇ gogo ');
     // 게임방 화면으로 넘어왔다고 서버에게 알려줄거고, 서버는 .. matchData를 넘겨줄것임
 
-    const roomid = user?.roomid;
+    const roomid = playingGameInfo?.gameRoomId;
     user?.socket.emit('onMatchingScreen', roomid);
 
     //   return gamerInfoDto;
     //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
-    user?.socket.on('matchData', (p1: any, p2: any) => {
+    user?.socket.on('matchData', (p1: IUserData, p2: IUserData) => {
       // 합의하기로는 첫번째 데이터에 left유저, 즉 p1이고, 두번째 데이터가 p2를 보내면, 내가 알아서 기억하는걸로
       // 그렇게하는것으로.. 되어있다!!! 제발 한번에 돼라 !
       console.log('player111:' + p1.nickname);
@@ -78,12 +79,10 @@ const GamePage: React.FC = () => {
       // 아무튼 내 유저아이디가 player1인지 2인지를 확인해서 기록해두고, 상대방의 닉네임도 기억해둘것
       // 왜냐면 캔버스에서 그려야하는데, 상대방이름을 알수있는 ...유일한 방법이라 (내가 생각하는)
       if (user) {
-        if (user?.nickname === p1.nickname) {
-          user.player = 'p1';
-          user.oppnickname = p2.nickname;
-        } else if (user?.nickname === p2.nickname) {
-          user.player = 'p2';
-          user.oppnickname = p1.nickname;
+        if (user.nickname === p1.nickname) {
+          setPlayingGameInfo({ ...playingGameInfo, player: 'p1', oppNickname: p2.nickname });
+        } else if (user.nickname === p2.nickname) {
+          setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
         }
       }
     });

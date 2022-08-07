@@ -1,11 +1,9 @@
+import { Socket } from 'socket.io-client';
+
 export interface IUserKey {
   userId: number;
   nickname: string;
-  //test!!!!! real!!!!!!!!!! 되는지만 볼게여 !!! 맘대로 끼워넣어서 죄송해여 !!
-  player: string;
-  oppnickname: string;
-  roomid: number;
-  socket: any;
+  socket: Socket;
 }
 
 export interface IUser extends IUserKey {
@@ -79,6 +77,12 @@ export interface IUserData extends IUserAuth, IWinLoseCount {
   isSecondAuthOn: boolean;
   isFriend: boolean;
   isBlocked: boolean;
+}
+
+export interface IPlayingGameInfo {
+  player: string;
+  oppNickname: string;
+  gameRoomId: number; // user.roomid -> ??.gameRoomId
 }
 
 export interface IUserWinLoseCount extends IWinLoseCount {

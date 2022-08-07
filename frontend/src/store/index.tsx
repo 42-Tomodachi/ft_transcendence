@@ -13,6 +13,7 @@ import {
   HandleUserType,
   IWinLoseCount,
   LOADING,
+  IPlayingGameInfo,
 } from '../utils/interface';
 
 export const AllContext = createContext<stateType>({
@@ -39,6 +40,14 @@ export const AllContext = createContext<stateType>({
     targetId: 0,
     setTargetId: () => null,
   },
+  playingGameInfo: {
+    playingGameInfo: {
+      player: '',
+      oppNickname: '',
+      gameRoomId: -1,
+    },
+    setGameInfo: () => null,
+  },
 });
 
 type stateType = {
@@ -62,6 +71,10 @@ type stateType = {
     targetId: number;
     setTargetId: (type: number) => void;
   };
+  playingGameInfo: {
+    playingGameInfo: IPlayingGameInfo;
+    setPlayingGameInfo: (type: IPlayingGameInfo | null) => void;
+  };
 };
 
 interface AllContextApiProps {
@@ -77,6 +90,11 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
   const [userStatus, setUserStatus] = useState<UserStatusType>(LOADING);
   const [jwt, setJwt] = useState<string>('');
   const [targetId, setTargetId] = useState<number>(0);
+  const [playingGameInfo, setPlayingGameInfo] = useState<IPlayingGameInfo>({
+    player: '',
+    oppNickname: '',
+    gameRoomId: -1,
+  });
 
   const handleJwt = (type: 'SET_JWT' | 'REMOVE_JWT', jwt?: string) => {
     switch (type) {
@@ -144,6 +162,16 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     setTargetId(type);
   };
 
+  const handlePlayingGameInfo = (type: IPlayingGameInfo | null) => {
+    if (type) {
+      setPlayingGameInfo({
+        player: type.player,
+        oppNickname: type.oppNickname,
+        gameRoomId: type.gameRoomId,
+      });
+    }
+  };
+
   const data = {
     modalData: {
       modal,
@@ -164,6 +192,10 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     targetItem: {
       targetId,
       setTargetId: handleTargetId,
+    },
+    playingGameInfo: {
+      playingGameInfo,
+      setGameInfo: handlePlayingGameInfo,
     },
   };
   return <AllContext.Provider value={data}>{children}</AllContext.Provider>;
