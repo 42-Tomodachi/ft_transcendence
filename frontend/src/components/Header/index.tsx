@@ -42,10 +42,15 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
     }
   };
 
-  const onClickExitBtn = async () => {
+  const onClickExitBtn = async (type: string) => {
     if (user && roomId) {
-      await chatsAPI.leaveChatRoom(+roomId, user.userId, user.jwt);
-      onClickMenu(CHAT);
+      if (type === CHAT) {
+        await chatsAPI.leaveChatRoom(+roomId, user.userId, user.jwt);
+        onClickMenu(CHAT);
+      } else if (type === GAME) {
+        // TODO: gameAPI.leaveGameRoom;
+        onClickMenu(GAME);
+      }
     }
   };
 
@@ -96,13 +101,19 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
                 text="방 나가기"
                 width={140}
                 height={50}
-                onClick={onClickExitBtn}
+                onClick={() => onClickExitBtn(CHAT)}
               />
             </Menus>
           ),
           GAME: (
             <Menus>
-              <Button color="white" text="방 나가기" width={140} height={50} />
+              <Button
+                color="white"
+                text="방 나가기"
+                width={140}
+                height={50}
+                onClick={() => onClickExitBtn(GAME)}
+              />
             </Menus>
           ),
         }[type]

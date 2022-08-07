@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { CHAT } from '../utils/interface';
+import { GAME } from '../utils/interface';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom';
 
@@ -400,7 +400,7 @@ const GameStart: React.FC = () => {
   return (
     <Background>
       <GameRoomContainer>
-        <Header type={CHAT} />
+        <Header type={GAME} />
         <GameRoomBody>
           <GameArea>
             <canvas ref={canvasRef} id="canvas" width="1000" height="700" />;
