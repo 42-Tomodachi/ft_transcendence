@@ -179,17 +179,17 @@ const GameStart: React.FC = () => {
       info.ballP_Y <= gameInfo.rightPaddlePos + 20
     )
       return 'rightHit';
-    if (gameInfo.ballP_X > 100) {
+    if (gameInfo.ballP_X >= 100) {
       return 'leftgoal';
-    } else if (gameInfo.ballP_X < 0) {
+    } else if (gameInfo.ballP_X <= 0) {
       return 'rightgoal';
     }
   };
 
   // 공의 진행이나 리셋값을 반환합니다.
   const ballAction = (pos: number, velo: number) => {
-    if (gameInfo.ballP_X > 100) return 50;
-    else if (gameInfo.ballP_X < 0) return 50;
+    if (gameInfo.ballP_X >= 100) return 50;
+    else if (gameInfo.ballP_X <= 0) return 50;
     else return pos + velo;
   };
 
