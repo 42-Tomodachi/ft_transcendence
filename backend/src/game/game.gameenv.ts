@@ -7,6 +7,7 @@ import {
   GameRoomProfileDto,
 } from './dto/game.dto';
 import { GameGateway } from './game.gateway';
+import { User } from 'src/users/entities/users.entity';
 
 export interface GameInfo {
   ballP_X: number;
@@ -22,6 +23,9 @@ export interface GameInfo {
   checkPoint: boolean;
 }
 
+// export class Player {
+//   user: User;
+// }
 export class Player {
   socket: Socket;
   userId: number;
@@ -47,8 +51,7 @@ class GameRTData {
   paddle_R_pos: number;
   turn: number;
   lostPoint: boolean;
-  updateLeft: boolean;
-  updateRight: boolean;
+  updateFlag: boolean;
   scoreLeft: number;
   scoreRight: number;
   lastSent: number;
@@ -60,8 +63,7 @@ class GameRTData {
     this.paddle_R_pos = 0;
     this.turn = randomInt(2) + 1;
     this.lostPoint = false;
-    this.updateLeft = true;
-    this.updateRight = true;
+    this.updateFlag = true;
     this.scoreLeft = 0;
     this.scoreRight = 0;
     this.lastSent = Date.now();
@@ -106,12 +108,11 @@ class GameRTData {
     this.turn = data.turn;
     if (this.turn == 1) {
       this.paddle_L_pos = data.leftPaddlePos;
-      this.updateLeft = true;
     } else {
       this.paddle_R_pos = data.rightPaddlePos;
-      this.updateRight = true;
     }
     this.lostPoint = data.checkPoint;
+    this.updateFlag = true;
     this.updateScore();
   }
 
@@ -124,7 +125,7 @@ class GameRTData {
   }
 
   isReadyToSend(): boolean {
-    return this.updateLeft == true && this.updateRight == true;
+    return this.updateFlag == true;
   }
 }
 
@@ -217,8 +218,7 @@ export class GameRoomAttribute {
     // rtLogger.log(500, `sending ${rtData.toRtData()}`);
     gateway.server.to(this.roomId.toString()).emit('rtData', rtData.toRtData());
     rtData.lastSent = currentTime;
-    rtData.updateLeft = false;
-    rtData.updateRight = false;
+    rtData.updateFlag = false;
   }
 
   gameStart(gateway: GameGateway) {
