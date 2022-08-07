@@ -47,7 +47,8 @@ class GameRTData {
   paddle_R_pos: number;
   turn: number;
   lostPoint: boolean;
-  updateFlag: boolean;
+  updateLeft: boolean;
+  updateRight: boolean;
   scoreLeft: number;
   scoreRight: number;
   lastSent: number;
@@ -59,7 +60,8 @@ class GameRTData {
     this.paddle_R_pos = 0;
     this.turn = randomInt(2) + 1;
     this.lostPoint = false;
-    this.updateFlag = true;
+    this.updateLeft = true;
+    this.updateRight = true;
     this.scoreLeft = 0;
     this.scoreRight = 0;
     this.lastSent = Date.now();
@@ -104,12 +106,13 @@ class GameRTData {
     this.turn = data.turn;
     if (this.turn == 1) {
       this.paddle_L_pos = data.leftPaddlePos;
+      this.updateLeft = true;
     } else {
       this.paddle_R_pos = data.rightPaddlePos;
+      this.updateRight = true;
     }
     this.lostPoint = data.checkPoint;
     this.updateScore();
-    this.updateFlag = true;
   }
 
   updatePaddleRtData(data: number) {
@@ -118,6 +121,10 @@ class GameRTData {
     } else {
       this.paddle_L_pos = data;
     }
+  }
+
+  isReadyToSend(): boolean {
+    return this.updateLeft == true && this.updateRight == true;
   }
 }
 
@@ -203,14 +210,15 @@ export class GameRoomAttribute {
     if (currentTime - rtData.lastSent < 15) {
       return;
     }
-    if (rtData.updateFlag === false) {
+    if (rtData.isReadyToSend() == false) {
       return;
     }
     // console.log(`sending ${rtData.toRtData()}`); // this line test only
     // rtLogger.log(500, `sending ${rtData.toRtData()}`);
     gateway.server.to(this.roomId.toString()).emit('rtData', rtData.toRtData());
     rtData.lastSent = currentTime;
-    rtData.updateFlag = false;
+    rtData.updateLeft = false;
+    rtData.updateRight = false;
   }
 
   gameStart(gateway: GameGateway) {
