@@ -31,7 +31,7 @@ export class AuthService {
   }
 
   async setLogon(user: User): Promise<string> {
-    const hashToken = await bcrypt.hash(this.makeRand6Num().toString(), 10);
+    const hashToken = await bcrypt.hash(this.gen6digitCode().toString(), 10);
     const jwt = this.jwtService.sign({
       id: user.id,
       email: user.email,
@@ -66,9 +66,10 @@ export class AuthService {
     return axiosResult.data.access_token;
   }
 
-  makeRand6Num = (): number => {
+  gen6digitCode = (): string => {
     const randNum = Math.floor(Math.random() * 1000000);
-    return randNum;
+    const code = randNum.toString().padStart(6, '0');
+    return code;
   };
 
   async getUserEmail(accessToken: string): Promise<string> {
@@ -147,9 +148,9 @@ export class AuthService {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
 
-    const code = Math.floor(Math.random() * 1000000);
+    const code = this.gen6digitCode();
     const salt = await bcrypt.genSalt();
-    const hashedCode = await bcrypt.hash(code.toString(), salt);
+    const hashedCode = await bcrypt.hash(code, salt);
     user.secondAuthEmail = email;
     user.secondAuthCode = hashedCode;
 
@@ -223,9 +224,9 @@ export class AuthService {
       throw new BadRequestException('2차 인증을 설정하지 않은 유저입니다.');
     }
 
-    const code = Math.floor(Math.random() * 1000000);
+    const code = this.gen6digitCode();
     const salt = await bcrypt.genSalt();
-    const hashedCode = await bcrypt.hash(code.toString(), salt);
+    const hashedCode = await bcrypt.hash(code, salt);
     user.secondAuthCode = hashedCode;
     await user.save();
 

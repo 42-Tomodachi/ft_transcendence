@@ -19,6 +19,11 @@ import ModalSet from './components/common/Modal/ModalSet';
 import { LOGIN, SET_NICKNAME, LOGOUT } from './utils/interface';
 import { usersAPI } from './API';
 
+// 테스트테스트테스트테스트
+import GamePage from './pages/GamePage';
+import GameStart from './pages/GameStart';
+import GameExit from './pages/GameExit';
+
 function App() {
   const { setJwt } = useContext(AllContext).jwtData;
   const { setUserStatus, userStatus } = useContext(AllContext).userStatus;
@@ -64,6 +69,13 @@ function App() {
           {/* Tester */}
           <Route path="/modaltester" element={<ModalTester />} />
           {/* ====== */}
+
+          {/* Tester */}
+          <Route path="/gameroom" element={<GamePage />} />
+          <Route path="/gameroom/:roomId" element={<GameStart />} />
+          <Route path="/gameroom/:roomId/gameexit/" element={<GameExit />} />
+          {/* ====== */}
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <ModalSet />

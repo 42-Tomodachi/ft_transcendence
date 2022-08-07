@@ -20,7 +20,7 @@ export class EmailService {
     return true;
   }
 
-  async sendEmail(to: string, emailAuthCode: number) {
+  async sendEmail(to: string, emailAuthCode: string) {
     await this._send([to], 'domodachi 2차 인증번호', 'sendEmail.ejs', {
       email: to,
       emailpassword: emailAuthCode,

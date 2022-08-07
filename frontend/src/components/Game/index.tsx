@@ -11,6 +11,7 @@ const Game: React.FC = () => {
   const [gameList, setGameList] = useState<IGameRooms[] | []>([]);
   const { user } = useContext(AllContext).userData;
   const { setModal } = useContext(AllContext).modalData;
+  //const navigate = useNavigate();
 
   useEffect(() => {
     if (user && user.jwt) {
@@ -21,7 +22,14 @@ const Game: React.FC = () => {
       getAllGameList();
     }
   }, []);
+  const creatMatch = async () => {
+    console.log('creatMatch!!!!!!');
+    //모달 표시해주고
+    setModal(LOADING_LADDER_GAME);
+    //await new Promise(resolve => setTimeout(resolve, 3000));
 
+    // 이후에 모달이 사라지고 네비게이터로 작성된 페이지로 이동..
+  };
   return (
     <>
       <LadderGame>
@@ -37,7 +45,7 @@ const Game: React.FC = () => {
           height={40}
           color="gradient"
           text="래더 게임 매칭"
-          onClick={() => setModal(LOADING_LADDER_GAME)}
+          onClick={creatMatch}
         />
       </LadderGame>
       {/* TODO: 게임방이 하나도 없을 때 하나도 없다는걸 보여주는 info 컴포넌트 필요 */}

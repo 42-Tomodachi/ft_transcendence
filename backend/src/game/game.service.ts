@@ -1,156 +1,216 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
-import { CreateGameRoomDto, GetGameRoomsDto, GetGameUsersDto } from './dto/game.dto';
-import { GameRoomEntity, } from './entity/game.entity';
+import { GamerInfoDto as PlayerInfoDto } from '../users/dto/users.dto';
+import {
+  CreateGameRoomDto,
+  GameRoomProfileDto,
+  GameResultDto,
+} from './dto/game.dto';
 import { GameGateway } from './game.gateway';
-import * as bcrypt from 'bcryptjs';
+import { Socket } from 'socket.io';
+import { GameEnv, GameRoomAttribute, Player } from './game.gameenv';
+
+class RtLogger {
+  lastLogged: number = Date.now();
+
+  public log(interval: number, msg: string) {
+    const currentTime = Date.now();
+    if (this.lastLogged - currentTime < interval) {
+      return;
+    }
+    console.log(msg);
+    this.lastLogged = currentTime;
+  }
+
+  public resetTimer() {
+    this.lastLogged = Date.now();
+  }
+}
+
+const rtLogger = new RtLogger();
 
 @Injectable()
 export class GameService {
-    constructor(
-        @InjectRepository(User)
-        private readonly userRepo: Repository<User>,
-        private readonly gameGateway: GameGateway,
-    ) { }
-    gameRoomIdList: number[] = new Array(10000).fill(0);
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+    private readonly gameEnv: GameEnv,
+  ) {}
 
-    private gameRoomTable: GameRoomEntity[] = [];
+  // HTTP APIs
 
-    getGameRoomPrimaryId(): number {
-        let index = 0;
-        for (const x of this.gameRoomIdList) {
-            if (x == 0) {
-                this.gameRoomIdList[index] = 1;
-                return index;
-            }
-            index++;
-        }
-        throw new BadRequestException('생성 가능한 방 개수를 초과하였습니다.');
+  getGameRoomList(): GameRoomProfileDto[] {
+    const gameRoomDtoArray: GameRoomProfileDto[] = [];
+    for (const item of this.gameEnv.gameRoomTable) {
+      if (!item) {
+        continue;
+      }
+      gameRoomDtoArray.push(item.toGameRoomProfileDto());
+    }
+    return gameRoomDtoArray;
+  }
+
+  createGameRoom(
+    gateway: GameGateway,
+    user: User,
+    createGameRoomDto: CreateGameRoomDto,
+  ) {
+    if (user.id !== createGameRoomDto.ownerId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+    // 같은 유저가 게임방을 여럿 만들 수 없도록 수정
+
+    const index: number = this.gameEnv.getFreeRoomIndex();
+
+    const gameRoomAtt = new GameRoomAttribute(
+      index,
+      createGameRoomDto,
+      this.gameEnv.getPlayerById(user.id),
+    );
+    gameRoomAtt.save(this.gameEnv.gameRoomTable);
+
+    // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
+    // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
+  }
+
+  async getPlayersInfo(gameId: number): Promise<PlayerInfoDto[]> {
+    const players: PlayerInfoDto[] = [];
+    const index = this.gameEnv.getRoomIndexOfGame(gameId);
+    if (index == null)
+      throw new BadRequestException('방 정보를 찾을 수 없습니다.');
+
+    const gameRoom = this.gameEnv.gameRoomTable[index];
+
+    const firstPlayerUserId = gameRoom.firstPlayer.userId;
+    const firstPlayer = await this.userRepo.findOneBy({
+      id: firstPlayerUserId,
+    });
+    players.push(firstPlayer.toGamerInfoDto());
+
+    if (!gameRoom.secondPlayer) {
+      return players;
     }
 
-    getGameRooms(): GetGameRoomsDto[] {
-        const getGameRoomsDtoArray = new Array<GetGameRoomsDto>;
-        for (const item of this.gameRoomTable) {
-            const getGameRoomsDto = new GetGameRoomsDto();
-            getGameRoomsDto.gameId = item.gameId;
-            getGameRoomsDto.roomTitle = item.roomTitle;
-            getGameRoomsDto.playerCount = item.playerCount;
-            getGameRoomsDto.isPublic = item.isPublic;
-            getGameRoomsDto.isStart = item.isStart;
-            getGameRoomsDtoArray.push(getGameRoomsDto);
-        }
-        return getGameRoomsDtoArray;
+    const secondPlayerUserId = gameRoom.secondPlayer.userId;
+    const secondPlayer = await this.userRepo.findOneBy({
+      id: secondPlayerUserId,
+    });
+    players.push(secondPlayer.toGamerInfoDto());
+
+    return players;
+  }
+
+  async enterGameRoom(
+    gateway: GameGateway,
+    user: User,
+    gameId: number,
+    userId: number,
+    gamePassword: string | null,
+  ): Promise<string> {
+    const index = this.gameEnv.getRoomIndexOfGame(gameId);
+    if (user.id != userId)
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    if (index == null)
+      throw new BadRequestException('방 정보를 찾을 수 없습니다.');
+    if (this.gameEnv.gameRoomTable[index].password != gamePassword) {
+      throw new BadRequestException('게임방의 비밀번호가 일치하지 않습니다.');
     }
 
-    createGameRoom(createGameRoomDto: CreateGameRoomDto): string {
-        // 서버 저장용
-        const gameRoomEntity = new GameRoomEntity();
-        gameRoomEntity.gameId = this.getGameRoomPrimaryId();
-        gameRoomEntity.firstPlayer = createGameRoomDto.ownerId;
-        gameRoomEntity.secondPlayer = null;
-        gameRoomEntity.roomTitle = createGameRoomDto.roomTitle;
-        gameRoomEntity.password = createGameRoomDto.password;
-        gameRoomEntity.playerCount = 1;
-        gameRoomEntity.isPublic = createGameRoomDto.password == '' ? false : true;
-        gameRoomEntity.isStart = false;
-        this.gameRoomTable.push(gameRoomEntity);
+    // 동일 유저의 재입장 막아야함
 
-        return gameRoomEntity.roomTitle;
+    if (!this.gameEnv.gameRoomTable[index].secondPlayer) {
+      this.gameEnv.gameRoomTable[index].secondPlayer =
+        this.gameEnv.getPlayerById(userId);
+
+      // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
+      // this.emitEvent('renewGameRoom', gameRoomAtt.toGameRoomProfileDto());
+      // 소켓: 로비에 변경사항 반영
+      // 소켓: 플레이어에 변경사항 전달
+      const gameUsers = await this.getPlayersInfo(gameId);
+      gateway.server
+        .to(gameId.toString())
+        .emit('updateGameUserList', gameUsers);
+    } else {
+      this.gameEnv.gameRoomTable[index].playerCount++;
+      // 소켓: 관전자 설정
     }
 
-    getGameRoomIndex(gameId: number, array: any) {
-        for (const item of array) {
-            if (item.gameId == gameId)
-                return array.indexOf(item);
-        }
-        return null;
+    return this.gameEnv.gameRoomTable[index].roomTitle;
+  }
+
+  async exitGameRoom(
+    gateway: GameGateway,
+    user: User,
+    gameId: number,
+    userId: number,
+  ): Promise<void> {
+    if (user.id != userId)
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+
+    const gameIndex = this.gameEnv.getRoomIndexOfGame(gameId);
+    if (gameIndex == null)
+      throw new BadRequestException('방 정보를 찾을 수 없습니다.');
+
+    switch (userId) {
+      case this.gameEnv.gameRoomTable[gameIndex].firstPlayer.userId:
+        this.gameEnv.gameRoomIdList[gameIndex] = 0;
+        delete this.gameEnv.gameRoomTable[gameIndex];
+
+        // 소켓: 로비 리스트 갱신
+        gateway.server.to(gameId.toString()).emit('deleteGameRoom', 'boom!');
+        break;
+      case this.gameEnv.gameRoomTable[gameIndex].secondPlayer.userId:
+        this.gameEnv.gameRoomTable[gameIndex].secondPlayer = null;
+        const gameUsers = await this.getPlayersInfo(gameId);
+        gateway.server
+          .to(gameId.toString())
+          .emit('updateGameUserList', gameUsers);
+        break;
+      default:
+        this.gameEnv.gameRoomTable[gameIndex].playerCount--;
+      // 소켓: 관전자 설정
     }
+  }
 
-    async enterGameRoom(
-        user: User,
-        gameId: number,
-        userId: number,
-        gamePassword: string | null,
-        ): Promise<string> {
-            const index = this.getGameRoomIndex(gameId, this.gameRoomTable);
-        if (user.id != userId)
-            throw new BadRequestException('잘못된 유저의 접근입니다.');
-        if (index == null)
-            throw new BadRequestException('방 정보를 찾을 수 없습니다.');
-        if (await this.gameRoomTable[index].password != gamePassword) {
-            throw new BadRequestException('게임방의 비밀번호가 일치하지 않습니다.');
-        }
-        // 2P 입장
-        if (this.gameRoomTable[index].secondPlayer == null) {
-            this.gameRoomTable[index].secondPlayer = userId;
-
-            const gameUsers = await this.getGameUsers(gameId);
-            this.gameGateway.server
-                .to(gameId.toString())
-                .emit('updateGameUserList', gameUsers);
-        }
-        // 관전자 입장
-        this.gameRoomTable[index].playerCount++;
-        return this.gameRoomTable[index].roomTitle;
+  async saveGameRecord(gameRecordSaveDto: GameResultDto): Promise<void> {
+    const firstPlayer = await this.userRepo.findOneBy({
+      id: gameRecordSaveDto.playerOneId,
+    });
+    const secondPlayer = await this.userRepo.findOneBy({
+      id: gameRecordSaveDto.playerTwoId,
+    });
+    if (!firstPlayer || !secondPlayer) {
+      throw new BadRequestException('유저 정보를 찾을 수 없습니다.');
     }
-
-    async exitGameRoom(user: User, gameId: number, userId: number): Promise<string> {
-        const index = this.getGameRoomIndex(gameId, this.gameRoomTable);
-        if (user.id != userId)
-            throw new BadRequestException('잘못된 유저의 접근입니다.');
-        if (index == null)
-            throw new BadRequestException('방 정보를 찾을 수 없습니다.');
-        if (userId == this.gameRoomTable[index].firstPlayer) {
-            // 1P가 나가면 방 폭파
-            const deleteGameId = this.gameRoomTable[index].gameId;
-            this.gameRoomIdList[deleteGameId] = 0;
-            this.gameRoomTable.splice(index, 1);
-
-            this.gameGateway.server
-                .to(gameId.toString())
-                .emit('deleteGameRoom', "boom!");
-        }
-        else if (userId == this.gameRoomTable[index].secondPlayer) {
-            this.gameRoomTable[index].secondPlayer = null;
-            const gameUsers = await this.getGameUsers(gameId);
-            this.gameGateway.server
-                .to(gameId.toString())
-                .emit('updateGameUserList', gameUsers);
-        }
-        this.gameRoomTable[index].playerCount--;
-        return this.gameRoomTable[index].roomTitle;
+    if (gameRecordSaveDto.winnerId == gameRecordSaveDto.playerOneId) {
+      if (gameRecordSaveDto.isLadder) {
+        firstPlayer.ladderWinCount++;
+        secondPlayer.ladderLoseCount++;
+      } else {
+        firstPlayer.winCount++;
+        secondPlayer.loseCount++;
+      }
+    } else {
+      if (gameRecordSaveDto.isLadder) {
+        firstPlayer.ladderWinCount++;
+        secondPlayer.ladderLoseCount++;
+      } else {
+        firstPlayer.winCount++;
+        secondPlayer.loseCount++;
+      }
     }
+    const newRecord = new GameRecord();
+    newRecord.playerOneId = gameRecordSaveDto.playerOneId;
+    newRecord.playerOneScore = gameRecordSaveDto.playerOneScore;
+    newRecord.playerTwoId = gameRecordSaveDto.playerTwoId;
+    newRecord.playerTwoScore = gameRecordSaveDto.playerTwoScore;
+    newRecord.winnerId = gameRecordSaveDto.winnerId;
+    await newRecord.save();
 
-    async getGameUsers(gameId: number): Promise<GetGameUsersDto[]> {
-        const GameUsers = [];
-        const index = this.getGameRoomIndex(gameId, this.gameRoomTable);
-        if (index == null)
-            throw new BadRequestException('방 정보를 찾을 수 없습니다.');
-
-        const gameRoom = this.gameRoomTable[index];
-
-        const firstPlayer = gameRoom.firstPlayer;
-        const firstPlayerInfo = await this.userRepo.findOneBy({ id: firstPlayer });
-        const firstPalyerDto = new GetGameUsersDto();
-        firstPalyerDto.nickname = firstPlayerInfo.nickname;
-        firstPalyerDto.avatar = firstPlayerInfo.avatar;
-        firstPalyerDto.winCount = firstPlayerInfo.winCount;
-        firstPalyerDto.loseCount = firstPlayerInfo.loseCount;
-        GameUsers.push(firstPalyerDto);
-
-        if (gameRoom.secondPlayer !== null) {
-            const secondPlayer = gameRoom.secondPlayer;
-            const secondPlayerInfo = await this.userRepo.findOneBy({ id: secondPlayer });
-            const secondPalyerDto = new GetGameUsersDto();
-            secondPalyerDto.nickname = secondPlayerInfo.nickname;
-            secondPalyerDto.avatar = secondPlayerInfo.avatar;
-            secondPalyerDto.winCount = secondPlayerInfo.winCount;
-            secondPalyerDto.loseCount = secondPlayerInfo.loseCount;
-            GameUsers.push(secondPalyerDto);
-        }
-
-        return GameUsers;
-    }
+    await firstPlayer.save();
+    await secondPlayer.save();
+  }
 }

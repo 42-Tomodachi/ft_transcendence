@@ -78,6 +78,17 @@ export class SimpleUserDto extends PickType(UserProfileDto, [
   status: 'on' | 'off' | 'play';
 }
 
+export class GamerInfoDto extends PickType(UserProfileDto, [
+  'nickname',
+  'avatar',
+  'winCount',
+  'loseCount',
+]) {
+  @ApiProperty({ description: '레더게임 레벨' })
+  @IsNumber()
+  ladderLevel: number;
+}
+
 export class UpdateUserDto extends PickType(UserProfileDto, [
   'userId',
   'avatar',
@@ -97,4 +108,15 @@ export class NumberDto {
   @ApiProperty({ description: '숫자' })
   @IsNumber()
   number: number;
+}
+
+export class GameRecordDto {
+  @ApiProperty({ description: '래더게임 여부' })
+  isLadder: boolean;
+
+  @ApiProperty({ description: '승리 여부' })
+  isWin: boolean;
+
+  @ApiProperty({ description: '상대 닉네임' })
+  opponentNickname: string;
 }

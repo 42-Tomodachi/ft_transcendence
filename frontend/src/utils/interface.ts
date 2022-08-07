@@ -1,6 +1,9 @@
+import { Socket } from 'socket.io-client';
+
 export interface IUserKey {
   userId: number;
   nickname: string;
+  socket: Socket;
 }
 
 export interface IUser extends IUserKey {
@@ -75,6 +78,12 @@ export interface IWinLoseCount {
 export interface IUserData extends IUserAuth, IWinLoseCount {
   isFriend: boolean;
   isBlocked: boolean;
+}
+
+export interface IPlayingGameInfo {
+  player: string;
+  oppNickname: string;
+  gameRoomId: number; // user.roomid -> ??.gameRoomId
 }
 
 export interface IUserWinLoseCount extends IWinLoseCount {

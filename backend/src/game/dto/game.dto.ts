@@ -1,14 +1,28 @@
 import { ApiProperty, PickType } from '@nestjs/swagger';
-import { IsBoolean, IsNumber, IsString, IsOptional } from 'class-validator';
+import {
+  IsBoolean,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsNotEmpty,
+} from 'class-validator';
 
-export class GetGameRoomsDto {
+export class GameRoomProfileDto {
   @ApiProperty({ description: '게임방 id' })
   @IsNumber()
   gameId: number;
 
+  @ApiProperty({ description: '게임방 오너 유저 id' })
+  @IsNumber()
+  ownerId: number;
+
   @ApiProperty({ description: '게임방 제목' })
   @IsString()
   roomTitle: string;
+
+  @ApiProperty({ description: '게임 모드' })
+  @IsString()
+  gameMode: 'normal' | 'speed' | 'obstacle';
 
   @ApiProperty({ description: '게임방 인원수' })
   @IsNumber()
@@ -23,17 +37,14 @@ export class GetGameRoomsDto {
   isStart: boolean;
 }
 
-export class CreateGameRoomDto {
-  @ApiProperty({ description: '게임방 오너 유저 id' })
-  @IsNumber()
-  ownerId: number;
-
-  @ApiProperty({ description: '게임방 제목' })
-  @IsString()
-  roomTitle: string;
-
+export class CreateGameRoomDto extends PickType(GameRoomProfileDto, [
+  'ownerId',
+  'roomTitle',
+  'gameMode',
+]) {
   @ApiProperty({ description: '게임방 비밀번호' })
   @IsString()
+  @IsNotEmpty()
   @IsOptional()
   password: string | null;
 }
@@ -42,24 +53,22 @@ export class GameRoomPasswordDto extends PickType(CreateGameRoomDto, [
   'password',
 ]) {}
 
-export class GetGameUsersDto {
-  @ApiProperty({ description: '유저 닉네임' })
-  @IsString()
-  nickname: string;
+export class GameResultDto {
+  @ApiProperty({ description: '래더게임 여부' })
+  isLadder: boolean;
 
-  @ApiProperty({ description: '유저 프로필 이미지' })
-  @IsString()
-  avatar: string | null;
+  @ApiProperty({ description: '[FK] 첫번째 플레이어의 유저 id' })
+  playerOneId: number;
 
-  @ApiProperty({ description: '게임방 유저의 승리 전적' })
-  @IsNumber()
-  winCount: number;
+  @ApiProperty({ description: '[FK] 두번째 플레이어의 유저 id' })
+  playerTwoId: number;
 
-  @ApiProperty({ description: '게임방 유저의 패배 전적' })
-  @IsNumber()
-  loseCount: number;
+  @ApiProperty({ description: '첫번째 플레이어의 점수' })
+  playerOneScore: number;
 
-  // @ApiProperty({ description: '게임방 유저가 첫번째 유저인지' })
-  // @IsNumber()
-  // isFirstPlayer: number;
+  @ApiProperty({ description: '두번째 플레이어의 점수' })
+  playerTwoScore: number;
+
+  @ApiProperty({ description: '승자 id' })
+  winnerId: number;
 }
