@@ -13,7 +13,7 @@ import {
 import { AllContext } from '../../store';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../common/Button';
-import { chatsAPI } from '../../API';
+import { chatsAPI, gameAPI } from '../../API';
 
 interface HeaderProps {
   type: 'HOME' | 'CHAT' | 'GAME';
@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
         await chatsAPI.leaveChatRoom(+roomId, user.userId, user.jwt);
         onClickMenu(CHAT);
       } else if (type === GAME) {
-        // TODO: gameAPI.leaveGameRoom;
+        await gameAPI.leaveGameRoom(+roomId, user.userId, user.jwt);
         onClickMenu(GAME);
       }
     }
@@ -63,8 +63,13 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
   useEffect(() => {
     const getRoomInfo = async () => {
       if (roomId && user) {
-        const roomInfo = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
-        setRoomInfo(roomInfo);
+        if (type === CHAT) {
+          const roomInfo = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
+          setRoomInfo(roomInfo);
+        } else if (type === GAME) {
+          // TODO: const roomInfo = await gameAPI.getGameRoomStatus(+roomId, user.jwt);
+          // setRoomInfo(roomInfo);
+        }
       }
     };
     getRoomInfo();
