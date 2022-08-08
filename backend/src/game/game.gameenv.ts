@@ -160,7 +160,7 @@ export class GameRoomAttribute {
     this.isStart = false;
     this.rtData = new GameRTData();
     this.playerCount = 1;
-    this.isPublic = createGameRoomDto.password ? true : false;
+    this.isPublic = !createGameRoomDto.password ? true : false;
     this.streaming = null;
   }
 
