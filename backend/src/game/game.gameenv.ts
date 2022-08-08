@@ -131,10 +131,11 @@ class GameRTData {
 
 export class GameRoomAttribute {
   roomId: number;
+  ownerId: number;
   roomTitle: string;
   password: string | null;
   gameMode: 'normal' | 'speed' | 'obstacle';
-  firstPlayer: Player;
+  firstPlayer: Player | null;
   secondPlayer: Player | null;
   spectators: Player[];
   playerCount: number;
@@ -150,6 +151,7 @@ export class GameRoomAttribute {
   ) {
     this.roomId = roomId;
     this.roomTitle = createGameRoomDto.roomTitle;
+    this.ownerId = createGameRoomDto.ownerId;
     this.password = createGameRoomDto.password;
     this.gameMode = createGameRoomDto.gameMode;
     this.firstPlayer = player1;
@@ -282,10 +284,26 @@ export class GameEnv {
     }
     const player = this.getPlayerById(createGameRoomDto.ownerId);
 
-    const gameRoomAtt = new GameRoomAttribute(index, createGameRoomDto, player);
-    gameRoomAtt.enroll(this.gameRoomTable);
-    player.inRoom = true;
+    const gameRoom = new GameRoomAttribute(index, createGameRoomDto, player);
+    gameRoom.enroll(this.gameRoomTable);
+    if (player) {
+      player.gameId = index;
+      player.games.push(gameRoom);
+    }
     return index;
+  }
+
+  setOwnerToCreatedRoom(userId: number, roomId: number): boolean {
+    const player = this.getPlayerById(userId);
+    if (!player) return false;
+    if (player.gameId !== roomId) return false;
+
+    const game = this.getGameRoom(roomId);
+    if (game.ownerId !== userId) return false;
+
+    game.firstPlayer = player;
+    player.inRoom = true;
+    return true;
   }
 
   joinGameRoom(

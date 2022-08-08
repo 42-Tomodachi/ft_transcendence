@@ -69,6 +69,18 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
     this.setSocketToPlayer(socket, userId);
 
+    const roomId: number = parseInt(
+      socket.handshake.query['roomId']?.toString(),
+      10,
+    );
+    if (roomId) {
+      console.log(`Client owns room ${roomId}.`);
+      if (this.gameEnv.setOwnerToCreatedRoom(userId, roomId) === false) {
+        console.log(`Error on creating room ${userId} ${roomId}`);
+        socket.emit('message', 'getting room failure');
+      }
+    }
+
     socket.emit('message', 'message you connect success okok');
     // 유저 상태 게임중으로 변경
   }
