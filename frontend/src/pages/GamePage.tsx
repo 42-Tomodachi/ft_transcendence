@@ -108,7 +108,7 @@ const GamePage: React.FC = () => {
       });
     }
   }, []);
-
+  // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
   return (
     <Background>
       <GameRoomContainer>
