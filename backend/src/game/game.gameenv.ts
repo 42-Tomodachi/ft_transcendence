@@ -125,21 +125,25 @@ class GameRTData {
   }
 
   isReadyToSend(): boolean {
-    return this.updateFlag == true;
+    const currentTime = Date.now();
+    const result = this.updateFlag == true && currentTime - this.lastSent < 15;
+    if (result === true) this.lastSent = currentTime;
+    return result;
   }
 }
 
 export class GameRoomAttribute {
   roomId: number;
+  ownerId: number;
   roomTitle: string;
   password: string | null;
   gameMode: 'normal' | 'speed' | 'obstacle';
-  firstPlayer: Player;
+  firstPlayer: Player | null;
   secondPlayer: Player | null;
   spectators: Player[];
   playerCount: number;
   isPublic: boolean;
-  isStart: boolean;
+  isPlaying: boolean;
   rtData: GameRTData;
   streaming: NodeJS.Timer | null;
 
@@ -150,15 +154,16 @@ export class GameRoomAttribute {
   ) {
     this.roomId = roomId;
     this.roomTitle = createGameRoomDto.roomTitle;
+    this.ownerId = createGameRoomDto.ownerId;
     this.password = createGameRoomDto.password;
     this.gameMode = createGameRoomDto.gameMode;
     this.firstPlayer = player1;
     this.secondPlayer = null;
     this.spectators = [];
-    this.isStart = false;
+    this.playerCount = player1 ? 1 : 0;
+    this.isPublic = !createGameRoomDto.password ? true : false;
+    this.isPlaying = false;
     this.rtData = new GameRTData();
-    this.playerCount = 1;
-    this.isPublic = createGameRoomDto.password ? true : false;
     this.streaming = null;
   }
 
@@ -168,23 +173,19 @@ export class GameRoomAttribute {
     gameRoomProfileDto.roomTitle = this.roomTitle;
     gameRoomProfileDto.playerCount = this.playerCount;
     gameRoomProfileDto.isPublic = this.isPublic;
-    gameRoomProfileDto.isStart = this.isStart;
+    gameRoomProfileDto.isStart = this.isPlaying;
 
     return gameRoomProfileDto;
   }
 
   toGameResultDto(): GameResultDto {
     const gameResultDto = new GameResultDto();
-    gameResultDto.isLadder =
-      this.password == null && this.isPublic == false ? true : false;
+    gameResultDto.isLadder = this.isLadder();
     gameResultDto.playerOneId = this.firstPlayer.userId;
     gameResultDto.playerTwoId = this.secondPlayer.userId;
     gameResultDto.playerOneScore = this.rtData.scoreLeft;
     gameResultDto.playerTwoScore = this.rtData.scoreRight;
-    gameResultDto.winnerId =
-      this.rtData.scoreLeft > this.rtData.scoreRight
-        ? this.firstPlayer.userId
-        : this.secondPlayer.userId;
+    gameResultDto.winnerId = this.getWinner().userId;
 
     return gameResultDto;
   }
@@ -197,6 +198,17 @@ export class GameRoomAttribute {
     }
   }
 
+  isLadder(): boolean {
+    return !this.password && !this.isPublic;
+  }
+
+  getWinner(): Player {
+    if (this.isPlaying) return null;
+    return this.rtData.scoreLeft > this.rtData.scoreRight
+      ? this.firstPlayer
+      : this.secondPlayer;
+  }
+
   updateRtData(data: GameInfo) {
     this.rtData.updateRtData(data);
   }
@@ -206,28 +218,23 @@ export class GameRoomAttribute {
   }
 
   streamRtData(gateway: GameGateway) {
-    const currentTime = Date.now();
     const rtData = this.rtData;
-    if (currentTime - rtData.lastSent < 15) {
-      return;
-    }
     if (rtData.isReadyToSend() == false) {
       return;
     }
     // console.log(`sending ${rtData.toRtData()}`); // this line test only
     // rtLogger.log(500, `sending ${rtData.toRtData()}`);
     gateway.server.to(this.roomId.toString()).emit('rtData', rtData.toRtData());
-    rtData.lastSent = currentTime;
     rtData.updateFlag = false;
   }
 
   gameStart(gateway: GameGateway) {
-    this.isStart = true;
+    this.isPlaying = true;
     this.streamRtData(gateway);
   }
 
-  gameStop() {
-    clearInterval(this.streaming);
+  gameClear() {
+    // clearInterval(this.streaming);
   }
 
   isFinished(): boolean {
@@ -237,9 +244,9 @@ export class GameRoomAttribute {
 
 @Injectable()
 export class GameEnv {
-  gameRoomIdList: number[] = new Array(10).fill(0);
+  gameRoomIdList: number[] = new Array(500).fill(0);
   gameRoomTable: GameRoomAttribute[] = [];
-  playerList: Player[] = new Array(50).fill(0);
+  playerList: Player[] = new Array(500).fill(0);
   ladderQueue: Player[] = [];
 
   getFreeRoomIndex(): number | null {
@@ -282,10 +289,26 @@ export class GameEnv {
     }
     const player = this.getPlayerById(createGameRoomDto.ownerId);
 
-    const gameRoomAtt = new GameRoomAttribute(index, createGameRoomDto, player);
-    gameRoomAtt.enroll(this.gameRoomTable);
-    player.inRoom = true;
+    const gameRoom = new GameRoomAttribute(index, createGameRoomDto, player);
+    gameRoom.enroll(this.gameRoomTable);
+    if (player) {
+      player.gameId = index;
+      player.games.push(gameRoom);
+    }
     return index;
+  }
+
+  setOwnerToCreatedRoom(userId: number, roomId: number): boolean {
+    const player = this.getPlayerById(userId);
+    if (!player) return false;
+    if (player.gameId !== roomId) return false;
+
+    const game = this.getGameRoom(roomId);
+    if (game.ownerId !== userId) return false;
+
+    game.firstPlayer = player;
+    player.inRoom = true;
+    return true;
   }
 
   joinGameRoom(

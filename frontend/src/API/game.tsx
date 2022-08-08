@@ -1,4 +1,4 @@
-import { IGameRoomInfo, IGameRooms } from '../utils/interface';
+import { GameMode, IGameRoomInfo, IGameRooms } from '../utils/interface';
 import { instance } from './index';
 
 const gamePath = (path: string): string => {
@@ -24,14 +24,15 @@ const gameAPI = {
   makeGameRoom: async (
     ownerId: number,
     roomTitle: string,
-    password: string,
+    password: string | null,
+    gameMode: GameMode,
     jwt: string,
   ): Promise<IGameRoomInfo | null> => {
     try {
-      const url = gamePath('');
+      const url = gamePath(`/${ownerId}`);
       const res = await instance.post(
         url,
-        { ownerId, roomTitle, password },
+        { ownerId, roomTitle, password, gameMode },
         { headers: { Authorization: `Bearer ${jwt}` } },
       );
       return res.data;

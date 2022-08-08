@@ -5,6 +5,7 @@ import Modal from '.';
 import { useNavigate } from 'react-router-dom';
 import { AllContext } from '../../../store';
 import { gameAPI } from '../../../API';
+import { GameMode } from '../../../utils/interface';
 // import { Radio } from 'antd';
 // import type { RadioChangeEvent } from 'antd';
 
@@ -14,7 +15,7 @@ const MakeGameRoom: React.FC = () => {
   const [roomName, setRoomName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [errMsg, setErrMsg] = useState<string>('');
-  const [values, setValues] = useState<string>('');
+  const [gameMode, setGameMode] = useState<GameMode>('normal');
   const navigate = useNavigate();
   const roomSettingValues = {
     MAXROOMNAMESIZE: 10,
@@ -38,11 +39,16 @@ const MakeGameRoom: React.FC = () => {
       return;
     }
     if (user) {
-      const res = await gameAPI.makeGameRoom(user.userId, roomName, password, user.jwt); // TODO: roomId가 포함되있어야함
-      console.log(res);
-      if (res && res.roomId) {
+      const res = await gameAPI.makeGameRoom(
+        user.userId,
+        roomName,
+        password.length ? password : null,
+        gameMode,
+        user.jwt,
+      );
+      if (res && res.gameId) {
         setModal(null);
-        navigate(`/chatroom/${res.roomId}`);
+        navigate(`/gameroom/${res.gameId}`);
       }
       // TODO : 실패시 로직 처리
     }

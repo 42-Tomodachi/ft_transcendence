@@ -27,7 +27,12 @@ export interface IChatRoomInfo {
   isDm?: boolean;
 }
 export interface IChatDMRoom extends IChatRoomInfo {}
-export interface IGameRoomInfo extends IChatRoomInfo {}
+export interface IGameRoomInfo {
+  gameId: number;
+  gameMode: GameMode;
+  ownerId: number;
+  roomTitle: string;
+}
 export interface IChatRooms {
   roomId: number;
   title: string;
@@ -129,6 +134,8 @@ export interface IGetUser {
 export type UserRole = 'owner' | 'manager' | 'guest';
 
 export type ActiveMenuType = 'ALL' | 'FRIEND' | 'INCHAT';
+
+export type GameMode = 'normal' | 'speed' | 'obstacle';
 
 export const ON = 'on' as const;
 export const OFF = 'off' as const;

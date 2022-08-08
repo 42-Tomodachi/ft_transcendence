@@ -23,7 +23,7 @@ const GameRooms: React.FC<GameRoomProps> = ({ item }) => {
             height={30}
             color="gradient"
             text="입장"
-            onClick={() => navigate(`modalTester`)} // TODO: navigate(`game/${roomNumber}`); // game room
+            onClick={() => navigate(`gameroom/${item.gameId}`)} // TODO: navigate(`game/${roomNumber}`); // game room
           />
         </EnterBtnWrap>
         <GameStat isGameStart={item.isStart}>{item.isStart ? `게임중` : `대기중`}</GameStat>

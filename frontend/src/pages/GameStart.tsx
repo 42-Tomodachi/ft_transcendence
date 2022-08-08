@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME } from '../utils/interface';
+import { GAME, UPDATE_USER } from '../utils/interface';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom';
+import { io, Socket } from 'socket.io-client';
 
 const calculateOn = [true, false];
 const ballball = [50, 50];
@@ -12,8 +13,6 @@ const point = [0, 0];
 const HERTZ = 60;
 const PLAYERONE = 1;
 const PLAYERTWO = 2;
-
-console.log('fst-rendering');
 
 // 계산에 사용할 변수들 정의(인테페이스)
 interface GameInfo {
@@ -30,9 +29,11 @@ interface GameInfo {
   checkPoint: boolean;
 }
 
+let socket: Socket;
+
 const GameStart: React.FC = () => {
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
-  const { user } = useContext(AllContext).userData;
+  const { user, setUser } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
   const player = user ? playingGameInfo.player : 'g1';
   const navigate = useNavigate();
@@ -316,7 +317,17 @@ const GameStart: React.FC = () => {
   // 유즈이펙트로 소켓의 변화가 감지되면 끊어버립니다. (블로그 참조)
   //https://obstinate-developer.tistory.com/entry/React-socket-io-client-%EC%A0%81%EC%9A%A9-%EB%B0%A9%EB%B2%95
   useEffect(() => {
-    getData();
+    if (user && user.socket && user.socket.disconnected) {
+      socket = io(`${process.env.REACT_APP_BACK_API}`, {
+        transports: ['websocket'], // 웹소켓으로 간다는걸 알려준다. 구글링.
+        query: {
+          userId: user.userId,
+        },
+      });
+      setUser(UPDATE_USER, { ...user, socket: socket });
+      getData();
+      console.log('first');
+    }
     return () => {
       if (user)
         if (user.socket) {
@@ -331,7 +342,8 @@ const GameStart: React.FC = () => {
   // 그대로 계산안하는쪽 useState에 초당 60번씩 setting하면 좋겠지만, 렉이 심하게 걸려서 우회했습니다.
   // 그리하야, 자신이 계산할 차례가 되는순간에만 받아온값을 setting하고, 이후 계산을 시작합니다.
   const getData = () => {
-    if (user) {
+    // TODO: 여기도 문제
+    if (user && user.socket) {
       user.socket.on('rtData', (data: number[]) => {
         ballball[0] = data[0];
         ballball[1] = data[1];
@@ -381,19 +393,23 @@ const GameStart: React.FC = () => {
   // 이 정보는 렌더링을 최적화하기 위해 브라우저에서 내부적으로 사용할 수 있습니다.
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d', { alpha: false });
-    if (user && canvas) {
-      if (ctx) {
-        const test = setInterval(() => {
-          calculate();
-          clear(ctx);
-          paddle(ctx);
-          ball(ctx);
-        }, 1000 / HERTZ);
-        return () => {
-          clearInterval(test);
-        };
+    if (canvas) {
+      const ctx = canvas.getContext('2d', { alpha: false });
+      // TODO: 여기에 문제가 있는듯
+      if (user && user.socket && user.socket.connected && canvas) {
+        if (ctx) {
+          const test = setInterval(() => {
+            calculate();
+            clear(ctx);
+            paddle(ctx);
+            ball(ctx);
+          }, 1000 / HERTZ);
+          return () => {
+            clearInterval(test);
+          };
+        }
       }
+      console.log('second');
     }
   }, [ball]); // 반영
 
