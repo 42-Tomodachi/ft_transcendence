@@ -171,7 +171,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     game.updateRtData(data);
     if (game.isFinished()) {
       await this.gameService.saveGameRecord(game.toGameResultDto());
-      game.gameStop();
+      game.gameClear();
       this.server.to(game.roomId.toString()).emit('gameFinished');
     }
     game.streamRtData(this);
