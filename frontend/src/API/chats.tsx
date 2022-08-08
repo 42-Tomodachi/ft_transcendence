@@ -45,7 +45,7 @@ const chatsAPI = {
     userId: number,
     title: string,
     isDm: boolean,
-    password: string,
+    password: string | null,
     jwt: string,
   ): Promise<IChatRoomInfo | null> => {
     try {
