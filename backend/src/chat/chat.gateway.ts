@@ -191,6 +191,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // });
   }
 
+  // 유저 상태변화 시 참여중인 채팅방에 유저 목록 emit
   emitChatRoomParticipants(roomId: string): void {
     const chatRoomUserDtos = this.chatService.getRoomParticipants(+roomId);
     this.wss
