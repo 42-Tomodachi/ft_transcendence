@@ -153,6 +153,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
         });
       }
+
+      this.emitChatRoomParticipants(chatRoomId.toString());
     });
   }
 
@@ -187,6 +189,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // userSocketMap.forEach((userSocket) => {
     //   this.wss.to(userSocket.valueOf()).emit('updateChatRoomTitle', title);
     // });
+  }
+
+  emitChatRoomParticipants(roomId: string): void {
+    const chatRoomUserDtos = this.chatService.getRoomParticipants(+roomId);
+    this.wss
+      .of('/ws-chat')
+      .to(roomId)
+      .emit('updateChatRoomParticipants', chatRoomUserDtos);
   }
 
   disconnectUser(roomId: number, userId: number) {

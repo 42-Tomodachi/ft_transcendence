@@ -250,6 +250,7 @@ export class ChatService {
     chatRoomDataDto.ownerId = createdChatRoom.ownerId;
     chatRoomDataDto.isDm = createdChatRoom.isDm;
 
+    this.chatGateway.emitChatRoomParticipants(createdChatRoom.id.toString());
     return chatRoomDataDto;
   }
 
@@ -340,6 +341,7 @@ export class ChatService {
       );
     }
 
+    this.chatGateway.emitChatRoomParticipants(roomId.toString());
     return { roomId: roomId };
   }
 
@@ -420,6 +422,8 @@ export class ChatService {
         roomId,
         await this.getChatContentDtoForEmit(createdChatContentId),
       );
+
+      this.chatGateway.emitChatRoomParticipants(roomId.toString());
     }
   }
 

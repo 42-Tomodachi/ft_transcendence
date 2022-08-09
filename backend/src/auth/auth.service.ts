@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
 import { UpdateUserDto, UserProfileDto } from 'src/users/dto/users.dto';
@@ -12,6 +17,8 @@ import { ConfigService } from '@nestjs/config';
 import { session } from 'passport';
 import * as bcrypt from 'bcryptjs';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
+import { ChatGateway } from 'src/chat/chat.gateway';
+import { ChatService } from 'src/chat/chat.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +26,9 @@ export class AuthService {
     public readonly configService: ConfigService,
     private readonly usersService: UsersService,
     private readonly emailService: EmailService,
+    @Inject(forwardRef(() => ChatService))
+    private readonly chatService: ChatService,
+    private readonly chatGateway: ChatGateway,
     private readonly jwtService: JwtService,
     private readonly jwtStrategy: JwtStrategy,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
@@ -109,13 +119,35 @@ export class AuthService {
         email: userEmail,
       });
 
-      return this.userToIsSignedUpDto(
-        createdUser,
-        await this.setLogon(createdUser),
-      );
+      const jwt = await this.setLogon(createdUser);
+
+      const participatingChatRooms =
+        await this.chatService.getParticipatingChatRooms(
+          createdUser,
+          createdUser.id,
+        );
+
+      participatingChatRooms.forEach((participatingChatRoom) => {
+        this.chatGateway.emitChatRoomParticipants(
+          participatingChatRoom.roomId.toString(),
+        );
+      });
+
+      return this.userToIsSignedUpDto(createdUser, jwt);
     }
 
-    return this.userToIsSignedUpDto(user, await this.setLogon(user));
+    const jwt = await this.setLogon(user);
+
+    const participatingChatRooms =
+      await this.chatService.getParticipatingChatRooms(user, user.id);
+
+    participatingChatRooms.forEach((participatingChatRoom) => {
+      this.chatGateway.emitChatRoomParticipants(
+        participatingChatRoom.roomId.toString(),
+      );
+    });
+
+    return this.userToIsSignedUpDto(user, jwt);
   }
 
   async isDuplicateNickname(nickname: string): Promise<IsDuplicateDto> {
@@ -134,6 +166,15 @@ export class AuthService {
     user.userStatus = 'off';
     await user.save();
     this.jwtStrategy.deletejwtAccessToken(user.id);
+
+    const participatingChatRooms =
+      await this.chatService.getParticipatingChatRooms(user, userId);
+
+    participatingChatRooms.forEach((participatingChatRoom) => {
+      this.chatGateway.emitChatRoomParticipants(
+        participatingChatRoom.roomId.toString(),
+      );
+    });
   }
 
   async startSecondAuth(
