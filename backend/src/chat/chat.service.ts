@@ -369,6 +369,10 @@ export class ChatService {
     } else room.password = null;
 
     const updatedRoom = await this.chatRoomRepo.save(room);
+    this.chatGateway.emitChatRoomTitle(
+      updatedRoom.id.toString(),
+      updatedRoom.title,
+    );
     return updatedRoom.toChatRoomDataDto();
   }
 

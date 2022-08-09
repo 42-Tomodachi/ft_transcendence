@@ -178,6 +178,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  // 방 제목 변경 시 해당 채팅방에 연결된 소켓에 방 제목 emit
+  emitChatRoomTitle(roomId: string, title: string): void {
+    this.wss.of('/ws-chat').to(roomId).emit('updateChatRoomTitle', title);
+
+    // const userSocketMap = this.connectedSocketMap.get(roomId);
+
+    // userSocketMap.forEach((userSocket) => {
+    //   this.wss.to(userSocket.valueOf()).emit('updateChatRoomTitle', title);
+    // });
+  }
+
   disconnectUser(roomId: number, userId: number) {
     const socketId = this.getParticipatingChatSocketId(
       roomId.toString(),
