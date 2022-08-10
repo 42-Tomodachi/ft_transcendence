@@ -120,19 +120,6 @@ export class AuthService {
       });
 
       const jwt = await this.setLogon(createdUser);
-
-      const participatingChatRooms =
-        await this.chatService.getParticipatingChatRooms(
-          createdUser,
-          createdUser.id,
-        );
-
-      participatingChatRooms.forEach((participatingChatRoom) => {
-        this.chatGateway.emitChatRoomParticipants(
-          participatingChatRoom.roomId.toString(),
-        );
-      });
-
       return this.userToIsSignedUpDto(createdUser, jwt);
     }
 
