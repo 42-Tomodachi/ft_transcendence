@@ -209,6 +209,12 @@ export class GameRoomAttribute {
       : this.secondPlayer;
   }
 
+  initGameData(): void {
+    this.isPlaying = false;
+    delete this.rtData;
+    this.rtData = new GameRTData();
+  }
+
   updateRtData(data: GameInfo) {
     this.rtData.updateRtData(data);
   }
@@ -231,10 +237,6 @@ export class GameRoomAttribute {
   gameStart(gateway: GameGateway) {
     this.isPlaying = true;
     this.streamRtData(gateway);
-  }
-
-  gameClear() {
-    // clearInterval(this.streaming);
   }
 
   isFinished(): boolean {
@@ -362,6 +364,15 @@ export class GameEnv {
     }
     player.inRoom = false;
     return 'okay';
+  }
+
+  postGameProcedure(game: GameRoomAttribute) {
+    if (game.isLadder() === true) {
+      this.gameRoomClear(game);
+    } else {
+      game.initGameData();
+    }
+    // clearInterval(this.streaming);
   }
 
   newPlayer(socket: Socket, userId: number, gameId: number): Player | null {
