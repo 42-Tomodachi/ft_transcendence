@@ -134,6 +134,8 @@ export class AuthService {
       );
     });
 
+    this.chatGateway.emitFriendList(user.id);
+
     return this.userToIsSignedUpDto(user, jwt);
   }
 
@@ -162,6 +164,8 @@ export class AuthService {
         participatingChatRoom.roomId.toString(),
       );
     });
+
+    this.chatGateway.emitFriendList(user.id);
   }
 
   async startSecondAuth(
