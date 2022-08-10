@@ -25,6 +25,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
   const navigate = useNavigate();
   const { roomId } = useParams();
   const [roomInfo, setRoomInfo] = useState<IChatRoomInfo | null>();
+  const [isOwner, setIsOwner] = useState<boolean>(false);
 
   const onClickMenu = (menu: MenuType | 'HOME') => {
     switch (menu) {
@@ -64,8 +65,9 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
     const getRoomInfo = async () => {
       if (roomId && user) {
         if (type === CHAT) {
-          const roomInfo = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
-          setRoomInfo(roomInfo);
+          const res = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
+          setRoomInfo(res);
+          if (res && res.ownerId == user.userId) setIsOwner(true);
         } else if (type === GAME) {
           // TODO: const roomInfo = await gameAPI.getGameRoomStatus(+roomId, user.jwt);
           // setRoomInfo(roomInfo);
@@ -73,7 +75,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
       }
     };
     getRoomInfo();
-  }, []);
+  }, [roomId, user]);
 
   return (
     <HeaderContainer>
@@ -91,8 +93,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
           ),
           CHAT: (
             <Menus>
-              {/* TODO : 나중에 role 받아와서 소유자만 버튼 표시되도록 해야함 */}
-              {roomInfo && user && roomInfo.ownerId === user.userId && (
+              {isOwner && (
                 <Button
                   color="white"
                   text="방 설정"
