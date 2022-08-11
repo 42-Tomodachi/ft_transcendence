@@ -126,7 +126,7 @@ class GameRTData {
 
   isReadyToSend(): boolean {
     const currentTime = Date.now();
-    const result = this.updateFlag == true && currentTime - this.lastSent < 15;
+    const result = this.updateFlag == true && currentTime - this.lastSent > 15;
     if (result === true) this.lastSent = currentTime;
     return result;
   }
