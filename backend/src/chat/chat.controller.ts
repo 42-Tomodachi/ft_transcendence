@@ -179,12 +179,19 @@ export class ChatController {
   }
 
   @ApiOperation({ summary: '✅ 음소거 시키기 토글: jihokim' })
-  @Put(':roomId/muteToggle')
+  @Put(':roomId/users/:callingUserId/muteToggle')
   async muteParticipant(
+    @GetJwtUser() user: User,
     @Param('roomId', ParseIntPipe) roomId: number,
+    @Param('callingUserId', ParseIntPipe) callingUserId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
   ): Promise<IsMutedDto> {
-    return this.chatService.muteCertainParticipant(roomId, targetUserId);
+    return await this.chatService.muteCertainParticipant(
+      user,
+      roomId,
+      callingUserId,
+      targetUserId,
+    );
   }
 
   // 인터페이스를 통해 게임 할 수 있도록 초대

@@ -227,6 +227,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  // 채팅방에서 권한 변경 시 emit
+  emitRole(roomId: string, userId: string, role: string) {
+    const targetSocketId = this.getParticipatingChatSocketId(roomId, userId);
+
+    this.wss.to(targetSocketId).emit('updateRole', role);
+  }
+
   disconnectUser(roomId: number, userId: number) {
     const socketId = this.getParticipatingChatSocketId(
       roomId.toString(),
