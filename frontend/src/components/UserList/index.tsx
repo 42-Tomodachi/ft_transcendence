@@ -49,6 +49,9 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
 
   const sortedUserList = (data: IGetUser[]) => {
     data.sort((a: IGetUser, b: IGetUser) => {
+      return a.nickname > b.nickname ? -1 : 1;
+    });
+    data.sort((a: IGetUser, b: IGetUser) => {
       return a.status !== OFF ? -1 : 1;
     });
     data.find(element => {
@@ -61,15 +64,32 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
 
   const getUserList = async () => {
     const data = await selectActiveMenu(activeMenu);
+    console.log(data);
     sortedUserList(data);
   };
 
-  if (socket) {
-    socket.on('updateChatRoomParticipants', data => {
-      console.log('update');
-      sortedUserList(data);
-    });
-  }
+  useEffect(() => {
+    if (socket) {
+      switch (activeMenu) {
+        case 'FRIEND':
+          socket.on('updateFriendList', data => {
+            sortedUserList(data);
+          });
+          break;
+        case 'INCHAT':
+          socket.on('updateChatRoomParticipants', data => {
+            sortedUserList(data);
+          });
+          break;
+      }
+    }
+    return () => {
+      if (socket) {
+        socket.off('updateFriendList');
+        socket.off('updateChatRoomParticipants');
+      }
+    };
+  }, [socket, activeMenu]);
 
   useEffect(() => {
     if (user && user.jwt) getUserList();
