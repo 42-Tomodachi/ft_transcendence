@@ -125,7 +125,7 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
                   onClick={onSendDm}
                 />
                 <Button
-                  color="white"
+                  color="white2"
                   text={target.isBlocked ? '차단해제' : '차단하기'}
                   width={200}
                   height={40}
@@ -135,7 +135,7 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
             ) : (
               <BanBtnBlock>
                 <Button
-                  color="white"
+                  color="white2"
                   text={target.isBlocked ? '차단해제' : '차단하기'}
                   width={415}
                   height={40}
