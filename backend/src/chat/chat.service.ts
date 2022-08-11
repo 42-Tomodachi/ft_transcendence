@@ -480,73 +480,90 @@ export class ChatService {
   }
 
   async muteCertainParticipant(
+    user: User,
     roomId: number,
-    userId: number,
+    callingUserId: number,
+    targetUserId: number,
   ): Promise<IsMutedDto> {
+    if (user.id !== callingUserId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+
     const room = await this.chatRoomRepo.findOneBy({ id: roomId });
     if (!room) {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    }
+
+    const callingChatParticipant = await this.chatParticipantRepo.findOneBy({
+      chatRoomId: roomId,
+      userId: callingUserId,
+    });
+    if (callingChatParticipant.role === 'guest') {
+      throw new BadRequestException('음소거 권한이 없습니다.');
     }
 
     const chatParticipants: ChatParticipant[] =
       await this.chatParticipantRepo.find({
         where: [{ chatRoomId: roomId }],
       });
-    const chatParticipant: ChatParticipant = chatParticipants.find(
-      (participant) => participant.userId === userId,
+    const targetChatParticipant: ChatParticipant = chatParticipants.find(
+      (participant) => participant.userId === targetUserId,
     );
 
-    if (!chatParticipant) {
+    if (!targetChatParticipant) {
       throw new BadRequestException('존재하지 않는 참여자입니다.');
     }
+    if (targetChatParticipant.role === 'owner') {
+      throw new BadRequestException('방장을 음소거 시킬 수 없습니다.');
+    }
 
-    if (chatParticipant.isMuted) {
-      chatParticipant.isMuted = false;
-      this.deleteMuteTimeout(`muteTimeout${chatParticipant.id}`);
+    if (targetChatParticipant.isMuted) {
+      targetChatParticipant.isMuted = false;
+      this.deleteMuteTimeout(`muteTimeout${targetChatParticipant.id}`);
 
       // 음소거 해제 메세지 db에 저장
       const { id: createdChatContentId } = await this.chatContentsRepo.save({
-        chatRoomId: chatParticipant.chatRoomId,
-        userId: chatParticipant.userId,
+        chatRoomId: targetChatParticipant.chatRoomId,
+        userId: targetChatParticipant.userId,
         content: `님의 채팅 금지가 해제되었습니다.`,
         isNotice: true,
       });
 
       // 채널 유저들에게 음소거해제 메세지 전송
       this.chatGateway.sendNoticeMessage(
-        chatParticipant.chatRoomId,
+        targetChatParticipant.chatRoomId,
         await this.getChatContentDtoForEmit(createdChatContentId),
       );
     } else {
-      chatParticipant.isMuted = true;
+      targetChatParticipant.isMuted = true;
       this.addMuteTimeout(
-        `muteTimeout${chatParticipant.id}`,
+        `muteTimeout${targetChatParticipant.id}`,
         10 * 1000,
-        chatParticipant,
+        targetChatParticipant,
       );
     }
-    await chatParticipant.save();
+    await targetChatParticipant.save();
 
     // 음소거 메세지 db에 저장
     const { id: createdChatContentId } = await this.chatContentsRepo.save({
-      chatRoomId: chatParticipant.chatRoomId,
-      userId: chatParticipant.userId,
+      chatRoomId: targetChatParticipant.chatRoomId,
+      userId: targetChatParticipant.userId,
       content: `님은 채팅이 금지되었습니다.`,
       isNotice: true,
     });
 
     // 채널 유저들에게 음소거해제 메세지 전송
     this.chatGateway.sendNoticeMessage(
-      chatParticipant.chatRoomId,
+      targetChatParticipant.chatRoomId,
       await this.getChatContentDtoForEmit(createdChatContentId),
     );
 
     this.chatGateway.wss
       .to(roomId.toString())
-      .emit('updateUserList', chatParticipant);
+      .emit('updateUserList', targetChatParticipant);
 
     const result: IsMutedDto = new IsMutedDto();
-    result.isMuted = chatParticipant.isMuted;
+    result.isMuted = targetChatParticipant.isMuted;
     return result;
   }
 
