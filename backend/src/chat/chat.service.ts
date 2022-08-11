@@ -120,34 +120,37 @@ export class ChatService {
     if (!room) {
       throw new BadRequestException('채팅방이 존재하지 않습니다.');
     }
-    const chatParticipant = await ChatParticipant.findOneBy({
+    const targetChatParticipant = await ChatParticipant.findOneBy({
       userId: targetUserId,
       chatRoomId: roomId,
     });
-    if (!chatParticipant) {
+    if (!targetChatParticipant) {
       throw new BadRequestException('존재하지 않는 참여자입니다.');
     }
-    if (chatParticipant.isBanned) {
+    if (targetChatParticipant.isBanned) {
       throw new BadRequestException('이미 강퇴당한 유저입니다.');
     }
     if (room.isDm === true) {
       throw new BadRequestException('DM방 입니다.');
     }
-    const findRole = await ChatParticipant.findOneBy({
+    if (targetChatParticipant.role === 'owner') {
+      throw new BadRequestException('방장을 강퇴할 수 없습니다.');
+    }
+    const callingChatParticipant = await ChatParticipant.findOneBy({
       userId: callingUserId,
       chatRoomId: roomId,
     });
-    if (findRole.role === 'guest') {
+    if (callingChatParticipant.role === 'guest') {
       throw new BadRequestException('권한이 없는 사용자입니다.');
     }
-    chatParticipant.isBanned = true;
-    await chatParticipant.save();
+    targetChatParticipant.isBanned = true;
+    await targetChatParticipant.save();
 
     // 강퇴 취소 스케줄러
     this.addBanTimeout(
-      `banTimeout${chatParticipant.id}`,
+      `banTimeout${targetChatParticipant.id}`,
       10 * 1000,
-      chatParticipant,
+      targetChatParticipant,
     );
 
     // 강퇴 메세지 db에 저장
