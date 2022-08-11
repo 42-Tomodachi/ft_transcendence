@@ -325,9 +325,9 @@ const GameStart: React.FC = () => {
         },
       });
       setUser(UPDATE_USER, { ...user, socket: socket });
-      getData();
       console.log('first');
     }
+    getData();
     return () => {
       if (user)
         if (user.socket) {

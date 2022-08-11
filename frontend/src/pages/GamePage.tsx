@@ -1,21 +1,24 @@
 import React, { useContext, useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { CHAT, IUserData } from '../utils/interface';
+import { GAME } from '../utils/interface';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom';
+// import { LinearProgress } from '@mui/material';
+import defaultProfile from '../assets/default-image.png';
+import ProfileImage from '../components/common/ProfileImage';
 
 interface GameInfoDto {
-  nicknameOne: any;
-  avatarOne: any;
-  winCountOne: any;
-  loseCountOne: any;
-  ladderLevelOne: any;
-  nicknameTwo: any;
-  avatarTwo: any;
-  winCountTwo: any;
-  loseCountTwo: any;
-  ladderLevelTwo: any;
+  nicknameOne: string;
+  avatarOne: string;
+  winCountOne: number;
+  loseCountOne: number;
+  ladderLevelOne: number;
+  nicknameTwo: string;
+  avatarTwo: string;
+  winCountTwo: number;
+  loseCountTwo: number;
+  ladderLevelTwo: number;
 }
 
 /*
@@ -30,16 +33,16 @@ const GamePage: React.FC = () => {
   const navigate = useNavigate();
   const [count, setCount] = useState(5); //오피셜은 10초
   const [info, setInfo] = useState<GameInfoDto>({
-    nicknameOne: null,
-    avatarOne: null,
-    winCountOne: null,
-    loseCountOne: null,
-    ladderLevelOne: null,
-    nicknameTwo: null,
-    avatarTwo: null,
-    winCountTwo: null,
-    loseCountTwo: null,
-    ladderLevelTwo: null,
+    nicknameOne: '',
+    avatarOne: '',
+    winCountOne: 0,
+    loseCountOne: 0,
+    ladderLevelOne: 0,
+    nicknameTwo: '',
+    avatarTwo: '',
+    winCountTwo: 0,
+    loseCountTwo: 0,
+    ladderLevelTwo: 0,
   });
 
   // window.addEventListener('beforeunload', event => {
@@ -49,74 +52,92 @@ const GamePage: React.FC = () => {
   //   return '';
   // });
 
+  // 고칠거면, 절반을 기준으로 변하게.
+  // const one = (num[0] / (num[0] + num[1])) * 100;
+  // const two = (num[1] / (num[1] + num[0])) * 100;
+  // const test = setInterval(() => {
+  // let oneCount = 0;
+  // let twoCount = 0;
+  //   if (win && oneCount < one) win.style.width = `${(oneCount += 1)}%`;
+  //   if (win2 && twoCount < two) win2.style.width = `${(twoCount += 1)}%`;
+  //   //else clearInterval(test);
+  // }, 25);
+  // return () => {};
+
   useEffect(() => {
-    console.log('onMatchingScreen? ㅇㅇㅇ gogo ');
-    // 게임방 화면으로 넘어왔다고 서버에게 알려줄거고, 서버는 .. matchData를 넘겨줄것임
+    const win: HTMLElement | null = document.getElementById('win');
+    const win2: HTMLElement | null = document.getElementById('win2');
+    // if (win) win.style.width = `${(num[0] / (num[0] + num[1])) * 100}%`;
+    // if (win2) win2.style.width = `${(num[1] / (num[1] + num[0])) * 100}%`;
 
-    const roomid = playingGameInfo?.gameRoomId;
-    user?.socket.emit('onMatchingScreen', roomid);
+    if (user) {
+      console.log('onMatchingScreen? ㅇㅇㅇ gogo ');
+      const roomid = playingGameInfo?.gameRoomId;
+      user.socket.emit('onMatchingScreen', roomid);
 
-    //   return gamerInfoDto;
-    //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
-    user?.socket.on('matchData', (p1: IUserData, p2: IUserData) => {
-      // 합의하기로는 첫번째 데이터에 left유저, 즉 p1이고, 두번째 데이터가 p2를 보내면, 내가 알아서 기억하는걸로
-      // 그렇게하는것으로.. 되어있다!!! 제발 한번에 돼라 !
-      console.log('player111:' + p1.nickname);
-      console.log('player222:' + p2.nickname);
-      setInfo({
-        nicknameOne: p1.nickname,
-        avatarOne: p1.avatar,
-        winCountOne: p1.winCount,
-        loseCountOne: p1.loseCount,
-        ladderLevelOne: p1.ladderLevel,
-        nicknameTwo: p2.nickname,
-        avatarTwo: p2.nickname,
-        winCountTwo: p2.winCount,
-        loseCountTwo: p2.loseCount,
-        ladderLevelTwo: p2.ladderLevel,
-      });
-      //난잘못없음 내아이디어는 아니고 !
-      // 아무튼 내 유저아이디가 player1인지 2인지를 확인해서 기록해두고, 상대방의 닉네임도 기억해둘것
-      // 왜냐면 캔버스에서 그려야하는데, 상대방이름을 알수있는 ...유일한 방법이라 (내가 생각하는)
-      if (user) {
-        if (user.nickname === p1.nickname) {
+      //   return gamerInfoDto;
+      //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
+      user.socket.on('matchData', (p1: any, p2: any) => {
+        setInfo({
+          nicknameOne: p1.nickname,
+          avatarOne: p1.avatar,
+          winCountOne: p1.winCount,
+          loseCountOne: p1.loseCount,
+          ladderLevelOne: p1.ladderLevel,
+          nicknameTwo: p2.nickname,
+          avatarTwo: p2.avatar,
+          winCountTwo: p2.winCount,
+          loseCountTwo: p2.loseCount,
+          ladderLevelTwo: p2.ladderLevel,
+        });
+        if (win) win.style.width = `${(p1.winCount / (p1.winCount + p1.loseCount)) * 100}%`;
+        if (win2) win2.style.width = `${(p2.winCount / (p2.winCount + p2.loseCount)) * 100}%`;
+        if (user.nickname === p1.nickname)
           setPlayingGameInfo({ ...playingGameInfo, player: 'p1', oppNickname: p2.nickname });
-        } else if (user.nickname === p2.nickname) {
+        else if (user.nickname === p2.nickname)
           setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
+      });
+      // 카운트다운이 발생하는 .. 서버에서 10초부터 하나씩 보내줄거고, 카운트가 끝나는순간, GameStart.tsx페이지로 이동하는 순간.
+      user.socket.on('gameStartCount', (data: number) => {
+        console.log('countdown:' + data);
+        setCount(data);
+        if (data == 0) {
+          console.log(`장면전환 /gameroom/${roomid}`);
+          navigate(`/gameroom/${roomid}`);
         }
-      }
-    });
-    // 카운트다운이 발생하는 .. 서버에서 10초부터 하나씩 보내줄거고, 카운트가 끝나는순간, GameStart.tsx페이지로 이동하는 순간.
-    user?.socket.on('gameStartCount', (data: number) => {
-      console.log('countdown:' + data);
-      setCount(data);
-      if (data == 0) {
-        console.log(`장면전환 /gameroom/${roomid}`);
-        navigate(`/gameroom/${roomid}`);
-      }
-    });
-    // const timer = setInterval(() => {
-    //   if (count === 0) {
-    //     setCount(10);
-    //     navigate('/gameroom/1');
-    //   } else setCount(count - 1);
-    // }, 1000);
-    // return () => clearInterval(timer);
+      });
+    }
   }, []);
-
+  // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
   return (
     <Background>
       <GameRoomContainer>
-        <Header type={CHAT} />
+        <Header type={GAME} />
         <GameRoomBody>
           <GameArea>
             <InfoArea>
               <UserInfo>
-                <span>{`${info.nicknameOne} Lv. ${info.ladderLevelOne}`}</span>
+                <PictureBlock>
+                  <ProfileImage src={info.avatarOne ? info.avatarOne : defaultProfile} size={150} />
+                </PictureBlock>
+                <span>{`${info.nicknameOne}`}</span>
+                <span>{`Lv. ${info.ladderLevelOne}`}</span>
+                <Bar>
+                  <Win id="win">{info.winCountOne}</Win>
+                  <Lose id="los">{info.loseCountOne}</Lose>
+                </Bar>
               </UserInfo>
               <Count>{count}</Count>
               <UserInfo>
-                <span>{`${info.nicknameTwo} Lv. ${info.ladderLevelTwo}`}</span>
+                <PictureBlock>
+                  <ProfileImage src={info.avatarTwo ? info.avatarTwo : defaultProfile} size={150} />
+                </PictureBlock>
+                <span>{`${info.nicknameTwo}`}</span>
+                <span>{`Lv. ${info.ladderLevelTwo}`}</span>
+                <Bar>
+                  <Win id="win2">{info.winCountTwo}</Win>
+                  <Lose id="los">{info.loseCountTwo}</Lose>
+                </Bar>
               </UserInfo>
             </InfoArea>
             <Message>게임이 곧 시작됩니다</Message>
@@ -126,6 +147,35 @@ const GamePage: React.FC = () => {
     </Background>
   );
 };
+const PictureBlock = styled.div``;
+// css 애니메이션기능으로 추가.
+const Bar = styled.div`
+  position: relative;
+  width: 210px;
+  height: 26px;
+  background: #ff6363;
+  border-radius: 13px;
+  /* overflow: hidden; */
+`;
+
+const Win = styled.div`
+  width: 50%;
+  height: 26px;
+  background: #87b7ff;
+  border-radius: 13px 0px 0px 13px;
+  color: white;
+  font-size: 14px;
+  padding: 5px;
+`;
+
+const Lose = styled.div`
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  height: 26px;
+  color: white;
+  font-size: 14px;
+`;
 
 const Message = styled.p`
   display: flex;
