@@ -12,7 +12,7 @@ import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom } from './entities/chatRoom.entity';
 
 @Module({
-  exports: [ChatGateway],
+  exports: [ChatGateway, ChatService],
   imports: [
     TypeOrmModule.forFeature([
       ChatContents,
@@ -21,7 +21,7 @@ import { ChatRoom } from './entities/chatRoom.entity';
       User,
       BlockedUser,
     ]),
-    AuthModule,
+    forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
   ],
   controllers: [ChatController],

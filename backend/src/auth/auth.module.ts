@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ChatModule } from 'src/chat/chat.module';
 import { EmailModule } from 'src/emails/email.module';
 import { User } from 'src/users/entities/users.entity';
 import { UsersModule } from 'src/users/users.module';
@@ -21,6 +22,7 @@ import { JwtStrategy } from './jwt.strategy';
     }),
     forwardRef(() => UsersModule),
     EmailModule,
+    forwardRef(() => ChatModule),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

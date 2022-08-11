@@ -153,6 +153,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
         });
       }
+
+      this.emitChatRoomParticipants(chatRoomId.toString());
     });
   }
 
@@ -175,6 +177,53 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             this.wss.to(socketId).emit('disconnectSocket', chatContentDtos);
           else this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
         });
+    });
+  }
+
+  getParticipatingSocketIds(userId: string): string[] {
+    const socketIds: string[] = [];
+
+    this.connectedSocketMap.forEach((userSocket) => {
+      const socketId = userSocket.get(userId);
+
+      if (socketId) {
+        socketIds.push(socketId);
+      }
+    });
+
+    return socketIds;
+  }
+
+  // 방 제목 변경 시 해당 채팅방에 연결된 소켓에 방 제목 emit
+  emitChatRoomTitle(roomId: string, title: string): void {
+    this.wss.to(roomId).emit('updateChatRoomTitle', title);
+  }
+
+  // 유저 상태변화 시 참여중인 채팅방에 유저 목록 emit
+  async emitChatRoomParticipants(roomId: string): Promise<void> {
+    const chatRoomUserDtos = await this.chatService.getRoomParticipants(
+      +roomId,
+    );
+    this.wss.to(roomId).emit('updateChatRoomParticipants', chatRoomUserDtos);
+  }
+
+  // 유저 상태 변화 시 나를 친구추가 한 유저의 친구 목록 emit
+  async emitFriendList(myId: number) {
+    // 나를 친구 추가한 유저들의 id들을 찾기: followerIds
+    const followerIds = await this.userService.getFollowerIds(myId);
+
+    followerIds.forEach(async (followerId) => {
+      const socketIds = this.getParticipatingSocketIds(followerId.toString());
+
+      // follower의 소켓이 있는지 확인하고
+      if (socketIds.length) {
+        // 있으면 해당 소켓에 친구 목록 emit
+        const friendList = await this.userService.getFriendsForEmit(followerId); // 친구 목록 가져오기
+
+        socketIds.forEach((socketId) => {
+          this.wss.to(socketId).emit('updateFriendList', friendList);
+        });
+      }
     });
   }
 
