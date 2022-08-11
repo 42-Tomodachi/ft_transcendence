@@ -7,6 +7,7 @@ import { UsersModule } from 'src/users/users.module';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
+import { ChatLobbyGateway } from './chatLobby.gateway';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom } from './entities/chatRoom.entity';
@@ -25,6 +26,6 @@ import { ChatRoom } from './entities/chatRoom.entity';
     forwardRef(() => UsersModule),
   ],
   controllers: [ChatController],
-  providers: [ChatService, ChatGateway],
+  providers: [ChatService, ChatGateway, ChatLobbyGateway],
 })
 export class ChatModule {}
