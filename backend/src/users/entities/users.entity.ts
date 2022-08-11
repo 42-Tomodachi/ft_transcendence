@@ -164,17 +164,14 @@ export class User extends BaseEntity {
     return winLoseCountDto;
   }
 
-  toGamerInfoDto(type: 'normal' | 'ladder'): GamerInfoDto {
+  toGamerInfoDto(): GamerInfoDto {
     const gamerInfoDto = new GamerInfoDto();
     gamerInfoDto.nickname = this.nickname;
     gamerInfoDto.avatar = this.avatar;
-    if (type === 'normal') {
-      gamerInfoDto.winCount = this.winCount;
-      gamerInfoDto.loseCount = this.loseCount;
-    } else {
-      gamerInfoDto.winCount = this.ladderWinCount;
-      gamerInfoDto.loseCount = this.ladderLoseCount;
-    }
+    gamerInfoDto.winCount = this.winCount;
+    gamerInfoDto.loseCount = this.loseCount;
+    gamerInfoDto.ladderWinCount = this.ladderWinCount;
+    gamerInfoDto.ladderLoseCount = this.ladderLoseCount;
     gamerInfoDto.ladderLevel = this.getLadderLevel();
 
     return gamerInfoDto;

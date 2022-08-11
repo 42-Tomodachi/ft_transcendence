@@ -83,6 +83,8 @@ export class GamerInfoDto extends PickType(UserProfileDto, [
   'avatar',
   'winCount',
   'loseCount',
+  'ladderWinCount',
+  'ladderLoseCount',
 ]) {
   @ApiProperty({ description: '레더게임 레벨' })
   @IsNumber()

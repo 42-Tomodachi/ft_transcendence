@@ -138,8 +138,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`onMatchingScreen`); // for test only
     client.emit(
       'matchData',
-      player1asUser.toGamerInfoDto('ladder'),
-      player2asUser.toGamerInfoDto('ladder'),
+      player1asUser.toGamerInfoDto(),
+      player2asUser.toGamerInfoDto(),
     );
 
     let counting = 5;
