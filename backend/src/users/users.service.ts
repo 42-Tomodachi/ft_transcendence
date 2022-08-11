@@ -71,6 +71,22 @@ export class UsersService {
     });
   }
 
+  async getFriendsForEmit(myId: number): Promise<SimpleUserDto[]> {
+    const followEntities = await this.followRepo
+      .createQueryBuilder('follow')
+      .leftJoinAndSelect('follow.follow', 'followee')
+      .where('follow.followerId = :myId', { myId })
+      .getMany();
+
+    return followEntities.map((followEntity) => {
+      return {
+        userId: followEntity.follow.id,
+        nickname: followEntity.follow.nickname,
+        status: followEntity.follow.userStatus,
+      };
+    });
+  }
+
   // 유저가 있을 경우 유저 엔티티를 리턴하고 없을 경우 null을 리턴함
   async getUserByEmail(email: string): Promise<User | null> {
     const ret = await this.userRepo.findOne({ where: { email } });
@@ -307,5 +323,11 @@ export class UsersService {
     );
 
     return unblockedUserIds;
+  }
+
+  async getFollowerIds(myId: number): Promise<number[]> {
+    const followEntities = await this.followRepo.findBy({ followId: myId });
+
+    return followEntities.map((followEntity) => followEntity.followerId);
   }
 }
