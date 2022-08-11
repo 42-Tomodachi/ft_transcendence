@@ -470,6 +470,12 @@ export class ChatService {
     }
     await targetParticipant.save();
 
+    this.chatGateway.emitRole(
+      roomId.toString(),
+      targetParticipant.userId.toString(),
+      targetParticipant.role,
+    );
+
     this.chatGateway.wss
       .to(roomId.toString())
       .emit('updateUserList', targetParticipant);
