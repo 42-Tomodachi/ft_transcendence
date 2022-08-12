@@ -94,6 +94,7 @@ export class ChatService {
       .createQueryBuilder('chatParticipant')
       .leftJoinAndSelect('chatParticipant.user', 'user')
       .where('chatParticipant.chatRoomId = :roomId', { roomId })
+      .andWhere('chatParticipant.isBanned = false')
       .getMany();
 
     return chatParticipants.map((chatParticipant) => {
@@ -166,6 +167,7 @@ export class ChatService {
       roomId,
       await this.getChatContentDtoForEmit(createdChatContentId),
     );
+    this.chatGateway.emitChatRoomParticipants(roomId.toString());
     this.chatGateway.disconnectUser(roomId, targetUserId);
   }
 
