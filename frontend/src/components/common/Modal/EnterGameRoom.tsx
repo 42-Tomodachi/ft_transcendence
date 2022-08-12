@@ -3,25 +3,33 @@ import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
 import { AllContext } from '../../../store';
+import { useNavigate } from 'react-router-dom';
+import { gameAPI } from '../../../API';
 
-const EnterGameRoom: React.FC = () => {
+const EnterGameRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
   const [errMsg, setErrMsg] = useState<string>('');
   const [inputPwd, setPwd] = useState<string>('');
   const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
+  const navigate = useNavigate();
 
-  const comparePwd = () => {
-    if (inputPwd === '1234') {
-      setErrMsg('');
-      alert(`정답ㅋ`);
-    } else {
-      setErrMsg('잘못된 비밀번호입니다.');
-      setPwd('');
+  const checkPwd = async () => {
+    if (user && user.jwt) {
+      const res = await gameAPI.enterGameRoom(roomId, user.userId, inputPwd, user.jwt);
+      if (res !== -1) {
+        setErrMsg('');
+        setModal(null);
+        navigate(`/gameroom/${roomId}`);
+      } else {
+        setErrMsg('잘못된 비밀번호입니다.');
+        setPwd('');
+      }
     }
   };
 
   const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      comparePwd();
+      checkPwd();
     }
   };
 
@@ -47,7 +55,7 @@ const EnterGameRoom: React.FC = () => {
             height={40}
             onClick={() => setModal(null)}
           />
-          <Button color="gradient" text="입장하기" width={150} height={40} onClick={comparePwd} />
+          <Button color="gradient" text="입장하기" width={150} height={40} onClick={checkPwd} />
         </BtnBlock>
       </MainBlock>
     </Modal>
