@@ -71,9 +71,12 @@ function App() {
           {/* ====== */}
 
           {/* Tester */}
-          <Route path="/gameroom" element={<GamePage />} />
-          <Route path="/gameroom/:roomId" element={<GameStart />} />
+          <Route path="/gameroom/:roomId" element={<GamePage />} />
+          <Route path="/gameroom/:roomId/playing" element={<GameStart />} />
           <Route path="/gameroom/:roomId/gameexit/" element={<GameExit />} />
+          {/* <Route path="/gameroom" element={<GamePage />} />
+          <Route path="/gameroom/:roomId" element={<GameStart />} />
+          <Route path="/gameroom/:roomId/gameexit/" element={<GameExit />} /> */}
           {/* ====== */}
 
           <Route path="*" element={<Navigate to="/" replace />} />

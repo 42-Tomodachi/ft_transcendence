@@ -1,12 +1,13 @@
 import React, { useContext, useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME } from '../utils/interface';
+import { GAME, UPDATE_USER } from '../utils/interface';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom';
 // import { LinearProgress } from '@mui/material';
 import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
+import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
 
 interface GameInfoDto {
   nicknameOne: string;
@@ -21,13 +22,15 @@ interface GameInfoDto {
   ladderLevelTwo: number;
 }
 
+let socket: Socket;
+
 /*
  * 모달 페이지로 큐에 게임매칭을 수행하게 되면, 이 페이지로 이동합니다.
  * 매칭이 이루어졌다면, 서버에서 매칭유저에 대한 정보를 보내주기로 합의되어있다.
  */
 const GamePage: React.FC = () => {
   //const socket = io('http://10.19.226.170:5500/');
-  const { user } = useContext(AllContext).userData;
+  const { user, setUser } = useContext(AllContext).userData;
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   const navigate = useNavigate();
@@ -71,44 +74,69 @@ const GamePage: React.FC = () => {
     // if (win2) win2.style.width = `${(num[1] / (num[1] + num[0])) * 100}%`;
 
     if (user) {
-      console.log('onMatchingScreen? ㅇㅇㅇ gogo ');
-      const roomid = playingGameInfo?.gameRoomId;
-      user.socket.emit('onMatchingScreen', roomid);
+      if (user.socket) {
+        console.log('onMatchingScreen? ㅇㅇㅇ gogo ');
+        const roomid = playingGameInfo?.gameRoomId;
+        user.socket.emit('onMatchingScreen', roomid);
 
-      //   return gamerInfoDto;
-      //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
-      user.socket.on('matchData', (p1: any, p2: any) => {
-        setInfo({
-          nicknameOne: p1.nickname,
-          avatarOne: p1.avatar,
-          winCountOne: p1.winCount,
-          loseCountOne: p1.loseCount,
-          ladderLevelOne: p1.ladderLevel,
-          nicknameTwo: p2.nickname,
-          avatarTwo: p2.avatar,
-          winCountTwo: p2.winCount,
-          loseCountTwo: p2.loseCount,
-          ladderLevelTwo: p2.ladderLevel,
+        //   return gamerInfoDto;
+        //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
+        //ladderWinCount, laddeLoseCount로 들어옵니다. 확인하세여
+        user.socket.on('matchData', (p1: any, p2: any) => {
+          setInfo({
+            nicknameOne: p1.nickname,
+            avatarOne: p1.avatar,
+            winCountOne: p1.ladderWinCount,
+            loseCountOne: p1.ladderLoseCount,
+            ladderLevelOne: p1.ladderLevel,
+            nicknameTwo: p2.nickname,
+            avatarTwo: p2.avatar,
+            winCountTwo: p2.ladderWinCount,
+            loseCountTwo: p2.ladderLoseCount,
+            ladderLevelTwo: p2.ladderLevel,
+          });
+          if (win)
+            win.style.width = `${
+              (p1.ladderWinCount / (p1.ladderWinCount + p1.ladderLoseCount)) * 100
+            }%`;
+          if (win2)
+            win2.style.width = `${
+              (p2.ladderWinCount / (p2.ladderWinCount + p2.ladderLoseCount)) * 100
+            }%`;
+          if (user.nickname === p1.nickname)
+            setPlayingGameInfo({ ...playingGameInfo, player: 'p1', oppNickname: p2.nickname });
+          else if (user.nickname === p2.nickname)
+            setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
         });
-        if (win) win.style.width = `${(p1.winCount / (p1.winCount + p1.loseCount)) * 100}%`;
-        if (win2) win2.style.width = `${(p2.winCount / (p2.winCount + p2.loseCount)) * 100}%`;
-        if (user.nickname === p1.nickname)
-          setPlayingGameInfo({ ...playingGameInfo, player: 'p1', oppNickname: p2.nickname });
-        else if (user.nickname === p2.nickname)
-          setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
-      });
-      // 카운트다운이 발생하는 .. 서버에서 10초부터 하나씩 보내줄거고, 카운트가 끝나는순간, GameStart.tsx페이지로 이동하는 순간.
-      user.socket.on('gameStartCount', (data: number) => {
-        console.log('countdown:' + data);
-        setCount(data);
-        if (data == 0) {
-          console.log(`장면전환 /gameroom/${roomid}`);
-          navigate(`/gameroom/${roomid}`);
-        }
-      });
+        // 카운트다운이 발생하는 .. 서버에서 10초부터 하나씩 보내줄거고, 카운트가 끝나는순간, GameStart.tsx페이지로 이동하는 순간.
+        user.socket.on('gameStartCount', (data: number) => {
+          console.log('countdown:' + data);
+          setCount(data);
+          if (data == 0) {
+            console.log(`장면전환 /gameroom/${roomid}`);
+            navigate(`/gameroom/${roomid}/playing`);
+          }
+        });
+      } else {
+        socket = io(`${process.env.REACT_APP_BACK_API}`, {
+          transports: ['websocket'],
+          query: { userId: user.userId },
+        });
+        setInfo(info => {
+          return {
+            ...info,
+            nicknameOne: user.nickname == 'junselee' ? user.nickname : info.nicknameOne,
+            nicknameTwo: user.nickname == 'jihokim' ? user.nickname : info.nicknameTwo,
+          };
+        });
+
+        setUser(UPDATE_USER, { ...user, socket: socket });
+        console.log('매치게임이 아니면 user.socket이 없을테니까 일로 오겟지.');
+      }
     }
   }, []);
   // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
+  // 함수형으로 반환하는 느낌으로 ..
   return (
     <Background>
       <GameRoomContainer>

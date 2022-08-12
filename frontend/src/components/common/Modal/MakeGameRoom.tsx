@@ -38,6 +38,7 @@ const MakeGameRoom: React.FC = () => {
       setErrMsg('방 제목은 최소 한 글자 이상 입력해주세요.');
       return;
     }
+    // 여기서 서버로부터 일반겜방아이디를 받고 이동한다.
     if (user) {
       const res = await gameAPI.makeGameRoom(
         user.userId,

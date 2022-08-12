@@ -41,7 +41,7 @@ const LadderModal: React.FC = () => {
       if (user) {
         setPlayingGameInfo({ ...playingGameInfo, gameRoomId: roomId });
       }
-      navigate(`/gameroom/`); //GamePage.tsx
+      navigate(`/gameroom/${roomId}`); //GamePage.tsx
     });
     return () => {
       // 매칭도 아니고, 취소도 아니면 ! 백그라운드일 뿐이니까 !!
