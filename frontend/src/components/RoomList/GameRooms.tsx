@@ -1,8 +1,10 @@
-import React from 'react';
-import { IGameRooms } from '../../utils/interface';
+import React, { useContext } from 'react';
+import { ENTER_GAME_ROOM, IGameRooms } from '../../utils/interface';
 import Button from '../common/Button';
 import styled from '@emotion/styled';
 import { useNavigate } from 'react-router-dom';
+import { gameAPI } from '../../API';
+import { AllContext } from '../../store';
 
 interface GameRoomProps {
   item: IGameRooms;
@@ -10,6 +12,27 @@ interface GameRoomProps {
 
 const GameRooms: React.FC<GameRoomProps> = ({ item }) => {
   const navigate = useNavigate();
+  const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
+
+  const enterRoom = async () => {
+    if (user) {
+      const res = await gameAPI.enterGameRoom(item.gameId, user.userId, '', user.jwt);
+      if (res !== -1) {
+        navigate(`/gameroom/${item.gameId}`);
+      }
+    }
+  };
+
+  const handleEnterRoom = async () => {
+    if (user) {
+      if (!item.isPublic) {
+        setModal(ENTER_GAME_ROOM, user.userId, item.gameId);
+      } else {
+        await enterRoom();
+      }
+    }
+  };
 
   return (
     <ListItem>
@@ -23,7 +46,7 @@ const GameRooms: React.FC<GameRoomProps> = ({ item }) => {
             height={30}
             color="gradient"
             text="입장"
-            onClick={() => navigate(`gameroom/${item.gameId}`)} // TODO: navigate(`game/${roomNumber}`); // game room
+            onClick={handleEnterRoom} // TODO: navigate(`game/${roomNumber}`); // game room
           />
         </EnterBtnWrap>
         <GameStat isGameStart={item.isStart}>{item.isStart ? `게임중` : `대기중`}</GameStat>
