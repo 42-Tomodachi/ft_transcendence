@@ -48,25 +48,6 @@ const GamePage: React.FC = () => {
     ladderLevelTwo: 0,
   });
 
-  // window.addEventListener('beforeunload', event => {
-  //   event.preventDefault();
-  //   navigate(`/`);
-  //   // 문자열 반환
-  //   return '';
-  // });
-
-  // 고칠거면, 절반을 기준으로 변하게.
-  // const one = (num[0] / (num[0] + num[1])) * 100;
-  // const two = (num[1] / (num[1] + num[0])) * 100;
-  // const test = setInterval(() => {
-  // let oneCount = 0;
-  // let twoCount = 0;
-  //   if (win && oneCount < one) win.style.width = `${(oneCount += 1)}%`;
-  //   if (win2 && twoCount < two) win2.style.width = `${(twoCount += 1)}%`;
-  //   //else clearInterval(test);
-  // }, 25);
-  // return () => {};
-
   useEffect(() => {
     const win: HTMLElement | null = document.getElementById('win');
     const win2: HTMLElement | null = document.getElementById('win2');
@@ -118,16 +99,51 @@ const GamePage: React.FC = () => {
           }
         });
       } else {
+        // 얘가 어디서 게임인포가 갱신되어있어야하냐?  -> 비밀방 입력치고 확인누를때, 일반방 입장버튼 누를때, 대전신청 버튼 누르고 상대방이 수락했을때,
+        // 그리고 게임방을 생성했을때,.. 이때 여기다 룸아이디를 저장해노며는 여기서 받아올수있고,
+        const roomid = playingGameInfo?.gameRoomId;
+        /*
+         * 일반게임이 공개방이던 비공개방이던 장애물맵이던, 스피드맵이던 일단 방으로 들어와야하고
+         * 래더게임매칭모달은 거치고 온게 아니기때문에,  생성된 소켓이 없을거라는말이지, 그럼 여기 else로 오는거야.
+         * 소켓 없으니까 소켓부터 연결해주는거라고,
+         *
+         *
+         *
+         *
+         */
+
         socket = io(`${process.env.REACT_APP_BACK_API}`, {
           transports: ['websocket'],
           query: { userId: user.userId },
         });
-        setInfo(info => {
-          return {
-            ...info,
-            nicknameOne: user.nickname == 'junselee' ? user.nickname : info.nicknameOne,
-            nicknameTwo: user.nickname == 'jihokim' ? user.nickname : info.nicknameTwo,
-          };
+
+        // 얘가 onGameroomScreen 같은 이름으로 만들어져서 룸아이디를 넘겨주면,
+        // 암튼 얘도 매치데이터를 받아올거고, (socket.on('matchData'))
+        socket.emit('onMatchingScreen', roomid);
+
+        /*
+         * 소켓이 연결되면, 두가지 동작을 서버랑 합의해서 취해야댐,
+         * 어.. 방을 생성한 유저(플레이어1)은 래더와 마찬가지로 자기가 p1인지를 알아야겠지.
+         * 자기정보를 왼편에 표시할수있어야 될거야,
+         * 같은 roomid로 대결을 하고 싶은 유저가 들어오면(플레이어2), 서버는 카운트를 시작해야되는데,
+         * 사실이거를 매칭큐처럼 작성할건지 어떡할건지. , 아니면 클라이언트 쪽에서 해야되는건지 모르겟음.
+         * 암튼 유저정보를 표시하는것은 나는 매치데이터 이벤트로 관리할수있도록 합의되어있으니까 그걸로 받아서 처리할것임.
+         * */
+        socket.on('matchData', (p1: any, p2: any) => {
+          setInfo(info => {
+            return {
+              nicknameOne: p1.nickname,
+              avatarOne: p1.avatar,
+              winCountOne: p1.ladderWinCount,
+              loseCountOne: p1.ladderLoseCount,
+              ladderLevelOne: p1.ladderLevel,
+              nicknameTwo: p2.nickname,
+              avatarTwo: p2.avatar,
+              winCountTwo: p2.ladderWinCount,
+              loseCountTwo: p2.ladderLoseCount,
+              ladderLevelTwo: p2.ladderLevel,
+            };
+          });
         });
 
         setUser(UPDATE_USER, { ...user, socket: socket });
