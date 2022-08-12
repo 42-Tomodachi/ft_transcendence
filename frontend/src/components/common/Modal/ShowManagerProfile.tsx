@@ -64,16 +64,16 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
       console.log('ban');
       if (res) {
         setModal(null);
-      }
+      } // TODO: 경고 noti, 방 주인한테 밴
     }
   };
   const onToggleMute = async () => {
     if (target && user) {
-      const res = await chatsAPI.setUpMuteUser(roomId, target.userId, user.jwt);
+      const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
       console.log('Toggle Mute', res);
-      if (res) {
+      if (res && res.isMuted) {
         setModal(null);
-      }
+      } // TODO: 경고 noti, 방 주인한테 뮤트
     }
   };
   const onApplyGame = async () => {

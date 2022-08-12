@@ -11,15 +11,16 @@ import ProfileImage from '../ProfileImage';
 
 const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId, userId }) => {
   const { setModal } = useContext(AllContext).modalData;
-  const [target, setTarget] = useState<IUserData | null>(null);
+  const [target, setTarget] = useState<(IUserData & { isMuted: boolean; role: string }) | null>(
+    null,
+  );
   const { user } = useContext(AllContext).userData;
-  const [isManager, setIsManager] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
-        const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
+        const data = await chatsAPI.getUserProfileInChatRoom(roomId, user.userId, userId, user.jwt);
         if (data) {
           if (data.avatar) setTarget(data);
           else setTarget({ ...data, avatar: defaultProfile });
@@ -69,7 +70,7 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   };
   const onToggleMute = async () => {
     if (target && user) {
-      const res = await chatsAPI.setUpMuteUser(roomId, target.userId, user.jwt);
+      const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
       console.log('Toggle Mute', res);
       if (res) {
         setModal(null);
@@ -79,8 +80,9 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   const onToggleRole = async () => {
     if (user && target) {
       const res = await chatsAPI.changeRoleInChatRoom(roomId, user.userId, target.userId, user.jwt);
-      console.log('toogle role', res);
-      setIsManager(prev => !prev);
+      if (res) {
+        setTarget({ ...target, role: res.role });
+      }
     }
   };
   const onApplyGame = async () => {
@@ -166,7 +168,7 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
                 <Button color="white2" text="뮤트" width={200} height={40} onClick={onToggleMute} />
                 <Button
                   color="gradient"
-                  text={isManager ? '관리자 권한 주기' : '관리자 권한 해제'}
+                  text={target.role === 'manager' ? '관리자 권한 해제' : '관리자 권한 주기'}
                   width={420}
                   height={40}
                   onClick={onToggleRole}

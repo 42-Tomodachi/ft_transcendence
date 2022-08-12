@@ -64,7 +64,6 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
 
   const getUserList = async () => {
     const data = await selectActiveMenu(activeMenu);
-    console.log(data);
     sortedUserList(data);
   };
 
@@ -80,6 +79,9 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
           socket.on('updateChatRoomParticipants', data => {
             sortedUserList(data);
           });
+          socket.on('updateRole', data => {
+            setLoginUserRole(data);
+          });
           break;
       }
     }
@@ -87,6 +89,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
       if (socket) {
         socket.off('updateFriendList');
         socket.off('updateChatRoomParticipants');
+        socket.off('updateRole');
       }
     };
   }, [socket, activeMenu]);
