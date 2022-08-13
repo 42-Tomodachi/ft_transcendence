@@ -13,7 +13,7 @@ import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom } from './entities/chatRoom.entity';
 
 @Module({
-  exports: [ChatGateway, ChatService],
+  exports: [ChatGateway, ChatService, ChatLobbyGateway],
   imports: [
     TypeOrmModule.forFeature([
       ChatContents,

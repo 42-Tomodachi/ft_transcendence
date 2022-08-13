@@ -40,9 +40,11 @@ export class ChatLobbyGateway
       const set = new Set([client.id]);
       this.connectedSocketMap.set(userId, set);
     }
+    // 최초 목록들은 api 요청으로 처리하는걸로 협의
     // 특정 소켓에 채팅방 목록 emit
-    this.emitChatRoomList(client.id);
+    // this.emitChatRoomList(client.id);
     // 특정 소켓에 전체 유저 목록 emit
+    // this.emitUserList(client.id);
   }
 
   handleDisconnect(client: Socket): void {
@@ -99,11 +101,9 @@ export class ChatLobbyGateway
   }
 
   // 참여중인 채팅방 목록 emit
-  // 1. 방 정보가 변경되면 emitParticipantingChatRoomList 호출: 방 제목 변경, 방 입퇴장(인원수 변경), 방 삭제되는 경우 - in chatLobby
-  // 2. 방에 참여중인 유저 id 가져오기 - in chatService
-  // 3. 2에서 가져온 유저의 id를 현재 로비 소켓에 연결되어 있는 유저의 id로 필터링 - in chatService에서 chatLobby의 getConnectedSocketIdsOfUser 함수 활용
-  // 4. 해당 유저의 소켓에 채팅방 목록 emit - in lobbyGateway
+  // 1. 방 정보가 변경되면 chatLobby의 emitParticipantingChatRoomList 호출: 방 제목 변경, 방 입퇴장(인원수 변경), 방 삭제되는 경우
   async emitParticipantingChatRoomList(roomId: number): Promise<void> {
+    // 2. 방에 참여중인 유저 id 가져오기 - in chatService
     const chatRoomUserDtos = await this.chatService.getRoomParticipants(roomId);
 
     const participantIds = chatRoomUserDtos.map(
@@ -111,10 +111,12 @@ export class ChatLobbyGateway
     );
 
     participantIds.forEach((participantId) => {
+      // 3. 2에서 가져온 유저의 id를 현재 로비 소켓에 연결되어 있는 유저의 id로 필터링 - chatLobby의 getConnectedSocketIdsOfUser 함수 활용
       const socketIds = this.getConnectedSocketIdsOfUser(
         participantId.toString(),
       );
 
+      // 4. 해당 유저의 소켓에 채팅방 목록 emit
       if (socketIds) {
         socketIds.forEach(async (socketId) => {
           const chatRoomList =
@@ -130,13 +132,37 @@ export class ChatLobbyGateway
     });
   }
 
-  // 특정 소켓에 전체 유저 목록 emit
-  emitUserListToSpecificSocket(socketId: string): void {}
-  // ws-chatLobby namespace에 전체 유저 목록 emit
-  emitUserListToNamespace(): void {}
+  // 전체 유저 목록 emit
+  // 회원가입, 로그인, 로그아웃, 닉네임 변경 todo: 게입 방 입퇴장(유저 상태 play)
+  async emitUserList(socketId?: string): Promise<void> {
+    const userList = await this.userService.getUsers();
 
-  // 특정 소켓에 친구 목록 emit
-  emitFriendListToSpecificSocket(socketId: string, myId: string): void {}
-  // 나를 친구 추가한 유저의 소켓에 친구 목록 emit
-  emitFriendlistToNamespace(): void {}
+    if (socketId) {
+      this.wss.to(socketId).emit('updateUserList', userList);
+    } else {
+      this.wss.emit('updateUserList', userList);
+    }
+  }
+
+  // 친구 목록 emit
+  // 로그인, 로그아웃, 닉네임 변경 todo: 게입 방 입퇴장(유저 상태 play)
+  async emitFriendList(myId: number) {
+    // 1. 나를 친구추가한 유저 id 가져오기
+    const followerIds = await this.userService.getFollowerIds(myId);
+
+    followerIds.forEach(async (followerId) => {
+      // 2. 1에서 가져온 유저 id에 연결된 소켓 id 가져오기
+      const socketIds = this.getConnectedSocketIdsOfUser(followerId.toString());
+
+      if (socketIds) {
+        // 3. 1에서 가져온 유저 id의 친구 목록 가져와서 emit
+        socketIds.forEach(async (socketId) => {
+          const friendList = await this.userService.getFriendsForEmit(
+            followerId,
+          );
+          this.wss.to(socketId).emit('updateFriendList', friendList);
+        });
+      }
+    });
+  }
 }

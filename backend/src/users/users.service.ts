@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsDuplicateDto, IsSignedUpDto } from 'src/auth/dto/auth.dto';
 import { ChatGateway } from 'src/chat/chat.gateway';
+import { ChatLobbyGateway } from 'src/chat/chatLobby.gateway';
 import { Repository } from 'typeorm';
 import { BlockResultDto } from './dto/blockedUser.dto';
 import { GameRecordDto } from './dto/users.dto';
@@ -33,6 +34,8 @@ export class UsersService {
     private readonly gameRecordRepo: Repository<GameRecord>,
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+    @Inject(forwardRef(() => ChatLobbyGateway))
+    private readonly chatLobbyGateway: ChatLobbyGateway,
   ) {}
 
   async getUsers(): Promise<SimpleUserDto[]> {
@@ -248,6 +251,8 @@ export class UsersService {
 
     this.chatGateway.updateUserInfoToJoinedChatRooms(user, userId);
     // this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
+    this.chatLobbyGateway.emitUserList();
+    this.chatLobbyGateway.emitFriendList(userId);
 
     return updatedUser.toUserProfileDto();
   }
