@@ -29,6 +29,7 @@ import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
 import * as bcrypt from 'bcryptjs';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { ChatLobbyGateway } from './chatLobby.gateway';
 
 @Injectable()
 export class ChatService {
@@ -41,6 +42,8 @@ export class ChatService {
     private readonly chatRoomRepo: Repository<ChatRoom>,
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+    @Inject(forwardRef(() => ChatLobbyGateway))
+    private readonly chatLobbyGateway: ChatLobbyGateway,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private dataSource: DataSource,
@@ -256,6 +259,8 @@ export class ChatService {
     chatRoomDataDto.isDm = createdChatRoom.isDm;
 
     this.chatGateway.emitChatRoomParticipants(createdChatRoom.id.toString());
+    this.chatLobbyGateway.emitChatRoomList();
+    this.chatLobbyGateway.emitParticipantingChatRoomList(createdChatRoom.id);
     return chatRoomDataDto;
   }
 
@@ -347,6 +352,8 @@ export class ChatService {
     }
 
     this.chatGateway.emitChatRoomParticipants(roomId.toString());
+    this.chatLobbyGateway.emitChatRoomList();
+    this.chatLobbyGateway.emitParticipantingChatRoomList(roomId);
     return { roomId: roomId };
   }
 
@@ -380,6 +387,9 @@ export class ChatService {
       updatedRoom.id.toString(),
       updatedRoom.title,
     );
+
+    this.chatLobbyGateway.emitChatRoomList();
+    this.chatLobbyGateway.emitParticipantingChatRoomList(roomId);
     return updatedRoom.toChatRoomDataDto();
   }
 
@@ -430,6 +440,9 @@ export class ChatService {
 
       this.chatGateway.emitChatRoomParticipants(roomId.toString());
     }
+
+    this.chatLobbyGateway.emitChatRoomList();
+    this.chatLobbyGateway.emitParticipantingChatRoomList(roomId);
   }
 
   async toggleParticipantRole(
@@ -704,6 +717,9 @@ export class ChatService {
       await t.save(chatParticipantForPartner);
     });
 
+    this.chatLobbyGateway.emitParticipantingChatRoomList(
+      chatRoomDataDto.roomId,
+    );
     return { roomId: chatRoomDataDto.roomId };
   }
 
@@ -955,4 +971,19 @@ export class ChatService {
   //   this.schedulerRegistry.deleteTimeout(name);
   //   this.logger.warn(`Scheduler ${name}(name) deleted!`);
   // }
+
+  async getParticipantingChatRoomsForEmit(
+    userId: number,
+  ): Promise<ChatRoomDto[]> {
+    const participantingChatRooms = await this.chatRoomRepo
+      .createQueryBuilder('chatRoom')
+      .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
+      .where('chatParticipant.isBanned = false')
+      .andWhere('chatParticipant.userId = :userId', { userId })
+      .getMany();
+
+    return participantingChatRooms.map((chatRoom) => {
+      return chatRoom.toChatRoomDto();
+    });
+  }
 }
