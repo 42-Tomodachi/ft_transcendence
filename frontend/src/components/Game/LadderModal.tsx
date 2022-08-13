@@ -45,10 +45,8 @@ const LadderModal: React.FC = () => {
     });
     return () => {
       // 매칭도 아니고, 취소도 아니면 ! 백그라운드일 뿐이니까 !!
-      if (test[0] === true) {
-        socket.emit('cancelLadderQueue');
-        setModal(null);
-      }
+      if (test[0] === true) socket.emit('cancelLadderQueue');
+      setModal(null);
     };
   }, []);
   return (

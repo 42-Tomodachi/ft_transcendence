@@ -1,10 +1,8 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME, UPDATE_USER } from '../utils/interface';
+import { GAME } from '../utils/interface';
 import { AllContext } from '../store';
-import { useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
 
 const calculateOn = [true, false];
 const ballball = [50, 50];
@@ -30,15 +28,13 @@ interface GameInfo {
   checkPoint: boolean;
 }
 
-let socket: Socket;
-
 const GameStart: React.FC = () => {
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
-  const { user, setUser } = useContext(AllContext).userData;
+  const { user } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
   const player = user ? playingGameInfo.player : 'g1';
-  const navigate = useNavigate();
   const roomid = user && playingGameInfo.gameRoomId;
+
   //console.log('re-render');
   // 서버와 통신하기 위한 정보변수들을 useState로 관리
   const [gameInfo, setGameInfo] = useState<GameInfo>({
@@ -120,6 +116,10 @@ const GameStart: React.FC = () => {
   const changeVelo = function a(type: string, value: string): number {
     if (value == 'ballP_X') {
       switch (type) {
+        case 'leftgoal':
+          return -1;
+        case 'rightgoal':
+          return 1;
         case 'upHit':
           if (gameInfo.ballVelo_X > 0) return 1;
           else return -1;
@@ -130,10 +130,6 @@ const GameStart: React.FC = () => {
           return 1;
         case 'rightHit':
           return -1;
-        case 'leftgoal':
-          return -1;
-        case 'rightgoal':
-          return 1;
         default:
           return gameInfo.ballVelo_X;
       }
@@ -375,6 +371,7 @@ const GameStart: React.FC = () => {
         if (data[8] === 10 || data[9] === 10) {
           if (user) {
             console.log('10점획득 disconnect:' + user.socket.id);
+            user.socket.emit('roomTerminated', roomid);
             user.socket.disconnect();
           }
           playing[0] = false;
@@ -420,7 +417,7 @@ const GameStart: React.FC = () => {
       console.log('second');
     }
   }, [ball]); // 반영
-  if (user && user.socket.connected) {
+  if (user && user.socket && user.socket.connected) {
     return (
       <Background>
         <GameRoomContainer>

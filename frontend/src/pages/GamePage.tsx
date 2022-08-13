@@ -4,10 +4,10 @@ import Header from '../components/Header';
 import { GAME, UPDATE_USER } from '../utils/interface';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom';
-// import { LinearProgress } from '@mui/material';
 import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
 import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
+import GameStart from './GameStart';
 
 interface GameInfoDto {
   nicknameOne: string;
@@ -23,6 +23,7 @@ interface GameInfoDto {
 }
 
 let socket: Socket;
+const gamestart = [false];
 
 /*
  * 모달 페이지로 큐에 게임매칭을 수행하게 되면, 이 페이지로 이동합니다.
@@ -33,7 +34,7 @@ const GamePage: React.FC = () => {
   const { user, setUser } = useContext(AllContext).userData;
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [count, setCount] = useState(5); //오피셜은 10초
   const [info, setInfo] = useState<GameInfoDto>({
     nicknameOne: '',
@@ -56,7 +57,7 @@ const GamePage: React.FC = () => {
 
     if (user) {
       if (user.socket) {
-        console.log('onMatchingScreen? ㅇㅇㅇ gogo ');
+        console.log('onMatchingScreen');
         const roomid = playingGameInfo?.gameRoomId;
         user.socket.emit('onMatchingScreen', roomid);
 
@@ -64,17 +65,19 @@ const GamePage: React.FC = () => {
         //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
         //ladderWinCount, laddeLoseCount로 들어옵니다. 확인하세여
         user.socket.on('matchData', (p1: any, p2: any) => {
-          setInfo({
-            nicknameOne: p1.nickname,
-            avatarOne: p1.avatar,
-            winCountOne: p1.ladderWinCount,
-            loseCountOne: p1.ladderLoseCount,
-            ladderLevelOne: p1.ladderLevel,
-            nicknameTwo: p2.nickname,
-            avatarTwo: p2.avatar,
-            winCountTwo: p2.ladderWinCount,
-            loseCountTwo: p2.ladderLoseCount,
-            ladderLevelTwo: p2.ladderLevel,
+          setInfo(info => {
+            return {
+              nicknameOne: p1.nickname,
+              avatarOne: p1.avatar,
+              winCountOne: p1.ladderWinCount,
+              loseCountOne: p1.ladderLoseCount,
+              ladderLevelOne: p1.ladderLevel,
+              nicknameTwo: p2.nickname,
+              avatarTwo: p2.avatar,
+              winCountTwo: p2.ladderWinCount,
+              loseCountTwo: p2.ladderLoseCount,
+              ladderLevelTwo: p2.ladderLevel,
+            };
           });
           if (win)
             win.style.width = `${
@@ -93,10 +96,9 @@ const GamePage: React.FC = () => {
         user.socket.on('gameStartCount', (data: number) => {
           console.log('countdown:' + data);
           setCount(data);
-          if (data == 0) {
-            console.log(`장면전환 /gameroom/${roomid}`);
-            navigate(`/gameroom/${roomid}/playing`);
-          }
+          if (data == 0) gamestart[0] = true;
+          //console.log(`장면전환 /gameroom/${roomid}`);
+          //navigate(`/gameroom/${roomid}/playing`);
         });
       } else {
         // 얘가 어디서 게임인포가 갱신되어있어야하냐?  -> 비밀방 입력치고 확인누를때, 일반방 입장버튼 누를때, 대전신청 버튼 누르고 상대방이 수락했을때,
@@ -144,6 +146,30 @@ const GamePage: React.FC = () => {
               ladderLevelTwo: p2.ladderLevel,
             };
           });
+          // if (p1) {
+          //   setInfo(info => {
+          //     return {
+          //       ...info,
+          //       nicknameOne: p1.nickname,
+          //       avatarOne: p1.avatar,
+          //       winCountOne: p1.ladderWinCount,
+          //       loseCountOne: p1.ladderLoseCount,
+          //       ladderLevelOne: p1.ladderLevel,
+          //     };
+          //   });
+          // }
+          // if (p2) {
+          //   setInfo(info => {
+          //     return {
+          //       ...info,
+          //       nicknameTwo: p2.nickname,
+          //       avatarTwo: p2.avatar,
+          //       winCountTwo: p2.ladderWinCount,
+          //       loseCountTwo: p2.ladderLoseCount,
+          //       ladderLevelTwo: p2.ladderLevel,
+          //     };
+          //   });
+          // }
         });
 
         setUser(UPDATE_USER, { ...user, socket: socket });
@@ -153,43 +179,51 @@ const GamePage: React.FC = () => {
   }, []);
   // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
   // 함수형으로 반환하는 느낌으로 ..
-  return (
-    <Background>
-      <GameRoomContainer>
-        <Header type={GAME} />
-        <GameRoomBody>
-          <GameArea>
-            <InfoArea>
-              <UserInfo>
-                <PictureBlock>
-                  <ProfileImage src={info.avatarOne ? info.avatarOne : defaultProfile} size={150} />
-                </PictureBlock>
-                <span>{`${info.nicknameOne}`}</span>
-                <span>{`Lv. ${info.ladderLevelOne}`}</span>
-                <Bar>
-                  <Win id="win">{info.winCountOne}</Win>
-                  <Lose id="los">{info.loseCountOne}</Lose>
-                </Bar>
-              </UserInfo>
-              <Count>{count}</Count>
-              <UserInfo>
-                <PictureBlock>
-                  <ProfileImage src={info.avatarTwo ? info.avatarTwo : defaultProfile} size={150} />
-                </PictureBlock>
-                <span>{`${info.nicknameTwo}`}</span>
-                <span>{`Lv. ${info.ladderLevelTwo}`}</span>
-                <Bar>
-                  <Win id="win2">{info.winCountTwo}</Win>
-                  <Lose id="los">{info.loseCountTwo}</Lose>
-                </Bar>
-              </UserInfo>
-            </InfoArea>
-            <Message>게임이 곧 시작됩니다</Message>
-          </GameArea>
-        </GameRoomBody>
-      </GameRoomContainer>
-    </Background>
-  );
+  if (gamestart[0] === false)
+    return (
+      <Background>
+        <GameRoomContainer>
+          <Header type={GAME} />
+          <GameRoomBody>
+            <GameArea>
+              <InfoArea>
+                <UserInfo>
+                  <PictureBlock>
+                    <ProfileImage
+                      src={info.avatarOne ? info.avatarOne : defaultProfile}
+                      size={150}
+                    />
+                  </PictureBlock>
+                  <span>{`${info.nicknameOne}`}</span>
+                  <span>{`Lv. ${info.ladderLevelOne}`}</span>
+                  <Bar>
+                    <Win id="win">{info.winCountOne}</Win>
+                    <Lose id="los">{info.loseCountOne}</Lose>
+                  </Bar>
+                </UserInfo>
+                <Count>{count}</Count>
+                <UserInfo>
+                  <PictureBlock>
+                    <ProfileImage
+                      src={info.avatarTwo ? info.avatarTwo : defaultProfile}
+                      size={150}
+                    />
+                  </PictureBlock>
+                  <span>{`${info.nicknameTwo}`}</span>
+                  <span>{`Lv. ${info.ladderLevelTwo}`}</span>
+                  <Bar>
+                    <Win id="win2">{info.winCountTwo}</Win>
+                    <Lose id="los">{info.loseCountTwo}</Lose>
+                  </Bar>
+                </UserInfo>
+              </InfoArea>
+              <Message>게임이 곧 시작됩니다</Message>
+            </GameArea>
+          </GameRoomBody>
+        </GameRoomContainer>
+      </Background>
+    );
+  else return <GameStart />;
 };
 const PictureBlock = styled.div``;
 // css 애니메이션기능으로 추가.
