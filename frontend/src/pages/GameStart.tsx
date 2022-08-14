@@ -392,6 +392,11 @@ const GameStart: React.FC = () => {
         }
       });
     } else console.log('ERROR: user undefined');
+    return () => {
+      setGameInfo(gameInfo => {
+        return { ...gameInfo };
+      });
+    };
   };
 
   // 드로잉 컨텍스트를 만들 때 alpha 옵션을 false로 설정합니다.(getContext)
@@ -417,6 +422,10 @@ const GameStart: React.FC = () => {
       console.log('second');
     }
   }, [ball]); // 반영
+  // true니까 여기로 넘어와버리고, 방만들기라서, 소켓이 없으니까 else로가면, 결과페이지가 나오는거임.
+  // 음... 해결방법 모색은 두가지 생각해볼수있는데, 사용후false상태인 gamestart변수를 다시 false로 되돌리는거
+  // 다른하나는, 분기조건을 다른방식으로 하는법.
+  // 오늘은 이거 해결하고, 지호킴님이 백엔드 해결해놓으면, 합쳐서 테스트한다.
   if (user && user.socket && user.socket.connected) {
     return (
       <Background>

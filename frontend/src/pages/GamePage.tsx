@@ -3,7 +3,6 @@ import styled from '@emotion/styled';
 import Header from '../components/Header';
 import { GAME, UPDATE_USER } from '../utils/interface';
 import { AllContext } from '../store';
-import { useNavigate } from 'react-router-dom';
 import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
 import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
@@ -22,19 +21,15 @@ interface GameInfoDto {
   ladderLevelTwo: number;
 }
 
-let socket: Socket;
-const gamestart = [false];
-
 /*
  * 모달 페이지로 큐에 게임매칭을 수행하게 되면, 이 페이지로 이동합니다.
  * 매칭이 이루어졌다면, 서버에서 매칭유저에 대한 정보를 보내주기로 합의되어있다.
  */
 const GamePage: React.FC = () => {
-  //const socket = io('http://10.19.226.170:5500/');
+  let socket: Socket;
+  const [gameStart, setGameStart] = useState(false);
   const { user, setUser } = useContext(AllContext).userData;
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
-
-  // const navigate = useNavigate();
   const [count, setCount] = useState(5); //오피셜은 10초
   const [info, setInfo] = useState<GameInfoDto>({
     nicknameOne: '',
@@ -49,6 +44,8 @@ const GamePage: React.FC = () => {
     ladderLevelTwo: 0,
   });
 
+  const roomid: number = playingGameInfo?.gameRoomId;
+
   useEffect(() => {
     const win: HTMLElement | null = document.getElementById('win');
     const win2: HTMLElement | null = document.getElementById('win2');
@@ -58,7 +55,6 @@ const GamePage: React.FC = () => {
     if (user) {
       if (user.socket) {
         console.log('onMatchingScreen');
-        const roomid = playingGameInfo?.gameRoomId;
         user.socket.emit('onMatchingScreen', roomid);
 
         //   return gamerInfoDto;
@@ -96,24 +92,18 @@ const GamePage: React.FC = () => {
         user.socket.on('gameStartCount', (data: number) => {
           console.log('countdown:' + data);
           setCount(data);
-          if (data == 0) gamestart[0] = true;
+          if (data == 0) setGameStart(true);
+          // if (data == 0) preRoomId = roomid;
           //console.log(`장면전환 /gameroom/${roomid}`);
           //navigate(`/gameroom/${roomid}/playing`);
         });
       } else {
-        // 얘가 어디서 게임인포가 갱신되어있어야하냐?  -> 비밀방 입력치고 확인누를때, 일반방 입장버튼 누를때, 대전신청 버튼 누르고 상대방이 수락했을때,
-        // 그리고 게임방을 생성했을때,.. 이때 여기다 룸아이디를 저장해노며는 여기서 받아올수있고,
-        const roomid = playingGameInfo?.gameRoomId;
         /*
          * 일반게임이 공개방이던 비공개방이던 장애물맵이던, 스피드맵이던 일단 방으로 들어와야하고
          * 래더게임매칭모달은 거치고 온게 아니기때문에,  생성된 소켓이 없을거라는말이지, 그럼 여기 else로 오는거야.
          * 소켓 없으니까 소켓부터 연결해주는거라고,
-         *
-         *
-         *
-         *
          */
-
+        console.log('일로왔자나 그치?\n');
         socket = io(`${process.env.REACT_APP_BACK_API}`, {
           transports: ['websocket'],
           query: { userId: user.userId },
@@ -146,40 +136,25 @@ const GamePage: React.FC = () => {
               ladderLevelTwo: p2.ladderLevel,
             };
           });
-          // if (p1) {
-          //   setInfo(info => {
-          //     return {
-          //       ...info,
-          //       nicknameOne: p1.nickname,
-          //       avatarOne: p1.avatar,
-          //       winCountOne: p1.ladderWinCount,
-          //       loseCountOne: p1.ladderLoseCount,
-          //       ladderLevelOne: p1.ladderLevel,
-          //     };
-          //   });
-          // }
-          // if (p2) {
-          //   setInfo(info => {
-          //     return {
-          //       ...info,
-          //       nicknameTwo: p2.nickname,
-          //       avatarTwo: p2.avatar,
-          //       winCountTwo: p2.ladderWinCount,
-          //       loseCountTwo: p2.ladderLoseCount,
-          //       ladderLevelTwo: p2.ladderLevel,
-          //     };
-          //   });
-          // }
         });
 
         setUser(UPDATE_USER, { ...user, socket: socket });
         console.log('매치게임이 아니면 user.socket이 없을테니까 일로 오겟지.');
       }
     }
-  }, []);
+    return () => {
+      if (user && user.socket && user.socket.connected) {
+        user.socket.off('gameStartCount');
+        user.socket.off('matchData');
+      }
+      // gamestart = false;
+      setGameStart(false);
+    };
+  }, [roomid]);
   // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
   // 함수형으로 반환하는 느낌으로 ..
-  if (gamestart[0] === false)
+  // 얘가 한번 ture로 바껴버리면, 리프레쉬 되기전까진 계속 true인 문제가 있음.
+  if (gameStart === false)
     return (
       <Background>
         <GameRoomContainer>
