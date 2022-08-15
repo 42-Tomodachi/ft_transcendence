@@ -307,8 +307,11 @@ const GameStart: React.FC = () => {
             checkPoint: getCheckPoint(),
           };
         });
+        console.log("testing AAA");
         user.socket.emit('calculatedRTData', gameInfo);
-      } else user.socket.emit('paddleRTData', mouseY);
+      } else {user.socket.emit('paddleRTData', mouseY); 
+      console.log("testing AAA");
+    }
     }
   };
 
