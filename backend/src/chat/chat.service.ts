@@ -442,7 +442,7 @@ export class ChatService {
     }
 
     this.chatLobbyGateway.emitChatRoomList();
-    this.chatLobbyGateway.emitParticipantingChatRoomList(roomId);
+    this.chatLobbyGateway.emitParticipantingChatRoomList();
   }
 
   async toggleParticipantRole(

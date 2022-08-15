@@ -8,6 +8,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
+import { ChatRoomUserDto } from './dto/chatParticipant.dto';
 
 @WebSocketGateway({ namespace: '/ws-chatLobby', cors: { origin: '*' } })
 export class ChatLobbyGateway
@@ -24,7 +25,7 @@ export class ChatLobbyGateway
 
   private logger: Logger = new Logger('LobbyGateway');
 
-  // Map<userId, socketId[]>
+  // Map<userId, Set<socketId>>
   connectedSocketMap = new Map<string, Set<string>>();
 
   handleConnection(client: Socket): void {
@@ -101,10 +102,31 @@ export class ChatLobbyGateway
   }
 
   // 참여중인 채팅방 목록 emit
+  // roomId 인자가 있으면 해당 방 참여자에게만 참여중인 채팅방 목록 emit, 없으면 모두에게 참여중인 채팅방 목록 emit
   // 1. 방 정보가 변경되면 chatLobby의 emitParticipantingChatRoomList 호출: 방 제목 변경, 방 입퇴장(인원수 변경), 방 삭제되는 경우
-  async emitParticipantingChatRoomList(roomId: number): Promise<void> {
+  async emitParticipantingChatRoomList(roomId?: number): Promise<void> {
+    if (!roomId) {
+      this.connectedSocketMap.forEach((socketSet, userId) => {
+        const chatRoomList = this.chatService.getParticipantingChatRoomsForEmit(
+          +userId,
+        );
+
+        socketSet.forEach((socketId) => {
+          this.wss
+            .to(socketId)
+            .emit('updateParticipnatingChatRoomList', chatRoomList);
+        });
+      });
+    }
+
     // 2. 방에 참여중인 유저 id 가져오기 - in chatService
-    const chatRoomUserDtos = await this.chatService.getRoomParticipants(roomId);
+    const chatRoomUserDtos: ChatRoomUserDto[] = [];
+
+    try {
+      chatRoomUserDtos.push(
+        ...(await this.chatService.getRoomParticipants(roomId)),
+      );
+    } catch (error) {}
 
     const participantIds = chatRoomUserDtos.map(
       (chatRoomUserDto) => chatRoomUserDto.userId,
