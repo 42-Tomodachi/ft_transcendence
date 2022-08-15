@@ -44,6 +44,8 @@ const GamePage: React.FC = () => {
     ladderLevelTwo: 0,
   });
 
+  console.log(count);
+  console.log('게임:' + gameStart);
   const roomid: number = playingGameInfo?.gameRoomId;
 
   useEffect(() => {
@@ -107,10 +109,17 @@ const GamePage: React.FC = () => {
           transports: ['websocket'],
           query: { userId: user.userId },
         });
+        socket.on('message', () => {
+          console.log(` 일반 connected socket : ${socket.id}`);
+          console.log(socket.connected); // true
+          if (user) user.socket = socket;
+        });
+
+        // setUser(UPDATE_USER, { ...user, socket: socket });
 
         // 얘가 onGameroomScreen 같은 이름으로 만들어져서 룸아이디를 넘겨주면,
         // 암튼 얘도 매치데이터를 받아올거고, (socket.on('matchData'))
-        // socket.emit('onMatchingScreen', roomid);
+        socket.emit('onMatchingScreen', roomid);
 
         /*
          * 소켓이 연결되면, 두가지 동작을 서버랑 합의해서 취해야댐,
@@ -128,25 +137,25 @@ const GamePage: React.FC = () => {
               winCountOne: p1.ladderWinCount,
               loseCountOne: p1.ladderLoseCount,
               ladderLevelOne: p1.ladderLevel,
-              nicknameTwo: p2.nickname,
-              avatarTwo: p2.avatar,
-              winCountTwo: p2.ladderWinCount,
-              loseCountTwo: p2.ladderLoseCount,
-              ladderLevelTwo: p2.ladderLevel,
+              nicknameTwo: p2 ? p2.nickname : info.nicknameTwo,
+              avatarTwo: p2 ? p2.avatar : info.avatarTwo,
+              winCountTwo: p2 ? p2.ladderWinCount : info.ladderLevelTwo,
+              loseCountTwo: p2 ? p2.ladderLoseCount : info.loseCountTwo,
+              ladderLevelTwo: p2 ? p2.ladderLevel : info.ladderLevelTwo,
             };
           });
         });
-        // setUser(UPDATE_USER, { ...user, socket: socket });
+
         console.log('매치게임이 아니면 user.socket이 없을테니까 일로 오겟지.');
+        socket.on('gameStartCount', (data: number) => {
+          console.log('countdown:' + data);
+          setCount(data);
+          if (data == 0) {
+            setGameStart(true);
+          }
+        });
       }
     }
-    setInfo(info => {
-      return {
-        ...info,
-        nicknameOne: user ? user.nickname : info.nicknameOne,
-        nicknameTwo: '들어온사람이름',
-      };
-    });
     return () => {
       if (user && user.socket && user.socket.connected) {
         user.socket.off('gameStartCount');
@@ -159,8 +168,6 @@ const GamePage: React.FC = () => {
         socket.emit('roomTerminated', roomid); // 백쪽에서 아직 작업이 안되어있다고함.
         socket.disconnect();
       }
-      // gamestart = false;
-      setGameStart(false);
     };
   }, [roomid]);
 

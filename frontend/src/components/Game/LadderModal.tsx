@@ -16,17 +16,16 @@ const LadderModal: React.FC = () => {
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   useEffect(() => {
-    console.log('modal!!!!!!!!!');
     socket = io(`${process.env.REACT_APP_BACK_API}`, {
       transports: ['websocket'], // 웹소켓으로 간다는걸 알려준다. 구글링.
       query: {
         userId: user?.userId,
       },
     });
-    if (user) user.socket = socket;
     socket.on('message', () => {
-      console.log(`connected socket : ${socket.id}`);
+      console.log(`래더 connected socket : ${socket.id}`);
       console.log(socket.connected); // true
+      if (user) user.socket = socket;
     });
 
     // 래더매치를 신청한 유저이름을 서버로 보내고,

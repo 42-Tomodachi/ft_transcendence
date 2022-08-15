@@ -430,6 +430,7 @@ const GameStart: React.FC = () => {
   //     setLeftPressed(true);
   //   }
   // }
+
   function keyDownHandler(e: any) {
     if (!mouseY) mouseY = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
     if (e.keyCode === 39) {
