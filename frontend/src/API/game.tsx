@@ -69,10 +69,8 @@ const gameAPI = {
       );
       return res.data;
     } catch (e) {
-      if (e instanceof Error) {
-        console.error(e.message);
-        if (e.message.includes('403')) return -403; // TODO: check enterChatRoom at chats.tsx
-      } else console.error(e);
+      if (e instanceof Error) console.error(e.message);
+      else console.error(e);
       return -1;
     }
   },

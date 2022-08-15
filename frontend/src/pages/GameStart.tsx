@@ -1,10 +1,8 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME, UPDATE_USER } from '../utils/interface';
+import { GAME } from '../utils/interface';
 import { AllContext } from '../store';
-import { useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
 
 const calculateOn = [true, false];
 const ballball = [50, 50];
@@ -13,6 +11,7 @@ const point = [0, 0];
 const HERTZ = 60;
 const PLAYERONE = 1;
 const PLAYERTWO = 2;
+const playing = [true, ''];
 
 // 계산에 사용할 변수들 정의(인테페이스)
 interface GameInfo {
@@ -29,15 +28,13 @@ interface GameInfo {
   checkPoint: boolean;
 }
 
-let socket: Socket;
-
 const GameStart: React.FC = () => {
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
-  const { user, setUser } = useContext(AllContext).userData;
+  const { user } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
   const player = user ? playingGameInfo.player : 'g1';
-  const navigate = useNavigate();
   const roomid = user && playingGameInfo.gameRoomId;
+
   //console.log('re-render');
   // 서버와 통신하기 위한 정보변수들을 useState로 관리
   const [gameInfo, setGameInfo] = useState<GameInfo>({
@@ -119,6 +116,10 @@ const GameStart: React.FC = () => {
   const changeVelo = function a(type: string, value: string): number {
     if (value == 'ballP_X') {
       switch (type) {
+        case 'leftgoal':
+          return -1;
+        case 'rightgoal':
+          return 1;
         case 'upHit':
           if (gameInfo.ballVelo_X > 0) return 1;
           else return -1;
@@ -129,10 +130,6 @@ const GameStart: React.FC = () => {
           return 1;
         case 'rightHit':
           return -1;
-        case 'leftgoal':
-          return -1;
-        case 'rightgoal':
-          return 1;
         default:
           return gameInfo.ballVelo_X;
       }
@@ -144,7 +141,12 @@ const GameStart: React.FC = () => {
           ? paddlepaddle[1] + 10 - gameInfo.ballP_Y - 1
           : gameInfo.rightPaddlePos + 10 - gameInfo.ballP_Y - 1;
       const normalizedRelativeIntersectionY = relativeIntersectY / 10;
+      //uphit나 downhit판정으로 리턴되어버리면, goal판정에대한 벨로시티가 이상하게 반영됨
       switch (type) {
+        case 'leftgoal':
+          return 0;
+        case 'rightgoal':
+          return 0;
         case 'upHit':
           return 1;
         case 'downHit':
@@ -153,10 +155,6 @@ const GameStart: React.FC = () => {
           return -normalizedRelativeIntersectionY;
         case 'rightHit':
           return -normalizedRelativeIntersectionY;
-        case 'leftgoal':
-          return 0;
-        case 'rightgoal':
-          return 0;
         default:
           return gameInfo.ballVelo_Y;
       }
@@ -317,16 +315,6 @@ const GameStart: React.FC = () => {
   // 유즈이펙트로 소켓의 변화가 감지되면 끊어버립니다. (블로그 참조)
   //https://obstinate-developer.tistory.com/entry/React-socket-io-client-%EC%A0%81%EC%9A%A9-%EB%B0%A9%EB%B2%95
   useEffect(() => {
-    if (user && user.socket && user.socket.disconnected) {
-      socket = io(`${process.env.REACT_APP_BACK_API}`, {
-        transports: ['websocket'], // 웹소켓으로 간다는걸 알려준다. 구글링.
-        query: {
-          userId: user.userId,
-        },
-      });
-      setUser(UPDATE_USER, { ...user, socket: socket });
-      console.log('first');
-    }
     getData();
     return () => {
       if (user)
@@ -380,10 +368,27 @@ const GameStart: React.FC = () => {
             calculateOn[1] = false;
           }
         }
-        if (data[8] == 10 || data[9] == 10) {
-          console.log('10점획득 disconnect:' + user.socket.id);
-          if (user) user.socket.disconnect();
-          navigate(`/gameroom/${roomid}/gameexit/`); //GamePage.tsx
+        if (data[8] === 10 || data[9] === 10) {
+          if (user) {
+            console.log('10점획득 disconnect:' + user.socket.id);
+            user.socket.emit('roomTerminated', roomid);
+            user.socket.disconnect();
+          }
+          playing[0] = false;
+          if (player == 'p1')
+            playing[1] =
+              data[8] > data[9]
+                ? user.nickname.toUpperCase()
+                : playingGameInfo.oppNickname.toUpperCase();
+          else
+            playing[1] =
+              data[8] < data[9]
+                ? user.nickname.toUpperCase()
+                : playingGameInfo.oppNickname.toUpperCase();
+          setGameInfo(gameInfo => {
+            return { ...gameInfo };
+          });
+          //navigate(`/gameroom/${roomid}/gameexit/`); //GamePage.tsx
         }
       });
     } else console.log('ERROR: user undefined');
@@ -412,20 +417,52 @@ const GameStart: React.FC = () => {
       console.log('second');
     }
   }, [ball]); // 반영
-
-  return (
-    <Background>
-      <GameRoomContainer>
-        <Header type={GAME} />
-        <GameRoomBody>
-          <GameArea>
-            <canvas ref={canvasRef} id="canvas" width="1000" height="700" />;
-          </GameArea>
-        </GameRoomBody>
-      </GameRoomContainer>
-    </Background>
-  );
+  if (user && user.socket && user.socket.connected) {
+    return (
+      <Background>
+        <GameRoomContainer>
+          <Header type={GAME} />
+          <GameRoomBody>
+            <GameArea>
+              <canvas ref={canvasRef} id="canvas" width="1000" height="700" />;
+            </GameArea>
+          </GameRoomBody>
+        </GameRoomContainer>
+      </Background>
+    );
+  } else {
+    return (
+      <Background>
+        <GameRoomContainer>
+          <Header type={GAME} />
+          <GameRoomBody>
+            <ResultArea>
+              <Message>{`🏆${playing[1]}🏆`}</Message>
+              <Message>.......</Message>
+              <Message>WINNER!</Message>
+              <Message>WINNER!</Message>
+              <Message>CHICKEN</Message>
+              <Message>DINNER!</Message>
+            </ResultArea>
+          </GameRoomBody>
+        </GameRoomContainer>
+      </Background>
+    );
+  }
 };
+
+const Message = styled.p`
+  display: flex;
+  justify-content: space-around;
+  font-style: normal;
+  font-family: 'Rubik One';
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 60px;
+  line-height: 74px;
+  letter-spacing: 0.07em;
+  background-color: none;
+`;
 
 const Background = styled.div`
   width: 100%;
@@ -453,6 +490,19 @@ const GameArea = styled.div`
   background-color: none;
   border-radius: 20px;
   overflow: hidden;
+`;
+
+// GameArea랑 백그라운드 컬러만 다름, 알고있음.
+const ResultArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 1000px;
+  height: 700px;
+  background-color: black;
+  border-radius: 20px;
 `;
 
 export default React.memo(GameStart);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import UserItem from './UserItem';
@@ -6,6 +6,7 @@ import { OFF, ActiveMenuType, IGetUser, UserRole } from '../../utils/interface';
 import { AllContext } from '../../store';
 import { chatsAPI, usersAPI } from '../../API';
 import { Interface } from 'readline';
+import { Socket } from 'socket.io-client';
 
 /*
  ** 제이슨서버에서 유저리스트를 받아와 정렬합니다.
@@ -23,9 +24,10 @@ interface UserListType {
   menuType: ActiveMenuType;
   roomId?: string;
   isDm?: boolean;
+  socket?: Socket; // TODO: 라이브하게 유저리스트 갱신 시키기 위해 사용
 }
 
-const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm }) => {
+const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) => {
   const { user } = useContext(AllContext).userData;
   const [activeMenu, setActiveMenu] = useState<ActiveMenuType>(menuType);
   const [userList, setUserList] = useState<IGetUser[] | []>([]);
@@ -44,9 +46,11 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm }) => {
     } else console.log('아무것도 없음');
     return [];
   };
-  const getUserList = async () => {
-    const data = await selectActiveMenu(activeMenu);
 
+  const sortedUserList = (data: IGetUser[]) => {
+    data.sort((a: IGetUser, b: IGetUser) => {
+      return a.nickname > b.nickname ? -1 : 1;
+    });
     data.sort((a: IGetUser, b: IGetUser) => {
       return a.status !== OFF ? -1 : 1;
     });
@@ -57,6 +61,45 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm }) => {
     });
     setUserList(data);
   };
+
+  const getUserList = async () => {
+    const data = await selectActiveMenu(activeMenu);
+    sortedUserList(data);
+  };
+
+  useEffect(() => {
+    console.log('socket activeMenu', activeMenu);
+    console.dir(socket);
+    if (socket) {
+      console.log('activeMenu', activeMenu);
+      if (activeMenu === 'ALL') {
+        socket.on('updateUserList', (data: IGetUser[]) => {
+          sortedUserList(data); // 전체 유저 목록
+        });
+      } else if (activeMenu === 'FRIEND') {
+        socket.on('updateFriendList', (data: IGetUser[]) => {
+          sortedUserList(data);
+        });
+      } else if (activeMenu === 'INCHAT') {
+        socket.on('updateChatRoomParticipants', (data: IGetUser[]) => {
+          sortedUserList(data);
+        });
+        socket.on('updateRole', (data: UserRole) => {
+          setLoginUserRole(data);
+        });
+      }
+    }
+    return () => {
+      if (socket) {
+        // console.log('userList socket off');
+        socket.off('updateUserList');
+        socket.off('updateFriendList');
+        socket.off('updateChatRoomParticipants');
+        socket.off('updateRole');
+      }
+    };
+  }, [socket, activeMenu]);
+
   useEffect(() => {
     if (user && user.jwt) getUserList();
   }, [activeMenu, user, roomId]);

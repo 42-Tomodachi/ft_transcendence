@@ -64,16 +64,16 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
       console.log('ban');
       if (res) {
         setModal(null);
-      }
+      } // TODO: 경고 noti, 방 주인한테 밴
     }
   };
   const onToggleMute = async () => {
     if (target && user) {
-      const res = await chatsAPI.setUpMuteUser(roomId, target.userId, user.jwt);
+      const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
       console.log('Toggle Mute', res);
-      if (res) {
+      if (res && res.isMuted) {
         setModal(null);
-      }
+      } // TODO: 경고 noti, 방 주인한테 뮤트
     }
   };
   const onApplyGame = async () => {
@@ -93,7 +93,7 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   return (
     <>
       {target && (
-        <Modal width={500} height={600} title={'프로필 보기'}>
+        <Modal width={500} height={target.isBlocked === false ? 550 : 450} title={'프로필 보기'}>
           <MainBlock>
             <ProfileBlock>
               <PictureBlock>
@@ -149,19 +149,19 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
                   onClick={onSendDm}
                 />
                 <Button
-                  color="white"
+                  color="white2"
                   text={target.isBlocked ? '차단해제' : '차단하기'}
                   width={200}
                   height={40}
                   onClick={onClickBlock}
                 />
-                <Button color="white" text="밴" width={200} height={40} onClick={onClickBan} />
-                <Button color="white" text="뮤트" width={200} height={40} onClick={onToggleMute} />
+                <Button color="white2" text="밴" width={200} height={40} onClick={onClickBan} />
+                <Button color="white2" text="뮤트" width={200} height={40} onClick={onToggleMute} />
               </OtherBtnBlock>
             ) : (
               <BanBtnBlock>
                 <Button
-                  color="white"
+                  color="white2"
                   text={target.isBlocked ? '차단해제' : '차단하기'}
                   width={415}
                   height={40}

@@ -51,7 +51,9 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && roomId) {
+      console.log(roomId, user.userId);
+      console.info(socket);
       socket = io(`${process.env.REACT_APP_BACK_API}/ws-chat`, {
         transports: ['websocket'],
         query: {
@@ -74,12 +76,16 @@ const ChatPage: React.FC = () => {
           // } else disconnectSocketNoti('error', 'top', '강퇴당한 방입니다'); // TODO: 방 폭파한 방장한테도 disconnect가 가는건 문제인듯
           navigate('/');
         });
+        socket.on('updateChatRoomTitle', data => {
+          setRoomName(data);
+        });
       }
     }
     return () => {
       if (socket) {
         socket.off('reloadChatHistory');
         socket.off('recieveMessage');
+        socket.off('updateChatRoomTitle');
         socket.disconnect();
       }
     };
@@ -123,7 +129,7 @@ const ChatPage: React.FC = () => {
             <MessageInput submitMessage={submitMessage} />
           </ChatArea>
           <ChatSideMenu>
-            <UserList menuType={'INCHAT'} roomId={roomId} isDm={isDm} />
+            <UserList menuType={'INCHAT'} roomId={roomId} isDm={isDm} socket={socket} />
             <UserProfile />
           </ChatSideMenu>
         </ChatRoomBody>
