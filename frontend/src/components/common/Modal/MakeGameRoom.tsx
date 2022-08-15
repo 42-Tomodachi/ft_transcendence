@@ -49,7 +49,8 @@ const MakeGameRoom: React.FC = () => {
         gameMode,
         user.jwt,
       );
-      if (res && res.gameId) {
+      //지호킴님 수정요청222
+      if (res && res.gameId !== undefined) {
         setPlayingGameInfo({ ...playingGameInfo, gameRoomId: res.gameId });
         setModal(null);
         navigate(`/gameroom/${res.gameId}`);

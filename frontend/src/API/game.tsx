@@ -64,7 +64,7 @@ const gameAPI = {
       const url = gamePath(`/${gameId}/users/${userId}`);
       const res = await instance.post(
         url,
-        { password },
+        { password: password === '' ? null : password }, //지호킴님 수정요청111
         { headers: { Authorization: `Bearer ${jwt}` } },
       );
       return res.data;
