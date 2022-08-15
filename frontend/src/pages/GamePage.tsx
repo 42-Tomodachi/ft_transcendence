@@ -51,13 +51,12 @@ const GamePage: React.FC = () => {
     const win2: HTMLElement | null = document.getElementById('win2');
     // if (win) win.style.width = `${(num[0] / (num[0] + num[1])) * 100}%`;
     // if (win2) win2.style.width = `${(num[1] / (num[1] + num[0])) * 100}%`;
-
     if (user) {
-      if (user.socket) {
+      if (user && user.socket && user.socket.connected) {
         console.log('onMatchingScreen');
         user.socket.emit('onMatchingScreen', roomid);
 
-        //   return gamerInfoDto;
+        //return gamerInfoDto;
         //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
         //ladderWinCount, laddeLoseCount로 들어옵니다. 확인하세여
         user.socket.on('matchData', (p1: any, p2: any) => {
@@ -103,7 +102,7 @@ const GamePage: React.FC = () => {
          * 래더게임매칭모달은 거치고 온게 아니기때문에,  생성된 소켓이 없을거라는말이지, 그럼 여기 else로 오는거야.
          * 소켓 없으니까 소켓부터 연결해주는거라고,
          */
-        console.log('일로왔자나 그치?\n');
+        console.log('방만들면 여기로 왔겠지.');
         socket = io(`${process.env.REACT_APP_BACK_API}`, {
           transports: ['websocket'],
           query: { userId: user.userId },
@@ -111,7 +110,7 @@ const GamePage: React.FC = () => {
 
         // 얘가 onGameroomScreen 같은 이름으로 만들어져서 룸아이디를 넘겨주면,
         // 암튼 얘도 매치데이터를 받아올거고, (socket.on('matchData'))
-        socket.emit('onMatchingScreen', roomid);
+        // socket.emit('onMatchingScreen', roomid);
 
         /*
          * 소켓이 연결되면, 두가지 동작을 서버랑 합의해서 취해야댐,
@@ -137,20 +136,34 @@ const GamePage: React.FC = () => {
             };
           });
         });
-
-        setUser(UPDATE_USER, { ...user, socket: socket });
+        // setUser(UPDATE_USER, { ...user, socket: socket });
         console.log('매치게임이 아니면 user.socket이 없을테니까 일로 오겟지.');
       }
     }
+    setInfo(info => {
+      return {
+        ...info,
+        nicknameOne: user ? user.nickname : info.nicknameOne,
+        nicknameTwo: '들어온사람이름',
+      };
+    });
     return () => {
       if (user && user.socket && user.socket.connected) {
         user.socket.off('gameStartCount');
         user.socket.off('matchData');
       }
+      console.log('일로오긴해?: ' + roomid);
+      if (socket) {
+        console.log('그래 소켓도있겟지. 근데 지금 roomTerminated가 없어서 방폭파 테스트는 못해.');
+        socket.off('matchData');
+        socket.emit('roomTerminated', roomid); // 백쪽에서 아직 작업이 안되어있다고함.
+        socket.disconnect();
+      }
       // gamestart = false;
       setGameStart(false);
     };
   }, [roomid]);
+
   // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
   // 함수형으로 반환하는 느낌으로 ..
   // 얘가 한번 ture로 바껴버리면, 리프레쉬 되기전까진 계속 true인 문제가 있음.
@@ -198,8 +211,9 @@ const GamePage: React.FC = () => {
         </GameRoomContainer>
       </Background>
     );
-  else return <GameStart />;
+  else return <GameStart />; // RTData에서 넘겨받거나, 여기서 방정보 받은거중에, 모드만, 넘겨주거나 둘중하나임.
 };
+
 const PictureBlock = styled.div``;
 // css 애니메이션기능으로 추가.
 const Bar = styled.div`

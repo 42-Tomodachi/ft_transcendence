@@ -252,11 +252,18 @@ const GameStart: React.FC = () => {
   // 마우스포인터의 Y좌표를 받아옵니다.
   // 패들좌표로 사용하기위해 상수 때려넣어서 변형했습니다.
   // 문제는 마우스좌표가 움직이지 않을때는 null이라 그대로 사용할순없습니다.
-  let mouseY: number;
-  document.addEventListener('mousemove', mouseMoveHandler, false);
-  function mouseMoveHandler(e: MouseEvent) {
-    mouseY = e.clientY / 7 - 17;
-  }
+
+  // let isPressed: boolean;
+  // document.addEventListener('mouseup', function (event) {
+  //   isPressed = false;
+  // });
+
+  // document.addEventListener('mousedown', function (event) {
+  //   isPressed = true;
+  //   if (!mouseY) mouseY = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
+  //   if (mouseY > event.clientY / 7 - 17) mouseY -= 10;
+  //   else if (mouseY < event.clientY / 7 - 37) mouseY += 10;
+  // });
 
   // 상대의 실점을 기록합니다(계산하는 유저입장에서)
   const getCheckPoint = () => {
@@ -401,6 +408,45 @@ const GameStart: React.FC = () => {
 
   // 드로잉 컨텍스트를 만들 때 alpha 옵션을 false로 설정합니다.(getContext)
   // 이 정보는 렌더링을 최적화하기 위해 브라우저에서 내부적으로 사용할 수 있습니다.
+  let mouseY: number;
+  // document.addEventListener('mousemove', mouseMoveHandler, false);
+  // function mouseMoveHandler(e: MouseEvent): void {
+  //   // if (e.clientY / 7 - 17) test = e.clientY / 7 - 17;
+  //   if (!mouseY) mouseY = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
+  //   if (mouseY > e.clientY / 7 - 17) mouseY -= 5;
+  //   else if (mouseY < e.clientY / 7 - 37) mouseY += 5;
+  // }
+
+  // const [rightPressed, setRightPressed] = useState(false);
+  // const [leftPressed, setLeftPressed] = useState(false);
+
+  document.addEventListener('keydown', keyDownHandler, false);
+  //document.addEventListener('keyup', keyUpHandler, false);
+
+  // function keyDownHandler(e: any) {
+  //   if (e.keyCode == 39) {
+  //     setRightPressed(true);
+  //   } else if (e.keyCode == 37) {
+  //     setLeftPressed(true);
+  //   }
+  // }
+  function keyDownHandler(e: any) {
+    if (!mouseY) mouseY = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
+    if (e.keyCode === 39) {
+      mouseY += player === 'p1' ? 1 : -1;
+    } else if (e.keyCode === 37) {
+      mouseY += player === 'p1' ? -1 : 1;
+    }
+  }
+
+  // function keyUpHandler(e: any) {
+  //   if (e.keyCode == 39) {
+  //     setRightPressed(false);
+  //   } else if (e.keyCode == 37) {
+  //     setLeftPressed(false);
+  //   }
+  // }
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
@@ -411,8 +457,8 @@ const GameStart: React.FC = () => {
           const test = setInterval(() => {
             calculate();
             clear(ctx);
-            paddle(ctx);
             ball(ctx);
+            paddle(ctx);
           }, 1000 / HERTZ);
           return () => {
             clearInterval(test);
@@ -421,11 +467,20 @@ const GameStart: React.FC = () => {
       }
       console.log('second');
     }
-  }, [ball]); // 반영
+    return () => {
+      console.log('여기 들어오는순간.');
+      if (user) {
+        user.socket.off('rtData');
+        // user.socket.disconnect();
+      }
+    };
+  }, [ball]);
+
   // true니까 여기로 넘어와버리고, 방만들기라서, 소켓이 없으니까 else로가면, 결과페이지가 나오는거임.
   // 음... 해결방법 모색은 두가지 생각해볼수있는데, 사용후false상태인 gamestart변수를 다시 false로 되돌리는거
   // 다른하나는, 분기조건을 다른방식으로 하는법.
   // 오늘은 이거 해결하고, 지호킴님이 백엔드 해결해놓으면, 합쳐서 테스트한다.
+  // 앞에서 소켓을 연결해버리니까 이제 소켓이 무조건 있어버리네,
   if (user && user.socket && user.socket.connected) {
     return (
       <Background>
@@ -514,4 +569,5 @@ const ResultArea = styled.div`
   border-radius: 20px;
 `;
 
+// 리렌더 방지 memo
 export default React.memo(GameStart);

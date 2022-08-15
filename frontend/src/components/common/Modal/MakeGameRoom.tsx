@@ -17,6 +17,8 @@ const MakeGameRoom: React.FC = () => {
   const [errMsg, setErrMsg] = useState<string>('');
   const [gameMode, setGameMode] = useState<GameMode>('normal');
   const navigate = useNavigate();
+
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo; // roomid기억하자.
   const roomSettingValues = {
     MAXROOMNAMESIZE: 10,
     MAXPASSWORDSIZE: 10,
@@ -48,6 +50,7 @@ const MakeGameRoom: React.FC = () => {
         user.jwt,
       );
       if (res && res.gameId) {
+        setPlayingGameInfo({ ...playingGameInfo, gameRoomId: res.gameId });
         setModal(null);
         navigate(`/gameroom/${res.gameId}`);
       }
