@@ -52,7 +52,6 @@ export class GameController {
       user,
       createGameRoomDto,
     );
-
     return gameRoom;
   }
 
