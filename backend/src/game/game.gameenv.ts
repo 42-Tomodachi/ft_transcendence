@@ -27,20 +27,38 @@ export interface GameInfo {
 //   user: User;
 // }
 export class Player {
-  socket: Socket;
+  socket: Socket[];
   userId: number;
-  gameId: number | null;
-  games: GameRoomAttribute[];
+  gamePlaying: GameRoomAttribute;
+  gamesWatching: GameRoomAttribute[];
   inRoom: boolean;
   inLadderQ: boolean;
 
-  constructor(socket: Socket, userId: number, gameId: number | null) {
-    this.socket = socket;
+  constructor(socket: Socket, userId: number, game: GameRoomAttribute) {
+    this.socket = [];
+    if (socket) this.socket.push(socket);
     this.userId = userId;
-    this.gameId = gameId;
-    this.games = [];
+    this.gamePlaying = game;
+    this.gamesWatching = [];
     this.inRoom = false;
     this.inLadderQ = false;
+  }
+
+  setGamePlaying(game: GameRoomAttribute): void {
+    this.gamePlaying = game;
+    if (!this.gamePlaying && !this.gamesWatching.length) this.inRoom = false;
+    else this.inRoom = true;
+  }
+
+  addWatchingGame(game: GameRoomAttribute): void {
+    this.gamesWatching.push(game);
+    this.inRoom = true;
+  }
+
+  eraseWatchingGame(game: GameRoomAttribute): void {
+    const index = this.gamesWatching.indexOf(game);
+    this.gamesWatching.splice(index, 1);
+    if (!this.gamePlaying && !this.gamesWatching.length) this.inRoom = false;
   }
 }
 
@@ -190,14 +208,6 @@ export class GameRoomAttribute {
     return gameResultDto;
   }
 
-  enroll(gameRoomTable: GameRoomAttribute[]) {
-    if (gameRoomTable.length == this.roomId) {
-      gameRoomTable.push(this);
-    } else {
-      gameRoomTable[this.roomId] = this;
-    }
-  }
-
   isLadder(): boolean {
     return !this.password && !this.isPublic;
   }
@@ -207,6 +217,13 @@ export class GameRoomAttribute {
     return this.rtData.scoreLeft > this.rtData.scoreRight
       ? this.firstPlayer
       : this.secondPlayer;
+  }
+
+  getAllPlayers(): Player[] {
+    const players = this.spectators;
+    players.unshift(this.secondPlayer);
+    players.unshift(this.firstPlayer);
+    return players;
   }
 
   initGameData(): void {
@@ -248,10 +265,10 @@ export class GameRoomAttribute {
 export class GameEnv {
   gameRoomIdList: number[] = new Array(500).fill(0);
   gameRoomTable: GameRoomAttribute[] = [];
-  playerList: Player[] = new Array(500).fill(0);
+  playerList: Player[] = [];
   ladderQueue: Player[] = [];
 
-  getFreeRoomIndex(): number | null {
+  getFreeRoomIndex(): number {
     let index = 0;
 
     for (const x of this.gameRoomIdList) {
@@ -261,7 +278,7 @@ export class GameEnv {
       }
       index++;
     }
-    return null;
+    return 0;
   }
 
   getRoomIndexOfGame(gameId: number): number | null {
@@ -284,29 +301,29 @@ export class GameEnv {
     return this.gameRoomTable.at(gameId);
   }
 
-  createGameRoom(createGameRoomDto: CreateGameRoomDto): number | null {
+  createGameRoom(player: Player, createGameRoomDto: CreateGameRoomDto): number {
     const index: number = this.getFreeRoomIndex();
-    if (index == null) {
-      return null;
-    }
-    const player = this.getPlayerById(createGameRoomDto.ownerId);
 
     const gameRoom = new GameRoomAttribute(index, createGameRoomDto, player);
-    gameRoom.enroll(this.gameRoomTable);
-    if (player) {
-      player.gameId = index;
-      player.games.push(gameRoom);
-    }
+    this.enrollGameToTable(gameRoom);
+
+    player.setGamePlaying(gameRoom);
     return index;
   }
 
-  setOwnerToCreatedRoom(userId: number, roomId: number): boolean {
-    const player = this.getPlayerById(userId);
-    if (!player) return false;
-    if (player.gameId !== roomId) return false;
+  enrollGameToTable(game: GameRoomAttribute): void {
+    if (this.gameRoomTable.length == game.roomId) {
+      this.gameRoomTable.push(game);
+    } else {
+      this.gameRoomTable[game.roomId] = game;
+    }
+  }
 
-    const game = this.getGameRoom(roomId);
-    if (game.ownerId !== userId) return false;
+  setOwnerToCreatedRoom(player: Player, game: GameRoomAttribute): boolean {
+    if (!player) return false;
+    if (player.gamePlaying.roomId !== game.roomId) return false;
+
+    if (game.ownerId !== player.userId) return false;
 
     game.firstPlayer = player;
     player.inRoom = true;
@@ -334,23 +351,22 @@ export class GameEnv {
   }
 
   gameRoomClear(game: GameRoomAttribute) {
-    game.firstPlayer.gameId = null;
-    game.firstPlayer.inRoom = false;
-    game.secondPlayer.gameId = null;
-    game.secondPlayer.inRoom = false;
+    game.firstPlayer.setGamePlaying(null);
+    game.secondPlayer?.setGamePlaying(null);
     for (const player of game.spectators) {
-      player.gameId = null;
-      player.inRoom = false;
+      player.eraseWatchingGame(game);
     }
     const index = this.gameRoomTable.indexOf(game);
+    delete this.gameRoomTable[index];
     this.gameRoomTable.splice(index, 1);
+    console.log(this.gameRoomTable); ///////////
   }
 
   leaveGameRoom(
     game: GameRoomAttribute,
     player: Player,
   ): 'clear' | 'okay' | 'failed' {
-    if (game.roomId != player.gameId) {
+    if (game.roomId !== player.gamePlaying.roomId) {
       return 'failed';
     }
 
@@ -375,20 +391,24 @@ export class GameEnv {
     // clearInterval(this.streaming);
   }
 
-  newPlayer(socket: Socket, userId: number, gameId: number): Player | null {
+  newPlayer(
+    socket: Socket,
+    userId: number,
+    game: GameRoomAttribute,
+  ): Player | null {
     for (const player of this.playerList) {
       if (player.userId == userId) {
         return player;
       }
     }
-    const newOne = new Player(socket, userId, gameId);
+    const newOne = new Player(socket, userId, game);
     this.playerList.push(newOne);
     return newOne;
   }
 
   removePlayer(player: Player) {
     if (player.inRoom) {
-      this.leaveGameRoom(this.getGameRoom(player.gameId), player);
+      this.leaveGameRoom(player.gamePlaying, player);
     }
     if (player.inLadderQ) {
       this.removeFromLadderQueue(player);
@@ -396,10 +416,12 @@ export class GameEnv {
     this.playerList.splice(this.playerList.indexOf(player), 1);
   }
 
-  getPlayerById(userId: number): Player {
-    return this.playerList.find((player) => {
-      player.userId == userId;
+  getPlayerByUserId(userId: number): Player {
+    const player = this.playerList.find((player) => {
+      return player.userId === userId;
     });
+    if (!player) return this.newPlayer(null, userId, null);
+    else return player;
   }
 
   enlistLadderQueue(player: Player): GameRoomAttribute | null {
@@ -427,22 +449,18 @@ export class GameEnv {
     createGameRoomDto.gameMode = 'normal';
     createGameRoomDto.ownerId = player1.userId;
 
-    const gameRoomAtt = new GameRoomAttribute(
-      index,
-      createGameRoomDto,
-      player1,
-    );
-    gameRoomAtt.secondPlayer = player2;
-    gameRoomAtt.playerCount = 2;
-    gameRoomAtt.isPublic = false;
+    const gameRoom = new GameRoomAttribute(index, createGameRoomDto, player1);
+    gameRoom.secondPlayer = player2;
+    gameRoom.playerCount = 2;
+    gameRoom.isPublic = false;
 
-    gameRoomAtt.enroll(this.gameRoomTable);
+    this.enrollGameToTable(gameRoom);
 
-    player1.gameId = index;
-    player2.gameId = index;
-    player1.socket.join(index.toString());
-    player2.socket.join(index.toString());
+    player1.gamePlaying = gameRoom;
+    player2.gamePlaying = gameRoom;
+    player1.socket[player1.socket.length - 1].join(index.toString());
+    player2.socket[player2.socket.length - 1].join(index.toString());
 
-    return gameRoomAtt;
+    return gameRoom;
   }
 }
