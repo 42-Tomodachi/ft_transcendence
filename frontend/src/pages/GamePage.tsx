@@ -144,6 +144,10 @@ const GamePage: React.FC = () => {
               ladderLevelTwo: p2 ? p2.ladderLevel : info.ladderLevelTwo,
             };
           });
+          if (user.nickname === p1.nickname)
+            setPlayingGameInfo({ ...playingGameInfo, player: 'p1', oppNickname: p2.nickname });
+          else if (user.nickname === p2.nickname)
+            setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
         });
 
         console.log('매치게임이 아니면 user.socket이 없을테니까 일로 오겟지.');
