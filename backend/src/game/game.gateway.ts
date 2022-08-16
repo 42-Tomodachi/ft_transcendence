@@ -35,6 +35,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   setSocketToPlayer(client: Socket, userId: number): Player {
     let player = this.gameEnv.getPlayerByUserId(userId);
+    if (player.sockets.indexOf(client) == -1) player.sockets.push(client);
     if (!player) {
       console.log('unregistered userId');
       player = this.gameEnv.newPlayer(client, userId, null);
@@ -59,7 +60,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   joinPlayerToRoom(player: Player, gameId: number): void {
-    player.socket.join(gameId.toString());
+    player.sockets.join(gameId.toString());
   }
 
   sendMatchData(user1: User, user2: User): boolean {

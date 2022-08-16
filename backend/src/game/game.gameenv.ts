@@ -27,7 +27,7 @@ export interface GameInfo {
 //   user: User;
 // }
 export class Player {
-  socket: Socket[];
+  sockets: Socket[];
   userId: number;
   gamePlaying: GameRoomAttribute;
   gamesWatching: GameRoomAttribute[];
@@ -35,8 +35,8 @@ export class Player {
   inLadderQ: boolean;
 
   constructor(socket: Socket, userId: number, game: GameRoomAttribute) {
-    this.socket = [];
-    if (socket) this.socket.push(socket);
+    this.sockets = [];
+    if (socket) this.sockets.push(socket);
     this.userId = userId;
     this.gamePlaying = game;
     this.gamesWatching = [];
@@ -458,8 +458,8 @@ export class GameEnv {
 
     player1.gamePlaying = gameRoom;
     player2.gamePlaying = gameRoom;
-    player1.socket[player1.socket.length - 1].join(index.toString());
-    player2.socket[player2.socket.length - 1].join(index.toString());
+    player1.sockets[player1.sockets.length - 1].join(index.toString());
+    player2.sockets[player2.sockets.length - 1].join(index.toString());
 
     return gameRoom;
   }
