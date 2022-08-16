@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { AllContext } from '../../../store';
 import { gameAPI } from '../../../API';
 import { GameMode } from '../../../utils/interface';
+import GameModeButton from '../GameModeButton';
 // import { Radio } from 'antd';
 // import type { RadioChangeEvent } from 'antd';
 
@@ -68,11 +69,7 @@ const MakeGameRoom: React.FC = () => {
       <MainBlock>
         <TextGridBlock>
           <RoomNPwd>게임모드</RoomNPwd>
-          {/* <Radio.Group onChange={onChange3} value={values} defaultValue="Normal">
-            <RadioButton value="Obstacle">장애물</RadioButton>
-            <RadioButton value="SpeedUp">스피드업</RadioButton>
-            <RadioButton value="Normal">일반</RadioButton>
-          </Radio.Group> */}
+          <GameModeButton gameMode={gameMode} setGameMode={setGameMode} />
           <RoomNPwd>방 제목</RoomNPwd>
           <InputRoomName
             type="text"
@@ -151,15 +148,5 @@ const BtnBlock = styled.div`
   }
 `;
 //============================================
-
-// TODO: radio button style
-// const RadioButton = styled(Radio.Button)`
-//   color: black;
-//   margin-right: 5px;
-//   &:hover {
-//     color: ${props => props.theme.colors.main};
-//     box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.25);
-//   }
-// `;
 
 export default MakeGameRoom;
