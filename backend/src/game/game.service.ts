@@ -8,7 +8,6 @@ import {
   CreateGameRoomDto,
   GameRoomProfileDto,
   GameResultDto,
-  GameRoomIdDto,
   SimpleGameRoomDto,
 } from './dto/game.dto';
 import { GameGateway } from './game.gateway';

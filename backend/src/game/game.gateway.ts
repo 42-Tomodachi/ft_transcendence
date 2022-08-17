@@ -11,7 +11,6 @@ import {
 import { Server, Socket } from 'socket.io';
 import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
-import { GameService } from './game.service';
 import { GameEnv } from './class/game.class.GameEnv';
 import { Player } from './class/game.class.Player';
 import { GameInfo } from './class/game.class.interface';
@@ -25,7 +24,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-    private readonly gameService: GameService,
     private readonly gameEnv: GameEnv,
   ) {}
   @WebSocketServer()
@@ -194,7 +192,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     setTimeout(
       () => {
-        gameRoom.gameStart();
+        this.gameEnv.startGame(gameRoom);
       },
       5000,
       counting--,
@@ -210,11 +208,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     game.updateRtData(data);
     if (game.isFinished()) {
-      console.log(`game is finished ${game.roomId}`);
-      game.isPlaying = false;
-      await this.gameService.saveGameRecord(game.toGameResultDto());
-      this.gameEnv.postGameProcedure(game);
-      this.server.to(game.roomId.toString()).emit('gameFinished');
+      this.gameEnv.endGame(game);
     }
     game.sendRtData();
   }

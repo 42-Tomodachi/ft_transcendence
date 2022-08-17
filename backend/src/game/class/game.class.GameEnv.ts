@@ -3,13 +3,29 @@ import { Socket } from 'socket.io';
 import { CreateGameRoomDto } from '../dto/game.dto';
 import { Player } from './game.class.Player';
 import { GameAttribute } from './game.class.GameAttribute';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from 'src/users/entities/users.entity';
+import { GameRecord } from 'src/users/entities/gameRecord.entity';
 
 @Injectable()
 export class GameEnv {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {}
   gameRoomIdList: number[] = new Array(500).fill(0);
   gameRoomTable: GameAttribute[] = [];
   playerList: Player[] = [];
   ladderQueue: Player[] = [];
+
+  async getUserByUserId(userId: number): Promise<User> {
+    return this.userRepo.findOneBy({ id: userId });
+  }
+
+  async getUserByPlayer(player: Player): Promise<User> {
+    return this.userRepo.findOneBy({ id: player.userId });
+  }
 
   getFreeRoomIndex(): number {
     let index = 0;
@@ -211,5 +227,69 @@ export class GameEnv {
     player2.sockets[player2.sockets.length - 1].join(index.toString());
 
     return gameRoom;
+  }
+
+  async writeMatchResult(game: GameAttribute) {
+    const firstPlayer = await this.getUserByPlayer(game.firstPlayer);
+    const secondPlayer = await this.getUserByPlayer(game.secondPlayer);
+    if (!firstPlayer || !secondPlayer) {
+      console.log('writeMatchResult: cannot get user from the database');
+      return;
+    }
+    const winnerId = game.getWinner().userId;
+
+    if (winnerId === firstPlayer.id) {
+      if (game.isLadder) {
+        firstPlayer.ladderWinCount++;
+        secondPlayer.ladderLoseCount++;
+      } else {
+        firstPlayer.winCount++;
+        secondPlayer.loseCount++;
+      }
+    } else {
+      if (game.isLadder) {
+        secondPlayer.ladderWinCount++;
+        firstPlayer.ladderLoseCount++;
+      } else {
+        secondPlayer.winCount++;
+        firstPlayer.loseCount++;
+      }
+    }
+    await firstPlayer.save();
+    await secondPlayer.save();
+
+    const newRecord = new GameRecord();
+    newRecord.playerOneId = game.firstPlayer.userId;
+    newRecord.playerOneScore = game.rtData.scoreLeft;
+    newRecord.playerTwoId = game.secondPlayer.userId;
+    newRecord.playerTwoScore = game.rtData.scoreRight;
+    newRecord.winnerId = winnerId;
+    await newRecord.save();
+  }
+
+  async startGame(game: GameAttribute): Promise<void> {
+    game.gameStart();
+
+    const userP1 = await this.getUserByPlayer(game.firstPlayer);
+    const userP2 = await this.getUserByPlayer(game.secondPlayer);
+    userP1.userStatus = 'play';
+    userP2.userStatus = 'play';
+    await userP1.save();
+    await userP2.save();
+  }
+
+  async endGame(game: GameAttribute): Promise<void> {
+    console.log(`game is finished ${game.roomId}`);
+    game.isPlaying = false;
+    this.postGameProcedure(game);
+    game.roomBroadcast.emit('gameFinished');
+    await this.writeMatchResult(game);
+
+    const userP1 = await this.getUserByPlayer(game.firstPlayer);
+    const userP2 = await this.getUserByPlayer(game.secondPlayer);
+    userP1.userStatus = 'on';
+    userP2.userStatus = 'on';
+    await userP1.save();
+    await userP2.save();
   }
 }
