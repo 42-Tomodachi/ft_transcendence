@@ -118,7 +118,7 @@ export class GameService {
     gameId: number,
     userId: number,
     gamePassword: string | null,
-  ): Promise<GameRoomIdDto> {
+  ): Promise<SimpleGameRoomDto> {
     if (user.id != userId)
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     const player = this.gameEnv.getPlayerByUserId(userId);
@@ -142,7 +142,13 @@ export class GameService {
     }
     game.playerCount++;
 
-    return { gameId: gameId };
+    const gameRoomDto = new SimpleGameRoomDto();
+    gameRoomDto.gameMode = game.gameMode;
+    gameRoomDto.ownerId = game.ownerId;
+    gameRoomDto.roomTitle = game.roomTitle;
+    gameRoomDto.gameId = gameId;
+
+    return gameRoomDto;
   }
 
   async exitGameRoom(

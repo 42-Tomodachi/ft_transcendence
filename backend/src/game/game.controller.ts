@@ -70,7 +70,7 @@ export class GameController {
     @Param('gameId', ParseIntPipe) gameId: number,
     @Param('userId', ParseIntPipe) userId: number,
     @Body() gamePasswordDto: GameRoomPasswordDto,
-  ): Promise<GameRoomIdDto> {
+  ): Promise<SimpleGameRoomDto> {
     return await this.gameService.enterGameRoom(
       this.gameGateway,
       user,
