@@ -12,7 +12,7 @@ import {
   SimpleGameRoomDto,
 } from './dto/game.dto';
 import { GameGateway } from './game.gateway';
-import { GameEnv } from './game.gameenv';
+import { GameEnv } from './class/game.class.GameEnv';
 
 // class RtLogger {
 //   lastLogged: number = Date.now();
@@ -127,20 +127,14 @@ export class GameService {
     if (game == null) throw new BadRequestException('게임을 찾을 수 없습니다.');
     if (game.password != gamePassword)
       throw new BadRequestException('잘못된 비밀번호.');
-
-    // 동일 유저의 재입장 막아야함
-    if (player.gamePlaying?.roomId === gameId)
+    if (player.isJoinedRoom(game))
       throw new BadRequestException('이미 입장 된 방입니다.');
 
-    if (!game.secondPlayer) {
-      game.secondPlayer = player;
-      // 소켓: 로비에 변경사항 반영
-      player.gamePlaying = game;
-    } else {
-      game.spectators.push(player);
-      player.gamesWatching.push(game);
-    }
-    game.playerCount++;
+    const peopleCount = game.addPlayer(player);
+    console.log(
+      `Player ${player.userId} joined room ${game.roomId}, ${peopleCount}`,
+    );
+    // 소켓: 로비에 변경사항 반영
 
     const gameRoomDto = new SimpleGameRoomDto();
     gameRoomDto.gameMode = game.gameMode;

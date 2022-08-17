@@ -12,9 +12,9 @@ import { Server, Socket } from 'socket.io';
 import { User } from 'src/users/entities/users.entity';
 import { Repository } from 'typeorm';
 import { GameService } from './game.service';
-import { GameEnv, GameInfo, Player } from './game.gameenv';
-import { Length } from 'class-validator';
-import { use } from 'passport';
+import { GameEnv } from './class/game.class.GameEnv';
+import { Player } from './class/game.class.Player';
+import { GameInfo } from './class/game.class.interface';
 
 // @UseGuards(AuthGuard())
 @WebSocketGateway({
@@ -116,10 +116,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // 유저 상태 게임중으로 변경
   }
 
-  handleDisconnect(socket: Socket): void {
-    console.log(`Client disconnected: ${socket.id}`);
-    this.gameEnv.removePlayer(this.socketMap[socket.id]);
-    this.socketMap.delete(socket.id);
+  handleDisconnect(client: Socket): void {
+    console.log(`Client disconnected: ${client.id}`);
+    this.gameEnv.clearPlayerSocket(this.socketMap[client.id], client);
+    this.socketMap.delete(client.id);
     // 해당 유저 퇴장 알림
     // 유저 상태 접속중으로 변경
   }
@@ -194,7 +194,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     setTimeout(
       () => {
-        gameRoom.gameStart(this);
+        gameRoom.gameStart();
       },
       5000,
       counting--,
@@ -216,7 +216,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.gameEnv.postGameProcedure(game);
       this.server.to(game.roomId.toString()).emit('gameFinished');
     }
-    game.streamRtData(this);
+    game.sendRtData();
   }
 
   @SubscribeMessage('paddleRTData')
@@ -227,6 +227,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const game = player.gamePlaying;
 
     game.updatePaddleRtData(data);
-    game.streamRtData(this);
+    game.sendRtData();
   }
 }
