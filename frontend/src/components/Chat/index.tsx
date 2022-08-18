@@ -24,12 +24,6 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
   useEffect(() => {
     if (user && user.jwt) {
       getAllChatList(user.jwt);
-      socket = io(`${process.env.REACT_APP_BACK_API}/ws-chatLobby`, {
-        transports: ['websocket'],
-        query: {
-          userId: user.userId,
-        },
-      });
       if (socket) {
         if (roomType === ALL) {
           socket.on('updateChatRoomList', (data: IChatRooms[]) => {
@@ -45,14 +39,13 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
       }
       return () => {
         if (socket) {
-          console.log('chat lobby disconnect');
           socket.off('updateChatRoomList');
           socket.off('updateParticipnatingChatRoomList');
-          socket.disconnect();
+          // socket.disconnect();
         }
       };
     }
-  }, []);
+  }, [socket]);
 
   const onGetJoinedChatRooms = async () => {
     if (user && user.jwt) {

@@ -68,10 +68,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
   };
 
   useEffect(() => {
-    console.log('socket activeMenu', activeMenu);
-    console.dir(socket);
     if (socket) {
-      console.log('activeMenu', activeMenu);
       if (activeMenu === 'ALL') {
         socket.on('updateUserList', (data: IGetUser[]) => {
           sortedUserList(data); // 전체 유저 목록
