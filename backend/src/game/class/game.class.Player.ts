@@ -1,9 +1,6 @@
 import { Socket } from 'socket.io';
 import { GameAttribute } from './game.class.GameAttribute';
 
-// export class Player {
-//   user: User;
-// }
 export class Player {
   socketLobby: Socket;
   socketQueue: Socket;

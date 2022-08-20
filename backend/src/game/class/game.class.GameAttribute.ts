@@ -84,35 +84,21 @@ export class GameAttribute {
     players.unshift(this.firstPlayer);
     return players;
   }
-
-  //   addPlayer(player: Player): number {
-  //     if (!this.secondPlayer) {
-  //       this.secondPlayer = player;
-  //       player.setGamePlaying(this);
-  //     } else {
-  //       this.watchers.push(player);
-  //       player.addWatchingGame(this);
-  //     }
-  //     this.playerCount++;
-  //     this.isSocketUpdated = false;
-  //     return this.playerCount;
-  //   }
-
   initGameData(): void {
     this.isPlaying = false;
     delete this.rtData;
     this.rtData = new GameRtData();
   }
 
-  updateRtData(data: GameInfo) {
+  updateRtData(data: GameInfo): void {
     this.rtData.updateRtData(data);
   }
 
-  updatePaddleRtData(data: number) {
+  updatePaddleRtData(data: number): void {
     this.rtData.updatePaddleRtData(data);
   }
 
-  sendRtData() {
+  sendRtData(): void {
     const rtData = this.rtData;
     if (rtData.isReadyToSend() == false) {
       return;
@@ -137,4 +123,17 @@ export class GameAttribute {
   isFinished(): boolean {
     return this.rtData.scoreLeft >= 10 || this.rtData.scoreRight >= 10;
   }
+
+  //   addPlayer(player: Player): number {
+  //     if (!this.secondPlayer) {
+  //       this.secondPlayer = player;
+  //       player.setGamePlaying(this);
+  //     } else {
+  //       this.watchers.push(player);
+  //       player.addWatchingGame(this);
+  //     }
+  //     this.playerCount++;
+  //     this.isSocketUpdated = false;
+  //     return this.playerCount;
+  //   }
 }
