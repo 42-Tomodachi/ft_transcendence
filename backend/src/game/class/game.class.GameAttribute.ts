@@ -17,7 +17,7 @@ export class GameAttribute {
   gameMode: 'normal' | 'speed' | 'obstacle';
   firstPlayer: Player | null;
   secondPlayer: Player | null;
-  spectators: Player[];
+  watchers: Player[];
   playerCount: number;
   isPublic: boolean;
   isPlaying: boolean;
@@ -38,11 +38,12 @@ export class GameAttribute {
     this.gameMode = createGameRoomDto.gameMode;
     this.firstPlayer = player1;
     this.secondPlayer = null;
-    this.spectators = [];
+    this.watchers = [];
     this.playerCount = player1 ? 1 : 0;
     this.isPublic = !createGameRoomDto.password ? true : false;
     this.isPlaying = false;
     this.rtData = new GameRtData();
+    this.roomBroadcast = null;
     this.isSocketUpdated = false;
     this.streaming = null;
   }
@@ -82,24 +83,24 @@ export class GameAttribute {
   }
 
   getAllPlayers(): Player[] {
-    const players = this.spectators;
+    const players = this.watchers;
     players.unshift(this.secondPlayer);
     players.unshift(this.firstPlayer);
     return players;
   }
 
-  addPlayer(player: Player): number {
-    if (!this.secondPlayer) {
-      this.secondPlayer = player;
-      player.setGamePlaying(this);
-    } else {
-      this.spectators.push(player);
-      player.addWatchingGame(this);
-    }
-    this.playerCount++;
-    if (player.sockets.length === 0) this.isSocketUpdated = false;
-    return this.playerCount;
-  }
+  //   addPlayer(player: Player): number {
+  //     if (!this.secondPlayer) {
+  //       this.secondPlayer = player;
+  //       player.setGamePlaying(this);
+  //     } else {
+  //       this.watchers.push(player);
+  //       player.addWatchingGame(this);
+  //     }
+  //     this.playerCount++;
+  //     this.isSocketUpdated = false;
+  //     return this.playerCount;
+  //   }
 
   initGameData(): void {
     this.isPlaying = false;

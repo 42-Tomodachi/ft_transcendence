@@ -5,46 +5,55 @@ import { GameAttribute } from './game.class.GameAttribute';
 //   user: User;
 // }
 export class Player {
-  sockets: Socket[];
+  socketLobby: Socket;
+  socketPlayingGame: Socket;
+  socketsToGameMap: Map<Socket, GameAttribute>;
   userId: number;
   gamePlaying: GameAttribute;
-  gamesWatching: GameAttribute[];
+  gamesWatching: Map<GameAttribute, Socket>;
   inRoom: boolean;
   inLadderQ: boolean;
 
-  constructor(socket: Socket, userId: number, game: GameAttribute) {
-    this.sockets = [];
-    if (socket) this.sockets.push(socket);
+  constructor(userId: number, game: GameAttribute) {
+    this.socketLobby = null;
+    this.socketPlayingGame = null;
+    this.socketsToGameMap = new Map<Socket, GameAttribute>();
     this.userId = userId;
     this.gamePlaying = game;
-    this.gamesWatching = [];
+    this.gamesWatching = new Map<GameAttribute, Socket>();
     this.inRoom = false;
     this.inLadderQ = false;
   }
 
   setGamePlaying(game: GameAttribute): void {
     this.gamePlaying = game;
-    if (this.gamesWatching.length === 0) {
-      this.inRoom = false;
-    } else {
-      this.inRoom = true;
-    }
+    this.inRoom = game ? true : false;
   }
 
   addWatchingGame(game: GameAttribute): void {
-    this.gamesWatching.push(game);
+    this.gamesWatching.set(game, null);
     this.inRoom = true;
   }
 
+  findGameHasUnsettedSocket(): GameAttribute {
+    for (const entry of this.gamesWatching.entries()) {
+      if (entry[1] === null) return entry[0];
+    }
+    return undefined;
+  }
+
+  eraseASocket(client: Socket): void {
+    if (client === this.socketLobby) this.socketLobby = null;
+    else if (client === this.socketPlayingGame) this.socketPlayingGame = null;
+  }
+
   eraseWatchingGame(game: GameAttribute): void {
-    const index = this.gamesWatching.indexOf(game);
-    this.gamesWatching.splice(index, 1);
-    if (!this.gamePlaying && !this.gamesWatching.length) this.inRoom = false;
+    this.gamesWatching.delete(game);
+    if (!this.gamePlaying && !this.gamesWatching.size) this.inRoom = false;
   }
 
   isJoinedRoom(game: GameAttribute): boolean {
-    if (this.gamePlaying === game || this.gamesWatching.indexOf(game) >= 0)
-      return true;
+    if (this.gamePlaying === game || this.gamesWatching.has(game)) return true;
     return false;
   }
 }
