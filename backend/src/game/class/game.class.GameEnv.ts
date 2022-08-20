@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/users.entity';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
+import { GameInfo } from './game.class.interface';
+import { GameGateway } from '../game.gateway';
 
 @Injectable()
 export class GameEnv {
@@ -14,18 +16,51 @@ export class GameEnv {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
   ) {}
+
+  socketIdToPlayerMap = new Map<string, Player>();
+  playerList: Player[] = [];
+  gameLobbyTable: Socket[] = [];
   gameRoomIdList: number[] = new Array(500).fill(0);
   gameRoomTable: GameAttribute[] = [];
-  playerList: Player[] = [];
   ladderQueue: Player[] = [];
 
-  async getUserByUserId(userId: number): Promise<User> {
-    return this.userRepo.findOneBy({ id: userId });
+  //
+  // socketMap related methods
+
+  getPlayerBySocket(socket: Socket): Player {
+    return this.socketIdToPlayerMap.get(socket.id);
   }
 
-  async getUserByPlayer(player: Player): Promise<User> {
-    return this.userRepo.findOneBy({ id: player.userId });
+  async getUserBySocket(socket: Socket): Promise<User> {
+    const player: Player = this.socketIdToPlayerMap[socket.id];
+    const user = await this.userRepo.findOne({ where: { id: player.userId } });
+    return user;
   }
+
+  getSocketIdByUserId(userId: number): string {
+    let socket: string;
+    this.socketIdToPlayerMap.forEach((value, key) => {
+      if (value.userId === userId) socket = key;
+    });
+    return socket;
+  }
+
+  assertGetPlayerBySocket(client: Socket, userId: number): Player {
+    let player = this.getPlayerBySocket(client);
+    if (!player) {
+      console.log(`unregistered userId ${userId}`);
+      player = this.newPlayer(userId, null);
+      this.socketIdToPlayerMap.set(client.id, player);
+    }
+    return player;
+  }
+
+  eraseFromSocketMap(client: Socket): void {
+    this.socketIdToPlayerMap.delete(client.id);
+  }
+
+  //
+  // gameRoom* related methods
 
   getFreeRoomIndex(): number {
     let index = 0;
@@ -40,24 +75,128 @@ export class GameEnv {
     return 0;
   }
 
-  getRoomIndexOfGame(gameId: number): number | null {
-    for (const item of this.gameRoomTable) {
-      if (item.roomId == gameId) {
-        return this.gameRoomTable.indexOf(item);
-      }
-    }
-    return null;
-  }
-
-  checkGameRoomPassword(
-    gameRoom: GameAttribute,
-    gamePassword: string,
-  ): boolean {
-    return gameRoom.password == gamePassword;
-  }
+  // getRoomIndexOfGame(gameId: number): number | null {
+  //   for (const item of this.gameRoomTable) {
+  //     if (item.roomId == gameId) {
+  //       return this.gameRoomTable.indexOf(item);
+  //     }
+  //   }
+  //   return null;
+  // }
 
   getGameRoom(gameId: number): GameAttribute | null {
     return this.gameRoomTable.at(gameId);
+  }
+
+  //
+  // basic getters
+
+  async getUserByUserId(userId: number): Promise<User> {
+    return this.userRepo.findOneBy({ id: userId });
+  }
+
+  async getUserByPlayer(player: Player): Promise<User> {
+    return this.userRepo.findOneBy({ id: player.userId });
+  }
+
+  getPlayerByUserId(userId: number): Player {
+    const player = this.playerList.find((player) => {
+      return player.userId === userId;
+    });
+    if (!player) return this.newPlayer(userId, null);
+    else return player;
+  }
+
+  //
+  // socket connection managing methods
+  // 소켓 연결 전에, 소켓을 제외한 모든 셋업은 api를 통해 처리되어 있어야 함.
+
+  handleConnectionOnLobby(client: Socket, player: Player): void {
+    this.gameLobbyTable.push(client);
+    client.join('gameLobby');
+
+    player.socketLobby = client;
+  }
+
+  handleConnectionOnGame(
+    gateway: GameGateway,
+    client: Socket,
+    player: Player,
+  ): void {
+    let game: GameAttribute;
+    const socketUnsettedGame = player.findGameHasUnsettedSocket();
+    if (!socketUnsettedGame) {
+      // game is for playing
+      player.socketPlayingGame = client;
+      game = player.gamePlaying;
+    } else {
+      // game is for watching
+      game = socketUnsettedGame;
+    }
+
+    this.setSocketOnGame(gateway, client, game);
+  }
+
+  onFirstSocketHandshake(
+    gateway: GameGateway,
+    client: Socket,
+    userId: number,
+    connectionType: string,
+  ): void {
+    const player = this.assertGetPlayerBySocket(client, userId);
+
+    this.socketIdToPlayerMap[client.id] = player;
+    switch (connectionType) {
+      case 'gameLobby':
+        this.handleConnectionOnLobby(client, player);
+        break;
+      case 'ladderGame':
+        player.socketPlayingGame = client;
+        // remove socket when no further connection
+        return;
+      case 'normalGame':
+        this.handleConnectionOnGame(gateway, client, player);
+        break;
+      default:
+        console.log(
+          `ConnectionHandler: ${connectionType} is not a correct type of connection.`,
+        );
+        client.emit(
+          'message',
+          `ConnectionHandler: ${connectionType} is not a correct type of connection.`,
+        );
+    }
+  }
+
+  clearPlayerSocket(client: Socket): void {
+    const player = this.socketIdToPlayerMap[client.id];
+    if (player === undefined) return;
+
+    if (player.inRoom) {
+      this.leaveGameRoom(player.gamePlaying, player);
+    }
+    if (player.inLadderQ) {
+      this.cancelLadderWaiting(client);
+    }
+    player.eraseASocket(client);
+    this.eraseFromSocketMap(client);
+
+    // 해당 유저 퇴장 알림
+    // 유저 상태 접속중으로 변경
+  }
+
+  //
+  // game managing methods
+
+  newPlayer(userId: number, game: GameAttribute): Player {
+    for (const player of this.playerList) {
+      if (player.userId === userId) {
+        return player;
+      }
+    }
+    const newPlayer = new Player(userId, game);
+    this.playerList.push(newPlayer);
+    return newPlayer;
   }
 
   setTimerOfRoomCancel(game: GameAttribute): NodeJS.Timer {
@@ -95,30 +234,45 @@ export class GameEnv {
     return true;
   }
 
-  joinGameRoom(
-    player: Player,
-    gameId: number,
+  checkGameRoomPassword(
+    gameRoom: GameAttribute,
     gamePassword: string,
-  ): 'player' | 'spectator' {
-    const game = this.getGameRoom(gameId);
-    this.checkGameRoomPassword(game, gamePassword);
+  ): boolean {
+    return gameRoom.password == gamePassword;
+  }
 
-    player.inRoom = true;
+  setSocketOnGame(
+    gateway: GameGateway,
+    client: Socket,
+    game: GameAttribute,
+  ): void {
+    if (game.isSocketUpdated === true) {
+      console.log('socket is already updated.');
+      return;
+    }
+    if (game.roomBroadcast === null)
+      game.roomBroadcast = gateway.server.to(game.roomId.toString());
+    client.join(game.roomId.toString());
+    game.isSocketUpdated = true;
+  }
+
+  joinPlayerToGame(player: Player, game: GameAttribute): number {
     if (!game.secondPlayer) {
       game.secondPlayer = player;
-      game.playerCount++;
-      return 'player';
+      player.setGamePlaying(game);
     } else {
-      game.spectators.push(player);
-      game.playerCount++;
-      return 'spectator';
+      game.watchers.push(player);
+      player.addWatchingGame(game);
     }
+    game.playerCount++;
+    game.isSocketUpdated = false;
+    return game.playerCount;
   }
 
   gameRoomClear(game: GameAttribute) {
     game.firstPlayer.setGamePlaying(null);
     game.secondPlayer?.setGamePlaying(null);
-    for (const player of game.spectators) {
+    for (const player of game.watchers) {
       player.eraseWatchingGame(game);
     }
     const index = this.gameRoomTable.indexOf(game);
@@ -130,6 +284,10 @@ export class GameEnv {
     game: GameAttribute,
     player: Player,
   ): 'clear' | 'okay' | 'failed' {
+    if (!game) {
+      console.log('leaveGameRoom: no game');
+      return 'failed';
+    }
     if (game.roomId !== player.gamePlaying.roomId) {
       return 'failed';
     }
@@ -140,7 +298,7 @@ export class GameEnv {
     } else if (game.secondPlayer == player) {
       game.secondPlayer = null;
     } else {
-      game.spectators.splice(game.spectators.indexOf(player), 1);
+      game.watchers.splice(game.watchers.indexOf(player), 1);
     }
     player.inRoom = false;
     return 'okay';
@@ -155,78 +313,147 @@ export class GameEnv {
     // clearInterval(this.streaming);
   }
 
-  newPlayer(
-    socket: Socket,
-    userId: number,
-    game: GameAttribute,
-  ): Player | null {
-    for (const player of this.playerList) {
-      if (player.userId == userId) {
-        return player;
-      }
-    }
-    const newOne = new Player(socket, userId, game);
-    this.playerList.push(newOne);
-    return newOne;
-  }
+  enlistLadderQueue(gateway: GameGateway, client: Socket): void {
+    const player = this.getPlayerBySocket(client);
 
-  clearPlayerSocket(player: Player, socket: Socket) {
-    if (player.inRoom) {
-      this.leaveGameRoom(player.gamePlaying, player);
-    }
-    if (player.inLadderQ) {
-      this.removeFromLadderQueue(player);
-    }
-    // this.playerList.splice(this.playerList.indexOf(player), 1);
-    player.sockets.splice(player.sockets.indexOf(socket), 1);
-  }
-
-  getPlayerByUserId(userId: number): Player {
-    const player = this.playerList.find((player) => {
-      return player.userId === userId;
-    });
-    if (!player) return this.newPlayer(null, userId, null);
-    else return player;
-  }
-
-  enlistLadderQueue(player: Player): GameAttribute | null {
     this.ladderQueue.push(player);
     console.log(`enlistLadderQueue: length: ${this.ladderQueue.length}`);
-    return this.makeLadderMatch();
+    const newMatch = this.makeLadderMatch(gateway);
+
+    if (newMatch) {
+      newMatch.roomBroadcast.emit('matchingGame', newMatch.roomId.toString());
+      console.log(`newLadderGame: ${newMatch}, ${player}`);
+    } else {
+      client.emit('message', '래더 대기열 부족');
+    }
   }
 
-  removeFromLadderQueue(player: Player) {
-    const index = this.ladderQueue.indexOf(player);
+  cancelLadderWaiting(client: Socket): void {
+    this.eraseFromSocketMap(client);
+    const index = this.ladderQueue.indexOf(this.getPlayerBySocket(client));
     this.ladderQueue.splice(index, 1);
+
+    client.disconnect();
   }
 
-  makeLadderMatch(): GameAttribute | null {
+  makeLadderMatch(gateway: GameGateway): GameAttribute | null {
     if (this.ladderQueue.length < 2) {
       return null;
     }
     const player1 = this.ladderQueue.shift();
     const player2 = this.ladderQueue.shift();
-    const index: number = this.getFreeRoomIndex();
+    const gameNumber = this.getFreeRoomIndex();
 
     const createGameRoomDto = new CreateGameRoomDto();
-    createGameRoomDto.roomTitle = `LadderGame${index}`;
+    createGameRoomDto.roomTitle = `LadderGame${gameNumber}`;
     createGameRoomDto.password = null;
     createGameRoomDto.gameMode = 'normal';
     createGameRoomDto.ownerId = player1.userId;
 
-    const gameRoom = new GameAttribute(index, createGameRoomDto, player1);
+    const gameRoom = new GameAttribute(gameNumber, createGameRoomDto, player1);
     gameRoom.secondPlayer = player2;
     gameRoom.playerCount = 2;
     gameRoom.isPublic = false;
+    gameRoom.roomBroadcast = gateway.server.to(gameNumber.toString());
 
     this.enrollGameToTable(gameRoom);
 
     player1.gamePlaying = gameRoom;
     player2.gamePlaying = gameRoom;
-    player1.sockets[player1.sockets.length - 1].join(index.toString());
-    player2.sockets[player2.sockets.length - 1].join(index.toString());
+    player1.socketPlayingGame.join(gameNumber.toString());
+    player2.socketPlayingGame.join(gameNumber.toString());
 
     return gameRoom;
+  }
+
+  async waitForPlayerJoins(client: Socket): Promise<void> {
+    const player = this.getPlayerBySocket(client);
+    const game = player.gamePlaying;
+    const player1asUser: User = await this.userRepo.findOne({
+      where: { id: game.firstPlayer.userId },
+    });
+    const player2asUser: User = game.secondPlayer
+      ? await this.userRepo.findOne({
+          where: { id: game.secondPlayer.userId },
+        })
+      : undefined;
+
+    game.roomBroadcast.emit(
+      'matchData',
+      player1asUser.toGamerInfoDto(),
+      player2asUser?.toGamerInfoDto(),
+    );
+
+    if (player2asUser) this.startGameCountdown(game);
+  }
+
+  async startGameCountdown(game: GameAttribute): Promise<void> {
+    let counting = 5;
+    game.roomBroadcast.emit('gameStartCount', `${counting}`);
+
+    const timer: NodeJS.Timer = setInterval(() => {
+      game.roomBroadcast.emit('gameStartCount', `${counting}`);
+      counting--;
+      if (counting < 0) {
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    setTimeout(
+      () => {
+        this.startGame(game); // careful: async
+      },
+      5000,
+      counting--,
+    );
+  }
+
+  async startGame(game: GameAttribute): Promise<void> {
+    game.gameStart();
+
+    const userP1 = await this.getUserByPlayer(game.firstPlayer);
+    const userP2 = await this.getUserByPlayer(game.secondPlayer);
+    userP1.userStatus = 'play';
+    userP2.userStatus = 'play';
+    await userP1.save();
+    await userP2.save();
+  }
+
+  async processRecievedRtData(client: Socket, data: GameInfo): Promise<void> {
+    const player: Player = this.getPlayerBySocket(client);
+    const game = player.gamePlaying;
+
+    game.updateRtData(data);
+    if (game.isFinished()) {
+      await this.endGame(game);
+    }
+    game.sendRtData();
+  }
+
+  async processRecievedPaddleRtData(
+    client: Socket,
+    data: number,
+  ): Promise<void> {
+    const player: Player = this.getPlayerBySocket(client);
+    const game = player.gamePlaying;
+
+    game.updatePaddleRtData(data);
+    game.sendRtData();
+  }
+
+  async endGame(game: GameAttribute): Promise<void> {
+    console.log(`game is finished ${game.roomId}`);
+    game.isPlaying = false;
+    this.postGameProcedure(game);
+    game.roomBroadcast.emit('gameFinished');
+    await this.writeMatchResult(game);
+
+    const userP1 = await this.getUserByPlayer(game.firstPlayer);
+    const userP2 = await this.getUserByPlayer(game.secondPlayer);
+    userP1.userStatus = 'on';
+    userP2.userStatus = 'on';
+    await userP1.save();
+    await userP2.save();
   }
 
   async writeMatchResult(game: GameAttribute) {
@@ -267,29 +494,18 @@ export class GameEnv {
     await newRecord.save();
   }
 
-  async startGame(game: GameAttribute): Promise<void> {
-    game.gameStart();
+  // sendMatchData(user1: User, user2: User): boolean {
+  //   const player1 = this.gameEnv.getPlayerByUserId(user1.id);
+  //   if (!player1) return false;
 
-    const userP1 = await this.getUserByPlayer(game.firstPlayer);
-    const userP2 = await this.getUserByPlayer(game.secondPlayer);
-    userP1.userStatus = 'play';
-    userP2.userStatus = 'play';
-    await userP1.save();
-    await userP2.save();
-  }
+  //   if (user2) {
+  //     const player2 = this.gameEnv.getPlayerByUserId(user2.id);
+  //     if (!player2) return false;
+  //     if (player1.gamePlaying !== player2.gamePlaying) return false;
+  //   }
 
-  async endGame(game: GameAttribute): Promise<void> {
-    console.log(`game is finished ${game.roomId}`);
-    game.isPlaying = false;
-    this.postGameProcedure(game);
-    game.roomBroadcast.emit('gameFinished');
-    await this.writeMatchResult(game);
-
-    const userP1 = await this.getUserByPlayer(game.firstPlayer);
-    const userP2 = await this.getUserByPlayer(game.secondPlayer);
-    userP1.userStatus = 'on';
-    userP2.userStatus = 'on';
-    await userP1.save();
-    await userP2.save();
-  }
+  //   this.server
+  //     .to(player1.gamePlaying.toString())
+  //     .emit('matchData', user1.toGamerInfoDto(), user2?.toGamerInfoDto());
+  // }
 }

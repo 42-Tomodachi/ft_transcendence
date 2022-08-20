@@ -129,7 +129,7 @@ export class GameService {
     if (player.isJoinedRoom(game))
       throw new BadRequestException('이미 입장 된 방입니다.');
 
-    const peopleCount = game.addPlayer(player);
+    const peopleCount = this.gameEnv.joinPlayerToGame(player, game);
     console.log(
       `Player ${player.userId} joined room ${game.roomId}, ${peopleCount}`,
     );
