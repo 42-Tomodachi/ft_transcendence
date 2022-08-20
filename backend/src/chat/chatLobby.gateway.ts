@@ -106,10 +106,10 @@ export class ChatLobbyGateway
   // 1. 방 정보가 변경되면 chatLobby의 emitParticipantingChatRoomList 호출: 방 제목 변경, 방 입퇴장(인원수 변경), 방 삭제되는 경우
   async emitParticipantingChatRoomList(roomId?: number): Promise<void> {
     if (!roomId) {
-      this.connectedSocketMap.forEach((socketSet, userId) => {
-        const chatRoomList = this.chatService.getParticipantingChatRoomsForEmit(
-          +userId,
-        );
+      this.connectedSocketMap.forEach(async (socketSet, userId) => {
+        const chatRoomList =
+          await this.chatService.getParticipantingChatRoomsForEmit(+userId);
+        console.log('\nchatRoomList ', chatRoomList);
 
         socketSet.forEach((socketId) => {
           this.wss
@@ -117,6 +117,8 @@ export class ChatLobbyGateway
             .emit('updateParticipnatingChatRoomList', chatRoomList);
         });
       });
+
+      return;
     }
 
     // 2. 방에 참여중인 유저 id 가져오기 - in chatService
@@ -138,6 +140,7 @@ export class ChatLobbyGateway
         participantId.toString(),
       );
 
+      console.log('\n participantIds ', participantIds);
       // 4. 해당 유저의 소켓에 채팅방 목록 emit
       if (socketIds) {
         socketIds.forEach(async (socketId) => {
@@ -145,6 +148,7 @@ export class ChatLobbyGateway
             await this.chatService.getParticipantingChatRoomsForEmit(
               participantId,
             );
+          console.log('\n chatRoomList ', chatRoomList);
 
           this.wss
             .to(socketId)

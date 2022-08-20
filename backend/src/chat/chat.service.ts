@@ -975,14 +975,28 @@ export class ChatService {
   async getParticipantingChatRoomsForEmit(
     userId: number,
   ): Promise<ChatRoomDto[]> {
-    const participantingChatRooms = await this.chatRoomRepo
-      .createQueryBuilder('chatRoom')
-      .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant')
+    const chatParticipants = await this.chatParticipantRepo
+      .createQueryBuilder('chatParticipant')
       .where('chatParticipant.isBanned = false')
       .andWhere('chatParticipant.userId = :userId', { userId })
       .getMany();
 
+    const participantingChatRoomIds = chatParticipants.map((p) => p.chatRoomId);
+
+    let query = this.chatRoomRepo
+      .createQueryBuilder('chatRoom')
+      .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant');
+
+    if (participantingChatRoomIds.length) {
+      query = query.where('chatRoom.id in (:...chatRoomIds)', {
+        chatRoomIds: participantingChatRoomIds,
+      });
+    }
+
+    const participantingChatRooms = await query.getMany();
+
     return participantingChatRooms.map((chatRoom) => {
+      console.log('\n chat participants cnt', chatRoom.chatParticipant);
       return chatRoom.toChatRoomDto();
     });
   }
