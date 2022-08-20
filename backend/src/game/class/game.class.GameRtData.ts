@@ -47,7 +47,7 @@ export class GameRtData {
     return [this.scoreLeft, this.scoreRight];
   }
 
-  updateScore() {
+  updateScore(): void {
     if (this.lostPoint == false) {
       return;
     }
@@ -59,7 +59,7 @@ export class GameRtData {
     this.lostPoint = false;
   }
 
-  updateRtData(data: GameInfo) {
+  updateRtData(data: GameInfo): void {
     this.ball_pos = [data.ballP_X, data.ballP_Y];
     this.ball_vec = [data.ballVelo_X, data.ballVelo_Y];
     this.turn = data.turn;
@@ -73,7 +73,7 @@ export class GameRtData {
     this.updateScore();
   }
 
-  updatePaddleRtData(data: number) {
+  updatePaddleRtData(data: number): void {
     if (this.turn == 1) {
       this.paddle_R_pos = data;
     } else {

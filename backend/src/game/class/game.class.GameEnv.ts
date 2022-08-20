@@ -84,7 +84,7 @@ export class GameEnv {
   //   return null;
   // }
 
-  getGameRoom(gameId: number): GameAttribute | null {
+  getGameRoom(gameId: number): GameAttribute {
     return this.gameRoomTable.at(gameId);
   }
 
@@ -269,7 +269,7 @@ export class GameEnv {
     return game.playerCount;
   }
 
-  gameRoomClear(game: GameAttribute) {
+  gameRoomClear(game: GameAttribute): void {
     game.firstPlayer.setGamePlaying(null);
     game.secondPlayer?.setGamePlaying(null);
     for (const player of game.watchers) {
@@ -304,7 +304,7 @@ export class GameEnv {
     return 'okay';
   }
 
-  postGameProcedure(game: GameAttribute) {
+  postGameProcedure(game: GameAttribute): void {
     if (game.isLadder() === true) {
       this.gameRoomClear(game);
     } else {
@@ -336,9 +336,9 @@ export class GameEnv {
     client.disconnect();
   }
 
-  makeLadderMatch(gateway: GameGateway): GameAttribute | null {
+  makeLadderMatch(gateway: GameGateway): GameAttribute {
     if (this.ladderQueue.length < 2) {
-      return null;
+      return undefined;
     }
     const player1 = this.ladderQueue.shift();
     const player2 = this.ladderQueue.shift();
@@ -456,7 +456,7 @@ export class GameEnv {
     await userP2.save();
   }
 
-  async writeMatchResult(game: GameAttribute) {
+  async writeMatchResult(game: GameAttribute): Promise<void> {
     const firstPlayer = await this.getUserByPlayer(game.firstPlayer);
     const secondPlayer = await this.getUserByPlayer(game.secondPlayer);
     if (!firstPlayer || !secondPlayer) {

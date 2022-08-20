@@ -88,6 +88,37 @@ export class GameAttribute {
     players.unshift(this.firstPlayer);
     return players;
   }
+  initGameData(): void {
+    this.isPlaying = false;
+    delete this.rtData;
+    this.rtData = new GameRtData();
+  }
+
+  updateRtData(data: GameInfo): void {
+    this.rtData.updateRtData(data);
+  }
+
+  updatePaddleRtData(data: number): void {
+    this.rtData.updatePaddleRtData(data);
+  }
+
+  sendRtData(): void {
+    const rtData = this.rtData;
+    if (rtData.isReadyToSend() == false) {
+      return;
+    }
+    this.roomBroadcast.emit('rtData', rtData.toRtData());
+    rtData.updateFlag = false;
+  }
+
+  gameStart(): void {
+    this.isPlaying = true;
+    this.sendRtData();
+  }
+
+  isFinished(): boolean {
+    return this.rtData.scoreLeft >= 10 || this.rtData.scoreRight >= 10;
+  }
 
   //   addPlayer(player: Player): number {
   //     if (!this.secondPlayer) {
@@ -101,38 +132,4 @@ export class GameAttribute {
   //     this.isSocketUpdated = false;
   //     return this.playerCount;
   //   }
-
-  initGameData(): void {
-    this.isPlaying = false;
-    delete this.rtData;
-    this.rtData = new GameRtData();
-  }
-
-  updateRtData(data: GameInfo) {
-    this.rtData.updateRtData(data);
-  }
-
-  updatePaddleRtData(data: number) {
-    this.rtData.updatePaddleRtData(data);
-  }
-
-  sendRtData() {
-    const rtData = this.rtData;
-    if (rtData.isReadyToSend() == false) {
-      return;
-    }
-    // console.log(`sending ${rtData.toRtData()}`); // this line test only
-    // rtLogger.log(500, `sending ${rtData.toRtData()}`);
-    this.roomBroadcast.emit('rtData', rtData.toRtData());
-    rtData.updateFlag = false;
-  }
-
-  gameStart() {
-    this.isPlaying = true;
-    this.sendRtData();
-  }
-
-  isFinished(): boolean {
-    return this.rtData.scoreLeft >= 10 || this.rtData.scoreRight >= 10;
-  }
 }
