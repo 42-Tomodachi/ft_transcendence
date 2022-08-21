@@ -44,7 +44,8 @@ export const AllContext = createContext<stateType>({
   playingGameInfo: {
     playingGameInfo: {
       player: '',
-      oppNickname: '',
+      oneNickname: '',
+      twoNickname: '',
       gameRoomId: -1,
       gameMode: 'normal',
       gameLadder: false,
@@ -96,7 +97,8 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
   const [targetId, setTargetId] = useState<number>(0);
   const [playingGameInfo, setPlayingGameInfo] = useState<IPlayingGameInfo>({
     player: '',
-    oppNickname: '',
+    oneNickname: '',
+    twoNickname: '',
     gameRoomId: -1,
     gameMode: 'normal',
     gameLadder: false,
@@ -173,7 +175,8 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     if (type) {
       setPlayingGameInfo({
         player: type.player,
-        oppNickname: type.oppNickname,
+        oneNickname: type.oneNickname,
+        twoNickname: type.twoNickname,
         gameRoomId: type.gameRoomId,
         gameMode: type.gameMode,
         gameLadder: type.gameLadder,

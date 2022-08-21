@@ -103,9 +103,19 @@ const GamePage: React.FC = () => {
               (p2.ladderWinCount / (p2.ladderWinCount + p2.ladderLoseCount)) * 100
             }%`;
           if (user?.nickname === p1.nickname)
-            setPlayingGameInfo({ ...playingGameInfo, player: 'p1', oppNickname: p2.nickname });
+            setPlayingGameInfo({
+              ...playingGameInfo,
+              player: 'p1',
+              oneNickname: p1.nickname,
+              twoNickname: p2.nickname,
+            });
           else if (user?.nickname === p2.nickname)
-            setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
+            setPlayingGameInfo({
+              ...playingGameInfo,
+              player: 'p2',
+              oneNickname: p1.nickname,
+              twoNickname: p2.nickname,
+            });
         });
       } else {
         // 래더가 아닐때의 소켓온
@@ -135,11 +145,24 @@ const GamePage: React.FC = () => {
             setPlayingGameInfo({
               ...playingGameInfo,
               player: 'p1',
-              oppNickname: p2 ? p2.nickname : info.nicknameTwo,
+              oneNickname: p1.nickname,
+              twoNickname: p2.nickname,
             });
           else if (user?.nickname === p2.nickname)
-            setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
-          else setPlayingGameInfo({ ...playingGameInfo, player: 'g1' });
+            setPlayingGameInfo({
+              ...playingGameInfo,
+              player: 'p2',
+              oneNickname: p1.nickname,
+              twoNickname: p2.nickname,
+            });
+          else {
+            setPlayingGameInfo({
+              ...playingGameInfo,
+              player: 'g1',
+              oneNickname: p1.nickname,
+              twoNickname: p2.nickname,
+            });
+          }
         });
       }
       socket.on('gameStartCount', (data: number) => {

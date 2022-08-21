@@ -88,7 +88,8 @@ export interface IUserData extends IUserAuth, IWinLoseCount {
 // 여기서 모드를 저장한다면 어떨까. 아 그럼 래더시작할때는 또, 노말로 바꿔줘야되는거 아녀.
 export interface IPlayingGameInfo {
   player: string;
-  oppNickname: string;
+  oneNickname: string;
+  twoNickname: string;
   gameRoomId: number; // user.roomid -> ??.gameRoomId
   gameMode: string; // test!!
   gameLadder: boolean; // test!!

@@ -58,25 +58,25 @@ const GameStart: React.FC = () => {
   const paddle = function paddle(ctx: CanvasRenderingContext2D): void {
     ctx.font = '32px Roboto';
     ctx.textAlign = 'center';
-    if (player == 'p1') {
+    if (player == 'p1' || player == 'p2') {
       ctx.fillStyle = '#3AB0FF';
-      ctx.fillText(` ${user?.nickname} : ${point[0]}`, 250, 50);
+      ctx.fillText(` ${playingGameInfo?.oneNickname} : ${point[0]}`, 250, 50);
       ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 700);
       ctx.fillStyle = '#F87474';
-      ctx.fillText(`${playingGameInfo?.oppNickname} : ${point[1]}`, 750, 50);
+      ctx.fillText(`${playingGameInfo?.twoNickname} : ${point[1]}`, 750, 50);
       ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
-    } else if (player == 'p2') {
+    } else {
+      // 이 누군지 모름이 해결되는 순간 여기는 분기를 탈 필요가 없겠다.
       ctx.fillStyle = '#3AB0FF';
-      ctx.fillText(` ${playingGameInfo?.oppNickname} : ${point[0]}`, 250, 50);
+      ctx.fillText(` 누군지모름 ${player} : ${point[0]}`, 250, 50);
       ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 700);
       ctx.fillStyle = '#F87474';
-      ctx.fillText(`${user?.nickname} : ${point[1]}`, 750, 50);
+      ctx.fillText(` 누군지모름 ${player} : ${point[1]}`, 750, 50);
       ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
     }
   };
 
   const obstacle = function obstacle(ctx: CanvasRenderingContext2D): void {
-    console.log('gameMode : ' + playingGameInfo.gameMode);
     if (playingGameInfo.gameMode === 'obstacle') {
       ctx.fillStyle = '#FFB562';
       ctx.fillRect(450, 300, 100, 100);
@@ -304,7 +304,7 @@ const GameStart: React.FC = () => {
     // 사용하면 React는 이 내부 함수에서 제공하는 상태 스냅샷이 항상 최신 상태 스냅샷이 되도록 보장하며 모든 예약된 상태 업데이트를 염두에 두고 있다.
     // 이것은 항상 최신 상태 스냅샷에서 작업하도록 하는 더 안전한 방법이다.
     // 따라서 상태 업데이트가 이전 상태에 따라 달라질 때마다 여기에서 이 함수 구문을 사용하는 것이 좋다.
-    if (user) {
+    if (user && user.socket && user.socket.connected) {
       if (
         (player === 'p1' && calculateOn[0] === true) ||
         (player === 'p2' && calculateOn[1] === true)
@@ -355,6 +355,23 @@ const GameStart: React.FC = () => {
   const getData = async () => {
     // 아마도 소켓이있으니까 게스트역시 rtData는 받으러 올거고, 볼과, 패들좌우를 저장할거고
     if (user && user.socket) {
+      ///////
+      user.socket.on('gameFinished', () => {
+        if (user && playingGameInfo.gameLadder === true) {
+          console.log('gameFinished, 10점획득 disconnect:' + user.socket.id);
+          user.socket.emit('roomTerminated', roomid);
+          user.socket.disconnect();
+        }
+        playing[0] = false;
+        playing[1] =
+          point[0] > point[1]
+            ? playingGameInfo.oneNickname.toUpperCase()
+            : playingGameInfo.twoNickname.toUpperCase();
+        setGameInfo(gameInfo => {
+          return { ...gameInfo };
+        });
+      });
+      ///////
       user.socket.on('rtData', async (data: number[]) => {
         if (ballball[0] !== data[0]) ballball[0] = data[0];
         if (ballball[1] !== data[1]) ballball[1] = data[1];
@@ -389,48 +406,6 @@ const GameStart: React.FC = () => {
             calculateOn[0] = true;
             calculateOn[1] = false;
           }
-        }
-        // user.socket.on('gameFinished', () => {
-        //   if (user) {
-        //     console.log('gameFinished, 10점획득 disconnect:' + user.socket.id);
-        //     user.socket.emit('roomTerminated', roomid);
-        //     user.socket.disconnect();
-        //   }
-        //   playing[0] = false;
-        //   if (player == 'p1')
-        //     playing[1] =
-        //       data[8] > data[9]
-        //         ? user.nickname.toUpperCase()
-        //         : playingGameInfo.oppNickname.toUpperCase();
-        //   else
-        //     playing[1] =
-        //       data[8] < data[9]
-        //         ? user.nickname.toUpperCase()
-        //         : playingGameInfo.oppNickname.toUpperCase();
-        //   setGameInfo(gameInfo => {
-        //     return { ...gameInfo };
-        //   });
-        // });
-        if (data[8] === 10 || data[9] === 10) {
-          if (user) {
-            console.log('10점획득 disconnect:' + user.socket.id);
-            user.socket.emit('roomTerminated', roomid);
-            user.socket.disconnect();
-          }
-          playing[0] = false;
-          if (player == 'p1')
-            playing[1] =
-              data[8] > data[9]
-                ? user.nickname.toUpperCase()
-                : playingGameInfo.oppNickname.toUpperCase();
-          else
-            playing[1] =
-              data[8] < data[9]
-                ? user.nickname.toUpperCase()
-                : playingGameInfo.oppNickname.toUpperCase();
-          setGameInfo(gameInfo => {
-            return { ...gameInfo };
-          });
         }
       });
     } else console.log('ERROR: user undefined');
