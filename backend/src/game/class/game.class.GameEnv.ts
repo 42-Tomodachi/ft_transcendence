@@ -8,7 +8,6 @@ import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/users.entity';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { GameInfo } from './game.class.interface';
-import { GameGateway } from '../game.gateway';
 
 @Injectable()
 export class GameEnv {
@@ -75,15 +74,6 @@ export class GameEnv {
     return 0;
   }
 
-  // getRoomIndexOfGame(gameId: number): number | null {
-  //   for (const item of this.gameRoomTable) {
-  //     if (item.roomId == gameId) {
-  //       return this.gameRoomTable.indexOf(item);
-  //     }
-  //   }
-  //   return null;
-  // }
-
   getGameRoom(gameId: number): GameAttribute | null {
     return this.gameRoomTable.at(gameId);
   }
@@ -96,6 +86,7 @@ export class GameEnv {
   }
 
   async getUserByPlayer(player: Player): Promise<User> {
+    if (!player) return undefined;
     return this.userRepo.findOneBy({ id: player.userId });
   }
 
@@ -118,11 +109,20 @@ export class GameEnv {
     player.socketLobby = client;
   }
 
-  handleConnectionOnGame(
-    gateway: GameGateway,
-    client: Socket,
-    player: Player,
-  ): void {
+  handleConnectionOnLadderQueue(client: Socket, player: Player): void {
+    player.socketQueue = client;
+    this.enlistLadderQueue(player);
+    // remove socket when no further connection
+  }
+
+  handleConnectionOnLadderGame(client: Socket, player: Player): void {
+    const game = player.gamePlaying;
+    player.socketPlayingGame = client;
+
+    this.setSocketOnGame(client, game);
+  }
+
+  handleConnectionOnNormalGame(client: Socket, player: Player): void {
     let game: GameAttribute;
     const socketUnsettedGame = player.findGameHasUnsettedSocket();
     if (!socketUnsettedGame) {
@@ -134,48 +134,52 @@ export class GameEnv {
       game = socketUnsettedGame;
     }
 
-    this.setSocketOnGame(gateway, client, game);
+    this.setSocketOnGame(client, game);
   }
 
   onFirstSocketHandshake(
-    gateway: GameGateway,
     client: Socket,
     userId: number,
     connectionType: string,
   ): void {
     const player = this.assertGetPlayerBySocket(client, userId);
-
     this.socketIdToPlayerMap[client.id] = player;
+
     switch (connectionType) {
       case 'gameLobby':
         this.handleConnectionOnLobby(client, player);
         break;
+      case 'ladderQueue':
+        this.handleConnectionOnLadderQueue(client, player);
+        break;
       case 'ladderGame':
-        player.socketPlayingGame = client;
-        // remove socket when no further connection
-        return;
+        this.handleConnectionOnLadderGame(client, player);
+        break;
       case 'normalGame':
-        this.handleConnectionOnGame(gateway, client, player);
+        this.handleConnectionOnNormalGame(client, player);
         break;
       default:
-        console.log(
-          `ConnectionHandler: ${connectionType} is not a correct type of connection.`,
-        );
-        client.emit(
-          'message',
-          `ConnectionHandler: ${connectionType} is not a correct type of connection.`,
-        );
+        const message = `ConnectionHandler: ${connectionType} is not a correct type of connection.`;
+        console.log(message);
+        client.send(message);
     }
+    console.log(`New client connected: ${client.id}`);
+    client.send(`New client connected: ${client.id}`);
   }
 
   clearPlayerSocket(client: Socket): void {
     const player = this.socketIdToPlayerMap[client.id];
     if (player === undefined) return;
 
-    if (player.inRoom) {
+    if (player.socketLobby === client) player.socketLobby = null;
+    else if (player.socketQueue === client) player.socketQueue = null;
+    else if (player.socketPlayingGame === client)
+      player.socketPlayingGame = null;
+
+    if (player.inRoom === true) {
       this.leaveGameRoom(player.gamePlaying, player);
     }
-    if (player.inLadderQ) {
+    if (player.inLadderQ === true) {
       this.cancelLadderWaiting(client);
     }
     player.eraseASocket(client);
@@ -241,19 +245,12 @@ export class GameEnv {
     return gameRoom.password == gamePassword;
   }
 
-  setSocketOnGame(
-    gateway: GameGateway,
-    client: Socket,
-    game: GameAttribute,
-  ): void {
-    if (game.isSocketUpdated === true) {
-      console.log('socket is already updated.');
+  setSocketOnGame(client: Socket, game: GameAttribute): void {
+    if (!game) {
+      console.log('setSocketonGame: game is undefined.');
       return;
     }
-    if (game.roomBroadcast === null)
-      game.roomBroadcast = gateway.server.to(game.roomId.toString());
     client.join(game.roomId.toString());
-    game.isSocketUpdated = true;
   }
 
   joinPlayerToGame(player: Player, game: GameAttribute): number {
@@ -313,18 +310,16 @@ export class GameEnv {
     // clearInterval(this.streaming);
   }
 
-  enlistLadderQueue(gateway: GameGateway, client: Socket): void {
-    const player = this.getPlayerBySocket(client);
-
+  enlistLadderQueue(player: Player): void {
     this.ladderQueue.push(player);
     console.log(`enlistLadderQueue: length: ${this.ladderQueue.length}`);
-    const newMatch = this.makeLadderMatch(gateway);
+    const newMatch = this.makeLadderMatch();
 
     if (newMatch) {
-      newMatch.roomBroadcast.emit('matchingGame', newMatch.roomId.toString());
       console.log(`newLadderGame: ${newMatch}, ${player}`);
+      player.socketQueue = null;
     } else {
-      client.emit('message', '래더 대기열 부족');
+      player.socketQueue.send('래더 대기열 부족');
     }
   }
 
@@ -336,7 +331,7 @@ export class GameEnv {
     client.disconnect();
   }
 
-  makeLadderMatch(gateway: GameGateway): GameAttribute | null {
+  makeLadderMatch(): GameAttribute {
     if (this.ladderQueue.length < 2) {
       return null;
     }
@@ -347,21 +342,21 @@ export class GameEnv {
     const createGameRoomDto = new CreateGameRoomDto();
     createGameRoomDto.roomTitle = `LadderGame${gameNumber}`;
     createGameRoomDto.password = null;
-    createGameRoomDto.gameMode = 'normal';
+    createGameRoomDto.gameMode = 'speed';
     createGameRoomDto.ownerId = player1.userId;
 
     const gameRoom = new GameAttribute(gameNumber, createGameRoomDto, player1);
     gameRoom.secondPlayer = player2;
     gameRoom.playerCount = 2;
     gameRoom.isPublic = false;
-    gameRoom.roomBroadcast = gateway.server.to(gameNumber.toString());
 
     this.enrollGameToTable(gameRoom);
+    console.log(`Ladder match made: ${player1.userId}, ${player2.userId}`);
 
     player1.gamePlaying = gameRoom;
     player2.gamePlaying = gameRoom;
-    player1.socketPlayingGame.join(gameNumber.toString());
-    player2.socketPlayingGame.join(gameNumber.toString());
+    player1.socketQueue.emit('matchingGame', gameRoom.roomId.toString());
+    player2.socketQueue.emit('matchingGame', gameRoom.roomId.toString());
 
     return gameRoom;
   }
@@ -369,6 +364,7 @@ export class GameEnv {
   async waitForPlayerJoins(client: Socket): Promise<void> {
     const player = this.getPlayerBySocket(client);
     const game = player.gamePlaying;
+
     const player1asUser: User = await this.userRepo.findOne({
       where: { id: game.firstPlayer.userId },
     });
@@ -378,7 +374,7 @@ export class GameEnv {
         })
       : undefined;
 
-    game.roomBroadcast.emit(
+    game.broadcastToRoom(
       'matchData',
       player1asUser.toGamerInfoDto(),
       player2asUser?.toGamerInfoDto(),
@@ -389,10 +385,10 @@ export class GameEnv {
 
   async startGameCountdown(game: GameAttribute): Promise<void> {
     let counting = 5;
-    game.roomBroadcast.emit('gameStartCount', `${counting}`);
+    game.broadcastToRoom('gameStartCount', `${counting}`);
 
     const timer: NodeJS.Timer = setInterval(() => {
-      game.roomBroadcast.emit('gameStartCount', `${counting}`);
+      game.broadcastToRoom('gameStartCount', `${counting}`);
       counting--;
       if (counting < 0) {
         clearInterval(timer);
@@ -409,6 +405,7 @@ export class GameEnv {
   }
 
   async startGame(game: GameAttribute): Promise<void> {
+    if (!game || !game.secondPlayer) return;
     game.gameStart();
 
     const userP1 = await this.getUserByPlayer(game.firstPlayer);
@@ -445,7 +442,7 @@ export class GameEnv {
     console.log(`game is finished ${game.roomId}`);
     game.isPlaying = false;
     this.postGameProcedure(game);
-    game.roomBroadcast.emit('gameFinished');
+    game.broadcastToRoom('gameFinished');
     await this.writeMatchResult(game);
 
     const userP1 = await this.getUserByPlayer(game.firstPlayer);
@@ -493,19 +490,4 @@ export class GameEnv {
     newRecord.winnerId = winnerId;
     await newRecord.save();
   }
-
-  // sendMatchData(user1: User, user2: User): boolean {
-  //   const player1 = this.gameEnv.getPlayerByUserId(user1.id);
-  //   if (!player1) return false;
-
-  //   if (user2) {
-  //     const player2 = this.gameEnv.getPlayerByUserId(user2.id);
-  //     if (!player2) return false;
-  //     if (player1.gamePlaying !== player2.gamePlaying) return false;
-  //   }
-
-  //   this.server
-  //     .to(player1.gamePlaying.toString())
-  //     .emit('matchData', user1.toGamerInfoDto(), user2?.toGamerInfoDto());
-  // }
 }

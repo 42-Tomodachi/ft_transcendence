@@ -1,5 +1,3 @@
-import { BroadcastOperator } from 'socket.io';
-import { DefaultEventsMap } from 'socket.io/dist/typed-events';
 import {
   CreateGameRoomDto,
   GameResultDto,
@@ -22,7 +20,6 @@ export class GameAttribute {
   isPublic: boolean;
   isPlaying: boolean;
   rtData: GameRtData;
-  roomBroadcast: BroadcastOperator<DefaultEventsMap, any>;
   isSocketUpdated: boolean;
   streaming: NodeJS.Timer | null;
 
@@ -43,7 +40,6 @@ export class GameAttribute {
     this.isPublic = !createGameRoomDto.password ? true : false;
     this.isPlaying = false;
     this.rtData = new GameRtData();
-    this.roomBroadcast = null;
     this.isSocketUpdated = false;
     this.streaming = null;
   }
@@ -123,8 +119,14 @@ export class GameAttribute {
     }
     // console.log(`sending ${rtData.toRtData()}`); // this line test only
     // rtLogger.log(500, `sending ${rtData.toRtData()}`);
-    this.roomBroadcast.emit('rtData', rtData.toRtData());
+    this.broadcastToRoom('rtData', rtData.toRtData());
     rtData.updateFlag = false;
+  }
+
+  broadcastToRoom(event: string, ...data: any[]): void {
+    const socket = this.firstPlayer.socketPlayingGame;
+    socket.to(this.roomId.toString()).emit(event, ...data);
+    socket.emit(event, ...data);
   }
 
   gameStart() {

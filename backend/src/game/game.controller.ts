@@ -17,8 +17,6 @@ import {
   CreateGameRoomDto,
   GameRoomPasswordDto,
   GameRoomProfileDto,
-  GameResultDto,
-  GameRoomIdDto,
   SimpleGameRoomDto,
 } from './dto/game.dto';
 import { GameService } from './game.service';

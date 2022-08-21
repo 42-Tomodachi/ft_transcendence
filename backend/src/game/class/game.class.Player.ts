@@ -6,6 +6,7 @@ import { GameAttribute } from './game.class.GameAttribute';
 // }
 export class Player {
   socketLobby: Socket;
+  socketQueue: Socket;
   socketPlayingGame: Socket;
   socketsToGameMap: Map<Socket, GameAttribute>;
   userId: number;
@@ -16,6 +17,7 @@ export class Player {
 
   constructor(userId: number, game: GameAttribute) {
     this.socketLobby = null;
+    this.socketQueue = null;
     this.socketPlayingGame = null;
     this.socketsToGameMap = new Map<Socket, GameAttribute>();
     this.userId = userId;
