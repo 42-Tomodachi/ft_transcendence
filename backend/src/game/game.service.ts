@@ -8,11 +8,10 @@ import {
   CreateGameRoomDto,
   GameRoomProfileDto,
   GameResultDto,
-  GameRoomIdDto,
   SimpleGameRoomDto,
 } from './dto/game.dto';
 import { GameGateway } from './game.gateway';
-import { GameEnv } from './game.gameenv';
+import { GameEnv } from './class/game.class.GameEnv';
 
 // class RtLogger {
 //   lastLogged: number = Date.now();
@@ -118,7 +117,7 @@ export class GameService {
     gameId: number,
     userId: number,
     gamePassword: string | null,
-  ): Promise<GameRoomIdDto> {
+  ): Promise<SimpleGameRoomDto> {
     if (user.id != userId)
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     const player = this.gameEnv.getPlayerByUserId(userId);
@@ -127,22 +126,22 @@ export class GameService {
     if (game == null) throw new BadRequestException('게임을 찾을 수 없습니다.');
     if (game.password != gamePassword)
       throw new BadRequestException('잘못된 비밀번호.');
-
-    // 동일 유저의 재입장 막아야함
-    if (player.gamePlaying?.roomId === gameId)
+    if (player.isJoinedRoom(game))
       throw new BadRequestException('이미 입장 된 방입니다.');
 
-    if (!game.secondPlayer) {
-      game.secondPlayer = player;
-      // 소켓: 로비에 변경사항 반영
-      player.gamePlaying = game;
-    } else {
-      game.spectators.push(player);
-      player.gamesWatching.push(game);
-    }
-    game.playerCount++;
+    const peopleCount = this.gameEnv.joinPlayerToGame(player, game);
+    console.log(
+      `Player ${player.userId} joined room ${game.roomId}, ${peopleCount}`,
+    );
+    // 소켓: 로비에 변경사항 반영
 
-    return { gameId: gameId };
+    const gameRoomDto = new SimpleGameRoomDto();
+    gameRoomDto.gameMode = game.gameMode;
+    gameRoomDto.ownerId = game.ownerId;
+    gameRoomDto.roomTitle = game.roomTitle;
+    gameRoomDto.gameId = gameId;
+
+    return gameRoomDto;
   }
 
   async exitGameRoom(
