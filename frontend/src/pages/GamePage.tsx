@@ -61,7 +61,7 @@ const GamePage: React.FC = () => {
         multiplex: false,
         query: {
           userId: user && user.userId,
-          connectionType: playingGameInfo.gameMode ? 'ladderGame' : 'normalGame',
+          connectionType: playingGameInfo.gameLadder ? 'ladderGame' : 'normalGame',
         },
       });
 

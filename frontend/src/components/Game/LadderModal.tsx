@@ -22,7 +22,7 @@ const LadderModal: React.FC = () => {
       multiplex: false,
       query: {
         userId: user?.userId,
-        connectionType: 'ladderGame',
+        connectionType: 'ladderQueue',
       },
     });
 
