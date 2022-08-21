@@ -161,7 +161,7 @@ export class ChatService {
     const { id: createdChatContentId } = await this.chatContentsRepo.save({
       chatRoomId: roomId,
       userId: targetUserId,
-      content: `님이 강퇴당했습니다.`,
+      content: `님이 일정 시간동안 강퇴당했습니다.`,
       isNotice: true,
     });
 
@@ -172,6 +172,65 @@ export class ChatService {
     );
     this.chatGateway.emitChatRoomParticipants(roomId.toString());
     this.chatGateway.disconnectUser(roomId, targetUserId);
+  }
+
+  async kickUser(
+    user: User,
+    roomId: number,
+    callingUserId: number,
+    targetUserId: number,
+  ) {
+    if (user.id !== callingUserId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
+    if (!room) {
+      throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    }
+    const targetChatParticipant = await ChatParticipant.findOneBy({
+      userId: targetUserId,
+      chatRoomId: roomId,
+    });
+    if (!targetChatParticipant) {
+      throw new BadRequestException('존재하지 않는 참여자입니다.');
+    }
+    if (targetChatParticipant.isBanned) {
+      throw new BadRequestException('이미 강퇴당한 유저입니다.');
+    }
+    if (room.isDm === true) {
+      throw new BadRequestException('DM방 입니다.');
+    }
+    if (targetChatParticipant.role === 'owner') {
+      throw new BadRequestException('방장을 강퇴할 수 없습니다.');
+    }
+    const callingChatParticipant = await ChatParticipant.findOneBy({
+      userId: callingUserId,
+      chatRoomId: roomId,
+    });
+    if (callingChatParticipant.role === 'guest') {
+      throw new BadRequestException('권한이 없는 사용자입니다.');
+    }
+    console.log('\n ### 2');
+
+    await this.chatParticipantRepo.remove(targetChatParticipant);
+
+    // 강퇴 메세지 db에 저장
+    const { id: createdChatContentId } = await this.chatContentsRepo.save({
+      chatRoomId: roomId,
+      userId: targetUserId,
+      content: `님이 강퇴당했습니다.`,
+      isNotice: true,
+    });
+    console.log('\n ### 3');
+
+    // 채널 유저들에게 강퇴 메세지 전송
+    this.chatGateway.sendNoticeMessage(
+      roomId,
+      await this.getChatContentDtoForEmit(createdChatContentId),
+    );
+    this.chatGateway.emitChatRoomParticipants(roomId.toString());
+    this.chatGateway.disconnectUser(roomId, targetUserId);
+    console.log('\n ### 4');
   }
 
   async getParticipatingChatRooms(
