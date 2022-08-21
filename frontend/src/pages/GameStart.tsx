@@ -79,7 +79,10 @@ const GameStart: React.FC = () => {
   const obstacle = function obstacle(ctx: CanvasRenderingContext2D): void {
     if (playingGameInfo.gameMode === 'obstacle') {
       ctx.fillStyle = '#FFB562';
-      ctx.fillRect(450, 300, 100, 100);
+      ctx.fillRect(450, 300, 100, 100); // x, y, width, height
+      ctx.fillRect(200, 300, 100, 20);
+      ctx.fillRect(300, 300, 20, 100);
+      ctx.fillRect(200, 400, 120, 20);
     }
   };
 
@@ -105,10 +108,9 @@ const GameStart: React.FC = () => {
       // 엑스 벨로시티에 대한, 충돌
       if (gameInfo.ballVelo_X > 0) return -1;
       else return 1;
+    } else {
+      if (gameInfo.ballP_Y >= 45 && gameInfo.ballP_Y <= 55) return -1;
     }
-    // else {
-    //   if (gameInfo.ballP_Y >= 45 && gameInfo.ballP_Y <= 55) return -1;
-    // }
     return 1;
   };
 
@@ -183,13 +185,13 @@ const GameStart: React.FC = () => {
   // 공의 진행이나 리셋값을 반환합니다.
   const ballAction = (pos: number, velo: number, id: string) => {
     if (testReturn(gameInfo) === 'rightgoal' || testReturn(gameInfo) === 'leftgoal') return 50;
-    // else if (testReturn(gameInfo) === 'leftHit') {
-    //   if (id === 'X') return 10;
-    //   else return gameInfo.ballP_Y;
-    // } else if (testReturn(gameInfo) === 'rightHit') {
-    //   if (id === 'X') return 91;
-    //   else return gameInfo.ballP_Y;}
-    else if (testReturn(gameInfo) === 'obstacleHit') {
+    else if (testReturn(gameInfo) === 'leftHit') {
+      if (id === 'X') return 10;
+      else return gameInfo.ballP_Y;
+    } else if (testReturn(gameInfo) === 'rightHit') {
+      if (id === 'X') return 91;
+      else return gameInfo.ballP_Y;
+    } else if (testReturn(gameInfo) === 'obstacleHit') {
       if (gameInfo.ballVelo_X > 0) {
         if (id === 'X') return 44;
         else return gameInfo.ballP_Y;
@@ -304,33 +306,18 @@ const GameStart: React.FC = () => {
     // 사용하면 React는 이 내부 함수에서 제공하는 상태 스냅샷이 항상 최신 상태 스냅샷이 되도록 보장하며 모든 예약된 상태 업데이트를 염두에 두고 있다.
     // 이것은 항상 최신 상태 스냅샷에서 작업하도록 하는 더 안전한 방법이다.
     // 따라서 상태 업데이트가 이전 상태에 따라 달라질 때마다 여기에서 이 함수 구문을 사용하는 것이 좋다.
+    // 이전에 패들좌표보내는조건 player === 'p1' && calculateOn[0] === false || player === 'p2' && calculateOn[1] === false
     if (user && user.socket && user.socket.connected) {
       if (
         (player === 'p1' && calculateOn[0] === true) ||
         (player === 'p2' && calculateOn[1] === true)
       ) {
         await test();
-        // setGameInfo(gameInfo => {
-        //   return {
-        //     ...gameInfo,
-        //     ballP_X: ballAction(gameInfo.ballP_X, gameInfo.ballVelo_X, 'X'),
-        //     ballP_Y: ballAction(gameInfo.ballP_Y, gameInfo.ballVelo_Y, 'Y'),
-        //     leftPaddlePos: getPaddlePos(player, 'left'),
-        //     rightPaddlePos: getPaddlePos(player, 'right'),
-        //     player: player === 'p1' ? 1 : 2,
-        //     ballVelo_X: getXvelo(),
-        //     ballVelo_Y: getYvelo(),
-        //     turn: getTurn(),
-        //     checkPoint: getCheckPoint(),
-        //   };
-        // });
         user.socket.emit('calculatedRTData', gameInfo);
-      }
-      // else if (
-      //   (player === 'p1' && calculateOn[0] === false) ||
-      //   (player === 'p2' && calculateOn[1] === false)
-      // )
-      else if ((player === 'p1' && gameInfo.turn === 2) || (player === 'p2' && gameInfo.turn === 1))
+      } else if (
+        (player === 'p1' && gameInfo.turn === 2) ||
+        (player === 'p2' && gameInfo.turn === 1)
+      )
         user.socket.emit('paddleRTData', mouseY);
     }
   };
@@ -340,6 +327,28 @@ const GameStart: React.FC = () => {
   useEffect(() => {
     getData();
     return () => {
+      console.log('jusnelee: 여기 들어오는순간. 끝났다는것이지.');
+      playing[0] = true;
+      paddlepaddle[0] = 40;
+      paddlepaddle[1] = 40;
+      calculateOn[0] = true;
+      calculateOn[1] = false;
+      //끝났으니까 초기화후 렌더
+      setGameInfo(() => {
+        return {
+          ballP_X: 50,
+          ballP_Y: 50,
+          ballVelo_X: -1,
+          ballVelo_Y: 0,
+          leftPaddlePos: 40,
+          rightPaddlePos: 40,
+          player: 1,
+          turn: 1,
+          leftScore: 0,
+          rightScore: 0,
+          checkPoint: false,
+        };
+      });
       if (user)
         if (user.socket) {
           console.log('socket disconnect:' + user.socket.id);
@@ -386,7 +395,7 @@ const GameStart: React.FC = () => {
           (data[6] === 2 && player === 'p2' && calculateOn[1] === false) ||
           (data[6] === 1 && player === 'p1' && calculateOn[0] === false)
         ) {
-          setGameInfo(gameInfo => {
+          setGameInfo(() => {
             return {
               ...gameInfo,
               ballP_X: ballball[0],
@@ -406,12 +415,20 @@ const GameStart: React.FC = () => {
             calculateOn[0] = true;
             calculateOn[1] = false;
           }
+          console.log(playingGameInfo.gameLadder);
+          // if (playingGameInfo.gameLadder === false && (data[8] === 9 || data[9] === 9)) {
+          //   playing[0] = false;
+          //   playing[1] =
+          //     point[0] > point[1]
+          //       ? playingGameInfo.oneNickname.toUpperCase()
+          //       : playingGameInfo.twoNickname.toUpperCase();
+          // }
         }
       });
     } else console.log('ERROR: user undefined');
     return () => {
       //끝났으니까 초기화후 렌더
-      setGameInfo(gameInfo => {
+      setGameInfo(() => {
         return {
           ballP_X: 50,
           ballP_Y: 50,
@@ -468,7 +485,6 @@ const GameStart: React.FC = () => {
       console.log('second');
     }
     return () => {
-      console.log('여기 들어오는순간.');
       if (user) {
         user.socket.off('rtData');
         user.socket.disconnect();
@@ -481,7 +497,7 @@ const GameStart: React.FC = () => {
   // 다른하나는, 분기조건을 다른방식으로 하는법.
   // 오늘은 이거 해결하고, 지호킴님이 백엔드 해결해놓으면, 합쳐서 테스트한다.
   // 앞에서 소켓을 연결해버리니까 이제 소켓이 무조건 있어버리네,
-  if (user && user.socket && user.socket.connected) {
+  if (playing[0] === true) {
     return (
       <Background>
         <GameRoomContainer>
