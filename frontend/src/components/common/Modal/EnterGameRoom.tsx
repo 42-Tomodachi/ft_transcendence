@@ -12,11 +12,19 @@ const EnterGameRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
   const navigate = useNavigate();
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo; // roomid기억하자.
 
   const checkPwd = async () => {
     if (user && user.jwt) {
       const res = await gameAPI.enterGameRoom(roomId, user.userId, inputPwd, user.jwt);
-      if (res !== -1) {
+      // if (res !== -1) { 이제 안쓸거지만 정상작동하는거 눈으로 확인할때까진 주석.
+      if (res && res.gameId !== undefined) {
+        console.log('입장할때 게임모드 : ' + res.gameMode);
+        setPlayingGameInfo({
+          ...playingGameInfo,
+          gameRoomId: res.gameId,
+          gameMode: res.gameMode,
+        }); // 그럼이제 전역으로 모드를 들고다닐수 있게 된거심.
         setErrMsg('');
         setModal(null);
         navigate(`/gameroom/${roomId}`);

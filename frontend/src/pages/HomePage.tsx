@@ -9,9 +9,13 @@ import Chat from '../components/Chat';
 import { AllContext } from '../store';
 import { usersAPI } from '../API';
 
+import { io, Socket } from 'socket.io-client';
+
 interface HomePageProps {
   menu?: MenuType;
 }
+
+let socket: Socket;
 
 const HomePage: React.FC<HomePageProps> = ({ menu }) => {
   const { setUser, user } = useContext(AllContext).userData;
@@ -25,6 +29,31 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
         }
       };
       getWinLoseCount();
+    }
+    if (menu === 'CHAT') {
+      socket = io(`${process.env.REACT_APP_BACK_API}/ws-chatLobby`, {
+        transports: ['websocket'],
+        multiplex: false,
+        query: {
+          userId: user && user.userId,
+        },
+      });
+    } else if (menu === 'GAME') {
+      console.log('hello Game world!');
+      // TODO: Game로비 연결부
+      socket = io(`${process.env.REACT_APP_BACK_API}`, {
+        transports: ['websocket'],
+        multiplex: false,
+        query: {
+          userId: user && user.userId,
+          connectionType: 'gameLobby',
+        },
+      });
+      socket.on('message', () => {
+        console.log(` 로비 connected socket : ${socket.id}`);
+        console.log(socket.connected); // true
+        if (user) user.socket = socket;
+      });
     }
   }, [menu]);
 

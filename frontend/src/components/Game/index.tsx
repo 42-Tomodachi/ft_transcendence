@@ -23,7 +23,7 @@ const Game: React.FC = () => {
     }
   }, []);
   const creatMatch = async () => {
-    console.log('creatMatch!!!!!!');
+    console.log('junselee: 래더게임매칭버튼이 눌렸고, 이제 모달을 띄울거다.(Game/)');
     //모달 표시해주고
     setModal(LOADING_LADDER_GAME);
     //await new Promise(resolve => setTimeout(resolve, 3000));

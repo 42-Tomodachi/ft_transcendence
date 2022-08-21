@@ -45,14 +45,19 @@ const MakeGameRoom: React.FC = () => {
     if (user) {
       const res = await gameAPI.makeGameRoom(
         user.userId,
-        roomName,
+        '[' + gameMode + '] ' + roomName,
         password.length ? password : null,
         gameMode,
         user.jwt,
       );
+      console.log('게임모드: ' + gameMode);
       //지호킴님 수정요청222
       if (res && res.gameId !== undefined) {
-        setPlayingGameInfo({ ...playingGameInfo, gameRoomId: res.gameId });
+        setPlayingGameInfo({
+          ...playingGameInfo,
+          gameRoomId: res.gameId,
+          gameMode: res.gameMode,
+        }); // 그럼이제 전역으로 모드를 들고다닐수 있게 된거심.
         setModal(null);
         navigate(`/gameroom/${res.gameId}`);
       }

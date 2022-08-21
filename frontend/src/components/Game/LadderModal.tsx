@@ -16,36 +16,41 @@ const LadderModal: React.FC = () => {
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   useEffect(() => {
+    // 소켓연결 하고
     socket = io(`${process.env.REACT_APP_BACK_API}`, {
-      transports: ['websocket'], // 웹소켓으로 간다는걸 알려준다. 구글링.
+      transports: ['websocket'],
+      multiplex: false,
       query: {
         userId: user?.userId,
+        connectionType: 'ladderGame',
       },
     });
-    socket.on('message', () => {
-      console.log(`래더 connected socket : ${socket.id}`);
-      console.log(socket.connected); // true
-      if (user) user.socket = socket;
-    });
 
-    // 래더매치를 신청한 유저이름을 서버로 보내고,
-    const data = user?.userId;
-    console.log('유저아이디 뭐야 : ' + data);
-    socket.emit('newLadderGame', data);
+    socket.on('message', data => {
+      console.log(`junselee: 모달들어와서 소켓연결했다.(Game/)`);
+      console.log(`junselee: 연결된 소켓 아이디는.. : ${socket.id}`);
+    });
 
     // 매치가 완료됐다고 서버한테 연락받으면
     socket.on('matchingGame', (roomId: number) => {
       test[0] = false;
       setModal(null);
       if (user) {
-        setPlayingGameInfo({ ...playingGameInfo, gameRoomId: roomId });
+        setPlayingGameInfo({
+          ...playingGameInfo,
+          gameRoomId: roomId,
+          gameMode: 'normal',
+          gameLadder: true,
+        });
       }
+
       navigate(`/gameroom/${roomId}`); //GamePage.tsx
     });
     return () => {
-      // 매칭도 아니고, 취소도 아니면 ! 백그라운드일 뿐이니까 !!
-      if (test[0] === true) socket.emit('cancelLadderQueue');
-      setModal(null);
+      console.log(`junselee: 모달이 종료되니, 이벤트랑 소켓 지우겠다.(Game/)`);
+      socket.off('matchingGame');
+      socket.off('message');
+      socket.disconnect();
     };
   }, []);
   return (

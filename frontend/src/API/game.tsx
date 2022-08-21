@@ -54,12 +54,14 @@ const gameAPI = {
   //   }
   // },
   // POST /games/{gameId}/users/{userId} - enterGameRoom
+
+  // 이쪽도 수정이 필요하긴 하겠다.
   enterGameRoom: async (
     gameId: number,
     userId: number,
     password: string,
     jwt: string,
-  ): Promise<number> => {
+  ): Promise<IGameRoomInfo | null> => {
     try {
       const url = gamePath(`/${gameId}/users/${userId}`);
       const res = await instance.post(
@@ -71,7 +73,7 @@ const gameAPI = {
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
-      return -1;
+      return null;
     }
   },
   // DELETE /games/{gameId}/users/{userId} - leaveGameRoom

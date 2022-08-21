@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME, UPDATE_USER } from '../utils/interface';
+import { GAME, UPDATE_USER, PLAY } from '../utils/interface';
 import { AllContext } from '../store';
 import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
@@ -29,6 +29,7 @@ const GamePage: React.FC = () => {
   let socket: Socket;
   const [gameStart, setGameStart] = useState(false);
   const { user, setUser } = useContext(AllContext).userData;
+  // const { setUserStatus } = useContext(AllContext).userStatus;
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
   const [count, setCount] = useState(5); //오피셜은 10초
   const [info, setInfo] = useState<GameInfoDto>({
@@ -51,17 +52,32 @@ const GamePage: React.FC = () => {
   useEffect(() => {
     const win: HTMLElement | null = document.getElementById('win');
     const win2: HTMLElement | null = document.getElementById('win2');
-    // if (win) win.style.width = `${(num[0] / (num[0] + num[1])) * 100}%`;
-    // if (win2) win2.style.width = `${(num[1] / (num[1] + num[0])) * 100}%`;
-    if (user) {
-      if (user && user.socket && user.socket.connected) {
-        console.log('onMatchingScreen');
-        user.socket.emit('onMatchingScreen', roomid);
 
-        //return gamerInfoDto;
-        //유저의 닉네임이 들어올거고 난 이걸 자기닉넴과 비교해서 기억해 둬야지
-        //ladderWinCount, laddeLoseCount로 들어옵니다. 확인하세여
-        user.socket.on('matchData', (p1: any, p2: any) => {
+    if (user) {
+      //이제 무조건 소켓을 연결할겁니다. 커넥션타입을 어떻게 분기해줄것인지.. 생각해봅시다.
+      //gameMode가 아니고, 모달에서 ladder인걸 기록해놓는 무언가 필요한것입니다아...
+      socket = io(`${process.env.REACT_APP_BACK_API}`, {
+        transports: ['websocket'],
+        multiplex: false,
+        query: {
+          userId: user && user.userId,
+          connectionType: playingGameInfo.gameMode ? 'ladderGame' : 'normalGame',
+        },
+      });
+
+      socket.on('message', () => {
+        console.log(` 일반 connected socket : ${socket.id}`);
+        console.log(socket.connected);
+        if (user) user.socket = socket;
+      });
+
+      // 래더든 일반이든 지금 데이터가 필요하다는걸 서버한테 알려주고,
+      // matchData 이벤트로 보내주길..하염없이 기다리는 코드.
+      socket.emit('onMatchingScreen', roomid);
+
+      // gameMode가 아니라 래더인지 아닌지를 알려주는 변수여야함!!
+      if (playingGameInfo.gameLadder === true) {
+        socket.on('matchData', (p1: any, p2: any) => {
           setInfo(info => {
             return {
               nicknameOne: p1.nickname,
@@ -76,6 +92,8 @@ const GamePage: React.FC = () => {
               ladderLevelTwo: p2.ladderLevel,
             };
           });
+
+          // 여기부터끝까지가 래더랑 일반이 구조가 중복되니까. 이 리팩이 무사히 돌아가면 함수로 빼겠다는 계획. 1111
           if (win)
             win.style.width = `${
               (p1.ladderWinCount / (p1.ladderWinCount + p1.ladderLoseCount)) * 100
@@ -84,100 +102,63 @@ const GamePage: React.FC = () => {
             win2.style.width = `${
               (p2.ladderWinCount / (p2.ladderWinCount + p2.ladderLoseCount)) * 100
             }%`;
-          if (user.nickname === p1.nickname)
+          if (user?.nickname === p1.nickname)
             setPlayingGameInfo({ ...playingGameInfo, player: 'p1', oppNickname: p2.nickname });
-          else if (user.nickname === p2.nickname)
+          else if (user?.nickname === p2.nickname)
             setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
         });
-        // 카운트다운이 발생하는 .. 서버에서 10초부터 하나씩 보내줄거고, 카운트가 끝나는순간, GameStart.tsx페이지로 이동하는 순간.
-        user.socket.on('gameStartCount', (data: number) => {
-          console.log('countdown:' + data);
-          setCount(data);
-          if (data == 0) setGameStart(true);
-          // if (data == 0) preRoomId = roomid;
-          //console.log(`장면전환 /gameroom/${roomid}`);
-          //navigate(`/gameroom/${roomid}/playing`);
-        });
       } else {
-        /*
-         * 일반게임이 공개방이던 비공개방이던 장애물맵이던, 스피드맵이던 일단 방으로 들어와야하고
-         * 래더게임매칭모달은 거치고 온게 아니기때문에,  생성된 소켓이 없을거라는말이지, 그럼 여기 else로 오는거야.
-         * 소켓 없으니까 소켓부터 연결해주는거라고,
-         */
-        console.log('방만들면 여기로 왔겠지.');
-        socket = io(`${process.env.REACT_APP_BACK_API}`, {
-          transports: ['websocket'],
-          query: { userId: user.userId },
-        });
-        socket.on('message', () => {
-          console.log(` 일반 connected socket : ${socket.id}`);
-          console.log(socket.connected); // true
-          if (user) user.socket = socket;
-        });
-
-        // setUser(UPDATE_USER, { ...user, socket: socket });
-
-        // 얘가 onGameroomScreen 같은 이름으로 만들어져서 룸아이디를 넘겨주면,
-        // 암튼 얘도 매치데이터를 받아올거고, (socket.on('matchData'))
-        socket.emit('onMatchingScreen', roomid);
-
-        /*
-         * 소켓이 연결되면, 두가지 동작을 서버랑 합의해서 취해야댐,
-         * 어.. 방을 생성한 유저(플레이어1)은 래더와 마찬가지로 자기가 p1인지를 알아야겠지.
-         * 자기정보를 왼편에 표시할수있어야 될거야,
-         * 같은 roomid로 대결을 하고 싶은 유저가 들어오면(플레이어2), 서버는 카운트를 시작해야되는데,
-         * 사실이거를 매칭큐처럼 작성할건지 어떡할건지. , 아니면 클라이언트 쪽에서 해야되는건지 모르겟음.
-         * 암튼 유저정보를 표시하는것은 나는 매치데이터 이벤트로 관리할수있도록 합의되어있으니까 그걸로 받아서 처리할것임.
-         * */
+        // 래더가 아닐때의 소켓온
         socket.on('matchData', (p1: any, p2: any) => {
           setInfo(info => {
             return {
               nicknameOne: p1.nickname,
               avatarOne: p1.avatar,
-              winCountOne: p1.ladderWinCount,
-              loseCountOne: p1.ladderLoseCount,
+              winCountOne: p1.winCount,
+              loseCountOne: p1.loseCount,
               ladderLevelOne: p1.ladderLevel,
               nicknameTwo: p2 ? p2.nickname : info.nicknameTwo,
               avatarTwo: p2 ? p2.avatar : info.avatarTwo,
-              winCountTwo: p2 ? p2.ladderWinCount : info.ladderLevelTwo,
-              loseCountTwo: p2 ? p2.ladderLoseCount : info.loseCountTwo,
+              winCountTwo: p2 ? p2.winCount : info.winCountTwo,
+              loseCountTwo: p2 ? p2.loseCount : info.loseCountTwo,
               ladderLevelTwo: p2 ? p2.ladderLevel : info.ladderLevelTwo,
             };
           });
-          if (user.nickname === p1.nickname)
-            setPlayingGameInfo({ ...playingGameInfo, player: 'p1', oppNickname: p2.nickname });
-          else if (user.nickname === p2.nickname)
-            setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
-        });
+          // 전적표시 바를 승률에 맞게 커스텀 하는 부분
+          // 여기부터끝까지가 래더랑 일반이 구조가 중복되니까. 이 리팩이 무사히 돌아가면 함수로 빼겠다는 계획. 2222
+          if (win) win.style.width = `${(p1.winCount / (p1.winCount + p1.loseCount)) * 100}%`;
+          if (win2 && p2)
+            win2.style.width = `${(p2.winCount / (p2.winCount + p2.loseCount)) * 100}%`;
 
-        console.log('매치게임이 아니면 user.socket이 없을테니까 일로 오겟지.');
-        socket.on('gameStartCount', (data: number) => {
-          console.log('countdown:' + data);
-          setCount(data);
-          if (data == 0) {
-            setGameStart(true);
-          }
+          // 플레이어가 p1이거나 p2이거나, g1임 (관전자)
+          if (user?.nickname === p1.nickname)
+            setPlayingGameInfo({
+              ...playingGameInfo,
+              player: 'p1',
+              oppNickname: p2 ? p2.nickname : info.nicknameTwo,
+            });
+          else if (user?.nickname === p2.nickname)
+            setPlayingGameInfo({ ...playingGameInfo, player: 'p2', oppNickname: p1.nickname });
+          else setPlayingGameInfo({ ...playingGameInfo, player: 'g1' });
         });
       }
+      socket.on('gameStartCount', (data: number) => {
+        console.log('countdown:' + data);
+        setCount(data);
+        if (data == 0) {
+          setGameStart(true);
+        }
+      });
     }
     return () => {
-      if (user && user.socket && user.socket.connected) {
-        user.socket.off('gameStartCount');
-        user.socket.off('matchData');
-      }
       console.log('일로오긴해?: ' + roomid);
-      if (socket) {
-        console.log('그래 소켓도있겟지. 근데 지금 roomTerminated가 없어서 방폭파 테스트는 못해.');
-        socket.off('matchData');
-        socket.emit('roomTerminated', roomid); // 백쪽에서 아직 작업이 안되어있다고함.
-        socket.disconnect();
-      }
+      socket.off('gameStartCount');
+      socket.off('matchData');
     };
   }, [roomid]);
 
   // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
   // 함수형으로 반환하는 느낌으로 ..
-  // 얘가 한번 ture로 바껴버리면, 리프레쉬 되기전까진 계속 true인 문제가 있음.
   if (gameStart === false)
     return (
       <Background>
