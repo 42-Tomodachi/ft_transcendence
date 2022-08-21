@@ -29,22 +29,20 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     );
     if (!userId) {
       console.log(`connection: New client has no userId`);
-      client.emit('message', 'no userId');
+      client.send('no userId');
       client.disconnect();
     }
-    this.gameEnv.onFirstSocketHandshake(this, client, userId, connectionType);
-    console.log(`New client connected: ${client.id}`);
-    client.emit('message', `New client connected: ${client.id}`);
+    this.gameEnv.onFirstSocketHandshake(client, userId, connectionType);
   }
 
   handleDisconnect(client: Socket): void {
+    const connectionType = client.handshake.query['connectionType']?.toString();
+    const player = this.gameEnv.getPlayerBySocket(client);
+    if (connectionType === 'ladderGame') {
+      player.socketQueue = null;
+    } else {
+    }
     this.gameEnv.clearPlayerSocket(client);
-    console.log(`Client disconnected: ${client.id}`);
-  }
-
-  @SubscribeMessage('newLadderGame')
-  async newLadderGame(client: Socket, userId: number): Promise<void> {
-    this.gameEnv.enlistLadderQueue(this, client);
   }
 
   @SubscribeMessage('cancelLadderQueue')
