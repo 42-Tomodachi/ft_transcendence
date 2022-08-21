@@ -146,21 +146,21 @@ const GamePage: React.FC = () => {
               ...playingGameInfo,
               player: 'p1',
               oneNickname: p1.nickname,
-              twoNickname: p2.nickname,
+              twoNickname: p2?.nickname,
             });
-          else if (user?.nickname === p2.nickname)
+          else if (user?.nickname === p2?.nickname)
             setPlayingGameInfo({
               ...playingGameInfo,
               player: 'p2',
               oneNickname: p1.nickname,
-              twoNickname: p2.nickname,
+              twoNickname: p2?.nickname,
             });
           else {
             setPlayingGameInfo({
               ...playingGameInfo,
               player: 'g1',
               oneNickname: p1.nickname,
-              twoNickname: p2.nickname,
+              twoNickname: p2?.nickname,
             });
           }
         });
