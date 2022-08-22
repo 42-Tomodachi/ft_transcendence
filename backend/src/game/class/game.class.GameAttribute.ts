@@ -21,7 +21,7 @@ export class GameAttribute {
   isPlaying: boolean;
   rtData: GameRtData;
   isSocketUpdated: boolean;
-  streaming: NodeJS.Timer | null;
+  timers: Map<string, NodeJS.Timer>;
 
   constructor(
     roomId: number,
@@ -41,7 +41,7 @@ export class GameAttribute {
     this.isPlaying = false;
     this.rtData = new GameRtData();
     this.isSocketUpdated = false;
-    this.streaming = null;
+    this.timers = new Map();
   }
 
   toGameRoomProfileDto(): GameRoomProfileDto {
@@ -84,6 +84,7 @@ export class GameAttribute {
     players.unshift(this.firstPlayer);
     return players;
   }
+
   initGameData(): void {
     this.isPlaying = false;
     delete this.rtData;

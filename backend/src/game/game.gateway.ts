@@ -37,12 +37,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket): void {
     const connectionType = client.handshake.query['connectionType']?.toString();
-    const player = this.gameEnv.getPlayerBySocket(client);
-    if (connectionType === 'ladderGame') {
-      player.socketQueue = null;
-    } else {
-    }
-    this.gameEnv.clearPlayerSocket(client);
+    this.gameEnv.onSocketDisconnect(client, connectionType);
   }
 
   @SubscribeMessage('cancelLadderQueue')
@@ -51,8 +46,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('onMatchingScreen')
-  async onMatchingScreen(client: Socket): Promise<void> {
-    await this.gameEnv.waitForPlayerJoins(client);
+  async onMatchingScreen(client: Socket, gameId: number): Promise<void> {
+    await this.gameEnv.waitForPlayerJoins(client, gameId);
   }
 
   @SubscribeMessage('calculatedRTData')

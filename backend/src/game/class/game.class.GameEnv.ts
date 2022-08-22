@@ -167,6 +167,33 @@ export class GameEnv {
     client.send(`New client connected: ${client.id}`);
   }
 
+  onSocketDisconnect(client: Socket, connectionType: string): void {
+    const player = this.getPlayerBySocket(client);
+    this.socketIdToPlayerMap[client.id] = player;
+
+    switch (connectionType) {
+      case 'gameLobby':
+        player.socketLobby = null;
+        break;
+      case 'ladderQueue':
+        player.socketQueue = null;
+        this.cancelLadderWaiting(client);
+        break;
+      case 'ladderGame':
+        this.clearPlayerSocket(client);
+        break;
+      case 'normalGame':
+        this.clearPlayerSocket(client);
+        break;
+      default:
+        const message = `ConnectionHandler: ${connectionType} is not a correct type of connection.`;
+        console.log(message);
+        client.send(message);
+    }
+    console.log(`New client connected: ${client.id}`);
+    client.send(`New client connected: ${client.id}`);
+  }
+
   clearPlayerSocket(client: Socket): void {
     const player = this.socketIdToPlayerMap[client.id];
     if (player === undefined) return;
@@ -327,8 +354,6 @@ export class GameEnv {
     this.eraseFromSocketMap(client);
     const index = this.ladderQueue.indexOf(this.getPlayerBySocket(client));
     this.ladderQueue.splice(index, 1);
-
-    client.disconnect();
   }
 
   makeLadderMatch(): GameAttribute {
@@ -361,9 +386,17 @@ export class GameEnv {
     return gameRoom;
   }
 
-  async waitForPlayerJoins(client: Socket): Promise<void> {
+  async waitForPlayerJoins(client: Socket, gameId: number): Promise<void> {
     const player = this.getPlayerBySocket(client);
-    const game = player.gamePlaying;
+    const game = this.getGameRoom(gameId);
+    const isPlaying: boolean = player.gamePlaying === game;
+    if (!isPlaying && player.gamesWatching.get(game) !== client) {
+      console.log(
+        `waitForPlayerJoins: ${player.userId} sent wrong roomNo.${gameId}`,
+      );
+      client.send('Error: recieved wrong room number');
+      return;
+    }
 
     const player1asUser: User = await this.userRepo.findOne({
       where: { id: game.firstPlayer.userId },
