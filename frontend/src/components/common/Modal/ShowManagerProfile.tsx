@@ -3,7 +3,12 @@ import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
 import { AllContext } from '../../../store';
-import { CHECK_SCORE, BAN_OR_KICK_MODAL, IUserData } from '../../../utils/interface';
+import {
+  CHECK_SCORE,
+  BAN_OR_KICK_MODAL,
+  FIGHT_RES_MODAL,
+  IUserData,
+} from '../../../utils/interface';
 import { useNavigate } from 'react-router-dom';
 import { chatsAPI, usersAPI } from '../../../API';
 import defaultProfile from '../../../assets/default-image.png';
@@ -57,16 +62,6 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
     }
     console.log('block');
   };
-
-  const onClickBan = async () => {
-    if (target && user) {
-      const res = await chatsAPI.banUserInChatRoom(roomId, user.userId, target.userId, user.jwt);
-      console.log('ban');
-      if (res) {
-        setModal(null);
-      } // TODO: 경고 noti, 방 주인한테 밴
-    }
-  };
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
@@ -78,6 +73,10 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   };
   const onApplyGame = async () => {
     console.log('send msg');
+    if (target) {
+      // TODO: 실시간으로 해당 타겟이 대전 가능한 상대인지  확인 필요
+      setModal(FIGHT_RES_MODAL, target.userId);
+    }
   };
   const onSendDm = async () => {
     if (user && target) {
