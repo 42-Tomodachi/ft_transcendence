@@ -19,6 +19,7 @@ import EditMyProfile from './EditMyProfile';
 import CheckScore from './CheckScore';
 import Modal from '.';
 import { useLocation } from 'react-router-dom';
+import BanOrKickModal from './BanOrKickModal';
 
 const ModalSet: React.FC = () => {
   const { modal, setModal } = useContext(AllContext).modalData;
@@ -53,6 +54,7 @@ const ModalSet: React.FC = () => {
               강퇴당한 채팅방입니다.
             </Modal>
           ),
+          BAN_OR_KICK_MODAL: <BanOrKickModal roomId={modal.roomId} userId={modal.userId} />,
         }[modal.modal]}
     </>
   );

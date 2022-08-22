@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
 import defaultProfile from '../../../assets/default-image.png';
-import { CHECK_SCORE, IUserData } from '../../../utils/interface';
+import { BAN_OR_KICK_MODAL, CHECK_SCORE, IUserData } from '../../../utils/interface';
 import { AllContext } from '../../../store';
 import { chatsAPI, usersAPI } from '../../../API';
 import { useNavigate } from 'react-router-dom';
@@ -98,6 +98,11 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
       }
     }
   };
+  const handleKickOrBan = async () => {
+    if (target) {
+      setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
+    }
+  };
 
   return (
     <>
@@ -164,8 +169,20 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
                   height={40}
                   onClick={onClickBlock}
                 />
-                <Button color="white2" text="밴" width={200} height={40} onClick={onClickBan} />
-                <Button color="white2" text="뮤트" width={200} height={40} onClick={onToggleMute} />
+                <Button
+                  color="white2"
+                  text="강퇴 & 입장금지"
+                  width={200}
+                  height={40}
+                  onClick={handleKickOrBan}
+                />
+                <Button
+                  color="white2"
+                  text="음소거"
+                  width={200}
+                  height={40}
+                  onClick={onToggleMute}
+                />
                 <Button
                   color="gradient"
                   text={target.role === 'manager' ? '관리자 권한 해제' : '관리자 권한 주기'}

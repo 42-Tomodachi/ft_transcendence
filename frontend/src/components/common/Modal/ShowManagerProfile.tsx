@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
 import { AllContext } from '../../../store';
-import { CHECK_SCORE, IUserData } from '../../../utils/interface';
+import { CHECK_SCORE, BAN_OR_KICK_MODAL, IUserData } from '../../../utils/interface';
 import { useNavigate } from 'react-router-dom';
 import { chatsAPI, usersAPI } from '../../../API';
 import defaultProfile from '../../../assets/default-image.png';
@@ -89,6 +89,11 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
       }
     }
   };
+  const handleKickOrBan = async () => {
+    if (target) {
+      setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
+    }
+  };
 
   return (
     <>
@@ -155,8 +160,20 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
                   height={40}
                   onClick={onClickBlock}
                 />
-                <Button color="white2" text="밴" width={200} height={40} onClick={onClickBan} />
-                <Button color="white2" text="뮤트" width={200} height={40} onClick={onToggleMute} />
+                <Button
+                  color="white2"
+                  text="강퇴 & 입장금지"
+                  width={200}
+                  height={40}
+                  onClick={handleKickOrBan}
+                />
+                <Button
+                  color="white2"
+                  text="음소거"
+                  width={200}
+                  height={40}
+                  onClick={onToggleMute}
+                />
               </OtherBtnBlock>
             ) : (
               <BanBtnBlock>
