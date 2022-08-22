@@ -15,7 +15,7 @@ export class GameAttribute {
   gameMode: 'normal' | 'speed' | 'obstacle';
   firstPlayer: Player | null;
   secondPlayer: Player | null;
-  watchers: Player[];
+  watchers: Set<Player>;
   playerCount: number;
   isPublic: boolean;
   isPlaying: boolean;
@@ -35,7 +35,7 @@ export class GameAttribute {
     this.gameMode = createGameRoomDto.gameMode;
     this.firstPlayer = player1;
     this.secondPlayer = null;
-    this.watchers = [];
+    this.watchers = new Set();
     this.playerCount = player1 ? 1 : 0;
     this.isPublic = !createGameRoomDto.password ? true : false;
     this.isPlaying = false;
@@ -79,7 +79,8 @@ export class GameAttribute {
   }
 
   getAllPlayers(): Player[] {
-    const players = this.watchers;
+    const players: Player[] = [];
+    for (const player of this.watchers) players.push(player);
     players.unshift(this.secondPlayer);
     players.unshift(this.firstPlayer);
     return players;
@@ -99,6 +100,12 @@ export class GameAttribute {
     this.rtData.updatePaddleRtData(data);
   }
 
+  broadcastToRoom(event: string, ...data: any[]): void {
+    const socket = this.firstPlayer.socketPlayingGame;
+    socket.to(this.roomId.toString()).emit(event, ...data);
+    socket.emit(event, ...data);
+  }
+
   sendRtData(): void {
     const rtData = this.rtData;
     if (rtData.isReadyToSend() == false) {
@@ -110,13 +117,21 @@ export class GameAttribute {
     rtData.updateFlag = false;
   }
 
-  broadcastToRoom(event: string, ...data: any[]): void {
-    const socket = this.firstPlayer.socketPlayingGame;
-    socket.to(this.roomId.toString()).emit(event, ...data);
-    socket.emit(event, ...data);
-  }
+  startCountdown(): void {
+    let counting = 5;
+    this.broadcastToRoom('gameStartCount', `${counting}`);
 
-  gameStart() {
+    const timer: NodeJS.Timer = setInterval(() => {
+      this.broadcastToRoom('gameStartCount', `${counting}`);
+      counting--;
+      if (counting < 0) {
+        clearInterval(timer);
+        // this.startGame(game); // careful: async
+        this.gameStart();
+      }
+    }, 1000);
+  }
+  gameStart(): void {
     this.isPlaying = true;
     this.sendRtData();
   }

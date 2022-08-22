@@ -127,11 +127,15 @@ export class GameEnv {
     const socketUnsettedGame = player.findGameHasUnsettedSocket();
     if (!socketUnsettedGame) {
       // game is for playing
-      player.socketPlayingGame = client;
       game = player.gamePlaying;
+      player.socketPlayingGame = client;
     } else {
       // game is for watching
       game = socketUnsettedGame;
+      game.watchers.add(player);
+      player.addWatchingGame(game);
+      player.gamesWatching.set(game, client);
+      player.socketsToGameMap.set(client, game);
     }
 
     this.setSocketOnGame(client, game);
@@ -285,7 +289,7 @@ export class GameEnv {
       game.secondPlayer = player;
       player.setGamePlaying(game);
     } else {
-      game.watchers.push(player);
+      game.watchers.add(player);
       player.addWatchingGame(game);
     }
     game.playerCount++;
@@ -296,9 +300,9 @@ export class GameEnv {
   gameRoomClear(game: GameAttribute): void {
     game.firstPlayer.setGamePlaying(null);
     game.secondPlayer?.setGamePlaying(null);
-    for (const player of game.watchers) {
+    game.watchers.forEach((player) => {
       player.eraseWatchingGame(game);
-    }
+    });
     const index = this.gameRoomTable.indexOf(game);
     delete this.gameRoomTable[index];
     this.gameRoomTable.splice(index, 1);
@@ -322,7 +326,7 @@ export class GameEnv {
     } else if (game.secondPlayer == player) {
       game.secondPlayer = null;
     } else {
-      game.watchers.splice(game.watchers.indexOf(player), 1);
+      game.watchers.delete(player);
     }
     player.inRoom = false;
     return 'okay';
@@ -407,51 +411,55 @@ export class GameEnv {
         })
       : undefined;
 
+    if (game.isPlaying === true) {
+      client.emit(
+        'matchData',
+        player1asUser.toGamerInfoDto(),
+        player2asUser?.toGamerInfoDto(),
+      );
+      client.emit('gameStartCount', '0');
+      return;
+    }
+
     game.broadcastToRoom(
       'matchData',
       player1asUser.toGamerInfoDto(),
       player2asUser?.toGamerInfoDto(),
     );
 
-    if (player2asUser) this.startGameCountdown(game);
+    if (player2asUser) game.startCountdown();
   }
 
-  async startGameCountdown(game: GameAttribute): Promise<void> {
-    let counting = 5;
-    game.broadcastToRoom('gameStartCount', `${counting}`);
+  // async startGameCountdown(game: GameAttribute): Promise<void> {
+  //   let counting = 5;
+  //   game.broadcastToRoom('gameStartCount', `${counting}`);
 
-    const timer: NodeJS.Timer = setInterval(() => {
-      game.broadcastToRoom('gameStartCount', `${counting}`);
-      counting--;
-      if (counting < 0) {
-        clearInterval(timer);
-      }
-    }, 1000);
+  //   const timer: NodeJS.Timer = setInterval(() => {
+  //     game.broadcastToRoom('gameStartCount', `${counting}`);
+  //     counting--;
+  //     if (counting < 0) {
+  //       clearInterval(timer);
+  //       this.startGame(game); // careful: async
+  //     }
+  //   }, 1000);
+  // }
 
-    setTimeout(
-      () => {
-        this.startGame(game); // careful: async
-      },
-      5000,
-      counting--,
-    );
-  }
+  // async startGame(game: GameAttribute): Promise<void> {
+  //   if (!game || !game.secondPlayer) return;
+  //   game.gameStart();
 
-  async startGame(game: GameAttribute): Promise<void> {
-    if (!game || !game.secondPlayer) return;
-    game.gameStart();
-
-    const userP1 = await this.getUserByPlayer(game.firstPlayer);
-    const userP2 = await this.getUserByPlayer(game.secondPlayer);
-    userP1.userStatus = 'play';
-    userP2.userStatus = 'play';
-    await userP1.save();
-    await userP2.save();
-  }
+  //   const userP1 = await this.getUserByPlayer(game.firstPlayer);
+  //   const userP2 = await this.getUserByPlayer(game.secondPlayer);
+  //   userP1.userStatus = 'play';
+  //   userP2.userStatus = 'play';
+  //   await userP1.save();
+  //   await userP2.save();
+  // }
 
   async processRecievedRtData(client: Socket, data: GameInfo): Promise<void> {
     const player: Player = this.getPlayerBySocket(client);
     const game = player.gamePlaying;
+    if (!game) return;
 
     game.updateRtData(data);
     if (game.isFinished()) {

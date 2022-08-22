@@ -34,6 +34,10 @@ export class Player {
     this.inRoom = true;
   }
 
+  leaveGame(game: GameAttribute): void {
+    // do something
+  }
+
   findGameHasUnsettedSocket(): GameAttribute {
     for (const entry of this.gamesWatching.entries()) {
       if (entry[1] === null) return entry[0];
