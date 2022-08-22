@@ -51,6 +51,12 @@ export class Player {
     if (!this.gamePlaying && !this.gamesWatching.size) this.inRoom = false;
   }
 
+  eraseAGame(game: GameAttribute): void {
+    if (this.gamePlaying === game) this.gamePlaying = null;
+    else if (this.gamesWatching.has(game)) this.gamesWatching.delete(game);
+    if (!this.gamePlaying && !this.gamesWatching.size) this.inRoom = false;
+  }
+
   isJoinedRoom(game: GameAttribute): boolean {
     if (this.gamePlaying === game || this.gamesWatching.has(game)) return true;
     return false;

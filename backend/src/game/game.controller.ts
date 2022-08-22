@@ -27,10 +27,7 @@ import { GameGateway } from './game.gateway';
 @ApiBearerAuth('access-token')
 @UseGuards(AuthGuard())
 export class GameController {
-  constructor(
-    private gameService: GameService,
-    private gameGateway: GameGateway,
-  ) {}
+  constructor(private gameService: GameService) {}
 
   @ApiOperation({ summary: 'seungyel✅ 게임방 목록 가져오기' })
   @Get('/')
@@ -45,11 +42,7 @@ export class GameController {
     @Param('userId') userId: number,
     @Body() createGameRoomDto: CreateGameRoomDto,
   ): SimpleGameRoomDto {
-    const gameRoom = this.gameService.createGameRoom(
-      this.gameGateway,
-      user,
-      createGameRoomDto,
-    );
+    const gameRoom = this.gameService.createGameRoom(user, createGameRoomDto);
     return gameRoom;
   }
 
@@ -70,7 +63,6 @@ export class GameController {
     @Body() gamePasswordDto: GameRoomPasswordDto,
   ): Promise<SimpleGameRoomDto> {
     return await this.gameService.enterGameRoom(
-      this.gameGateway,
       user,
       gameId,
       userId,
@@ -85,7 +77,7 @@ export class GameController {
     @Param('gameId', ParseIntPipe) gameId: number,
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<void> {
-    await this.gameService.exitGameRoom(this.gameGateway, user, gameId, userId);
+    await this.gameService.exitGameRoom(user, gameId, userId);
   }
 
   // @ApiOperation({ summary: 'seungyel✅ 게임 전적 반영' })

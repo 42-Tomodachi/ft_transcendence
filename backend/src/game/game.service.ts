@@ -54,7 +54,6 @@ export class GameService {
   }
 
   createGameRoom(
-    gateway: GameGateway,
     user: User,
     createGameRoomDto: CreateGameRoomDto,
   ): SimpleGameRoomDto {
@@ -112,7 +111,6 @@ export class GameService {
   }
 
   async enterGameRoom(
-    gateway: GameGateway,
     user: User,
     gameId: number,
     userId: number,
@@ -145,7 +143,6 @@ export class GameService {
   }
 
   async exitGameRoom(
-    gateway: GameGateway,
     user: User,
     gameId: number,
     userId: number,
@@ -163,15 +160,13 @@ export class GameService {
         this.gameEnv.gameRoomClear(game);
 
         // 소켓: 로비 리스트 갱신
-        gateway.server.to(gameId.toString()).emit('deleteGameRoom', 'boom!');
+        game.broadcastToRoom('deleteGameRoom', 'boom!');
         break;
       default:
         this.gameEnv.leaveGameRoom(game, game.secondPlayer);
 
         const gameUsers = await this.getPlayersInfo(gameId);
-        gateway.server
-          .to(gameId.toString())
-          .emit('updateGameUserList', gameUsers);
+        game.broadcastToRoom('updateGameUserList', gameUsers);
       // 소켓: 관전자 설정
     }
   }
