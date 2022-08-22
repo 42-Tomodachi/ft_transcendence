@@ -25,18 +25,6 @@ import { MulterModule } from '@nestjs/platform-express';
 import { GameModule } from './game/game.module';
 import { ChatGateway } from './chat/chat.gateway';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AdminModule } from '@adminjs/nestjs';
-import { ChatContents } from './chat/entities/chatContents.entity';
-import AdminJS from 'adminjs';
-import { Database, Resource } from '@adminjs/typeorm';
-import { ChatParticipant } from './chat/entities/chatParticipant.entity';
-import { ChatRoom } from './chat/entities/chatRoom.entity';
-import { BlockedUser } from './users/entities/blockedUser.entity';
-import { Follow } from './users/entities/follow.entity';
-import { GameRecord } from './users/entities/gameRecord.entity';
-import { User } from './users/entities/users.entity';
-
-AdminJS.registerAdapter({ Database, Resource });
 
 @Module({
   imports: [
@@ -71,37 +59,6 @@ AdminJS.registerAdapter({ Database, Resource });
     }),
     ChatModule,
     GameModule,
-    AdminModule.createAdmin({
-      adminJsOptions: {
-        rootPath: '/admin',
-        resources: [
-          ChatContents,
-          ChatParticipant,
-          ChatRoom,
-          BlockedUser,
-          Follow,
-          GameRecord,
-          User,
-        ],
-        branding: {
-          companyName: process.env.TYPEORM_DATABASE + ' 관리자 페이지',
-          logo: false,
-        },
-      },
-      auth: {
-        authenticate: async (email, password) => {
-          if (
-            process.env.ADMINJS_EMAIL === email &&
-            process.env.ADMINJS_PASSWORD === password
-          ) {
-            return { email };
-          }
-          return null;
-        },
-        cookieName: process.env.ADMINJS_COOKIENAME,
-        cookiePassword: process.env.ADMINJS_COOKIEPASSWORD,
-      },
-    }),
   ],
   controllers: [AppController],
   providers: [
