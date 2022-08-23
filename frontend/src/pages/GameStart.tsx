@@ -12,6 +12,7 @@ const HERTZ = 60; //
 const PLAYERONE = 1;
 const PLAYERTWO = 2;
 const playing = [true, ''];
+// const obstaclePos = [Math.floor(Math.random() * 500)];
 
 // 계산에 사용할 변수들 정의(인테페이스)
 interface GameInfo {
@@ -35,8 +36,6 @@ const GameStart: React.FC = () => {
   const player = user && playingGameInfo.player;
   const roomid = user && playingGameInfo.gameRoomId;
 
-  // console.log('GameStart.tsx.. gameMode! : ' + playingGameInfo.gameMode); // 게임모드가 여기서 확인이 잘됨.
-  //console.log('re-render');
   // 서버와 통신하기 위한 정보변수들을 useState로 관리
   const [gameInfo, setGameInfo] = useState<GameInfo>({
     ballP_X: 50,
@@ -58,31 +57,21 @@ const GameStart: React.FC = () => {
   const paddle = function paddle(ctx: CanvasRenderingContext2D): void {
     ctx.font = '32px Roboto';
     ctx.textAlign = 'center';
-    if (player == 'p1' || player == 'p2') {
-      ctx.fillStyle = '#3AB0FF';
-      ctx.fillText(` ${playingGameInfo?.oneNickname} : ${point[0]}`, 250, 50);
-      ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 700);
-      ctx.fillStyle = '#F87474';
-      ctx.fillText(`${playingGameInfo?.twoNickname} : ${point[1]}`, 750, 50);
-      ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
-    } else {
-      // 이 누군지 모름이 해결되는 순간 여기는 분기를 탈 필요가 없겠다.
-      ctx.fillStyle = '#3AB0FF';
-      ctx.fillText(` 누군지모름 ${player} : ${point[0]}`, 250, 50);
-      ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 700);
-      ctx.fillStyle = '#F87474';
-      ctx.fillText(` 누군지모름 ${player} : ${point[1]}`, 750, 50);
-      ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
-    }
+    ctx.fillStyle = '#3AB0FF';
+    ctx.fillText(` ${playingGameInfo?.oneNickname} : ${point[0]}`, 250, 50);
+    ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 700);
+    ctx.fillStyle = '#F87474';
+    ctx.fillText(`${playingGameInfo?.twoNickname} : ${point[1]}`, 750, 50);
+    ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
   };
 
   const obstacle = function obstacle(ctx: CanvasRenderingContext2D): void {
     if (playingGameInfo.gameMode === 'obstacle') {
       ctx.fillStyle = '#FFB562';
+      // ctx.fillStyle = 'black';
       ctx.fillRect(450, 300, 100, 100); // x, y, width, height
-      ctx.fillRect(200, 300, 100, 20);
-      ctx.fillRect(300, 300, 20, 100);
-      ctx.fillRect(200, 400, 120, 20);
+      ctx.fillRect(700, 500, 100, 100); // x, y, width, height
+      ctx.fillRect(200, 100, 100, 100); // x, y, width, height
     }
   };
 
@@ -91,6 +80,30 @@ const GameStart: React.FC = () => {
     ctx.fillStyle = '#f9f2ed';
     ctx.clearRect(0, 0, 1000, 700);
     ctx.fillRect(0, 0, 1000, 700);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(500, 0, 10, 700); //중앙선
+    ctx.fillRect(0, 0, 1000, 10); //위
+    ctx.fillRect(0, 690, 1000, 10); //아래
+    ctx.fillRect(0, 0, 10, 700); //왼
+    ctx.fillRect(990, 0, 10, 700); //오
+  };
+
+  const defaultGameinfo = () => {
+    return setGameInfo(() => {
+      return {
+        ballP_X: 50,
+        ballP_Y: 50,
+        ballVelo_X: -1,
+        ballVelo_Y: 0,
+        leftPaddlePos: 40,
+        rightPaddlePos: 40,
+        player: 1,
+        turn: 1,
+        leftScore: 0,
+        rightScore: 0,
+        checkPoint: false,
+      };
+    });
   };
 
   // 공그리기 (계산하는자는 useState, 안하는자는 socket.on한 data)
@@ -103,15 +116,42 @@ const GameStart: React.FC = () => {
     ctx.fill();
   };
 
-  const obstacleVal = function obstacleVal(value: string): number {
-    if (value === 'ballP_X') {
-      // 엑스 벨로시티에 대한, 충돌
-      if (gameInfo.ballVelo_X > 0) return -1;
-      else return 1;
-    } else {
-      if (gameInfo.ballP_Y >= 45 && gameInfo.ballP_Y <= 55) return -1;
-    }
-    return 1;
+  const obstacleUpDwon = () => {
+    if (
+      gameInfo.ballP_X >= 45 &&
+      gameInfo.ballP_X <= 55 &&
+      (gameInfo.ballP_Y <= 45 || gameInfo.ballP_Y >= 55)
+    )
+      return gameInfo.ballP_Y <= 45 ? 'up' : 'down';
+    else if (
+      gameInfo.ballP_X >= 20 &&
+      gameInfo.ballP_X <= 30 &&
+      (gameInfo.ballP_Y <= 15 || gameInfo.ballP_Y >= 25)
+    )
+      return gameInfo.ballP_Y <= 15 ? 'up' : 'down';
+    if (
+      gameInfo.ballP_X >= 70 &&
+      gameInfo.ballP_X <= 80 &&
+      (gameInfo.ballP_Y <= 73 || gameInfo.ballP_Y >= 83)
+    )
+      return gameInfo.ballP_Y <= 73 ? 'up' : 'down';
+    else return 'test';
+  };
+
+  const obstacleHit = (info: GameInfo) => {
+    if (info.ballP_X >= 20 && info.ballP_X <= 30 && info.ballP_Y >= 14 && info.ballP_Y <= 26)
+      return true;
+    if (info.ballP_X >= 45 && info.ballP_X <= 55 && info.ballP_Y >= 44 && info.ballP_Y <= 56)
+      return true;
+    else if (info.ballP_X >= 70 && info.ballP_X <= 80 && info.ballP_Y >= 72 && info.ballP_Y <= 84)
+      return true;
+    else return false;
+  };
+
+  const obstacleVal = function obstacleVal(value: string, normal: number): number {
+    if (value === 'ballP_X')
+      return obstacleUpDwon() !== 'test' ? gameInfo.ballVelo_X : (gameInfo.ballVelo_X *= -1);
+    else return obstacleUpDwon() !== 'test' ? (gameInfo.ballVelo_Y *= -1) : gameInfo.ballVelo_Y; //Y는 반사각.
   };
 
   // 상태와 바꿀 밸로시티값을 확인하고 변경값을 리턴합니다.
@@ -145,7 +185,7 @@ const GameStart: React.FC = () => {
       case 'rightHit':
         return value === 'ballP_X' ? -1 : -normalizedRelativeIntersectionY;
       case 'obstacleHit':
-        return obstacleVal(value);
+        return obstacleVal(value, -normalizedRelativeIntersectionY);
       default:
         return value === 'ballP_X' ? gameInfo.ballVelo_X : gameInfo.ballVelo_Y;
     }
@@ -153,56 +193,66 @@ const GameStart: React.FC = () => {
 
   // 밸로시티가 바뀌는 조건
   const testReturn = (info: GameInfo) => {
-    if (gameInfo.ballP_X >= 100) return 'leftgoal';
-    else if (gameInfo.ballP_X <= 0) return 'rightgoal';
+    if (info.ballP_X >= 100) return 'leftgoal';
+    else if (info.ballP_X <= 0) return 'rightgoal';
     else if (info.ballP_Y <= 2) return 'upHit';
     else if (info.ballP_Y >= 97) return 'downHit';
     else if (
       info.ballP_X >= 4 &&
       info.ballP_X <= 9 &&
-      info.ballP_Y >= gameInfo.leftPaddlePos &&
-      info.ballP_Y <= gameInfo.leftPaddlePos + 21
+      info.ballP_Y >= info.leftPaddlePos &&
+      info.ballP_Y <= info.leftPaddlePos + 21
     )
       return 'leftHit';
     else if (
       info.ballP_X >= 92 &&
       info.ballP_X <= 96 &&
-      info.ballP_Y >= gameInfo.rightPaddlePos &&
-      info.ballP_Y <= gameInfo.rightPaddlePos + 21
+      info.ballP_Y >= info.rightPaddlePos &&
+      info.ballP_Y <= info.rightPaddlePos + 21
     )
       return 'rightHit';
-    //if (); obstacle의 좌표범위값.
-    else if (
-      playingGameInfo.gameMode === 'obstacle' &&
-      info.ballP_X >= 45 &&
-      info.ballP_X <= 55 &&
-      info.ballP_Y >= 44 &&
-      info.ballP_Y <= 56
-    )
-      return 'obstacleHit';
+    else if (playingGameInfo.gameMode === 'obstacle' && obstacleHit(info)) return 'obstacleHit';
+    else return 'rally';
+  };
+
+  const checkObstacle = () => {
+    if (testReturn(gameInfo) === 'obstacleHit') {
+      if (gameInfo.ballP_X >= 20 && gameInfo.ballP_X <= 30) return 'obLeft';
+      else if (gameInfo.ballP_X >= 45 && gameInfo.ballP_X <= 55) return 'obCenter';
+      else if (gameInfo.ballP_X >= 70 && gameInfo.ballP_X <= 80) return 'obRight';
+    }
+    return 'default';
+  };
+
+  // 여기가 방향이 기준이면 짧아서 좋지만, 전부다 커버할수가 없어진다.
+  const resObstacle = (id: string, title: string) => {
+    if (title === 'obCenter') {
+      if (obstacleUpDwon() === 'up') return id === 'X' ? gameInfo.ballP_X : 43;
+      if (obstacleUpDwon() === 'down') return id === 'X' ? gameInfo.ballP_X : 57;
+      if (gameInfo.ballVelo_X > 0) return id === 'X' ? 44 : gameInfo.ballP_Y;
+      else return id === 'X' ? 56 : gameInfo.ballP_Y;
+    } else if (title === 'obLeft') {
+      if (obstacleUpDwon() === 'up') return id === 'X' ? gameInfo.ballP_X : 13;
+      if (obstacleUpDwon() === 'down') return id === 'X' ? gameInfo.ballP_X : 27;
+      if (gameInfo.ballVelo_X > 0) return id === 'X' ? 19 : gameInfo.ballP_Y;
+      else return id === 'X' ? 31 : gameInfo.ballP_Y;
+    } else {
+      if (obstacleUpDwon() === 'up') return id === 'X' ? gameInfo.ballP_X : 71;
+      if (obstacleUpDwon() === 'down') return id === 'X' ? gameInfo.ballP_X : 85;
+      if (gameInfo.ballVelo_X > 0) return id === 'X' ? 69 : gameInfo.ballP_Y;
+      else return id === 'X' ? 81 : gameInfo.ballP_Y;
+    }
   };
 
   // 공의 진행이나 리셋값을 반환합니다.
   const ballAction = (pos: number, velo: number, id: string) => {
     if (testReturn(gameInfo) === 'rightgoal' || testReturn(gameInfo) === 'leftgoal') return 50;
-    else if (testReturn(gameInfo) === 'leftHit') {
-      if (id === 'X') return 10;
-      else return gameInfo.ballP_Y;
-    } else if (testReturn(gameInfo) === 'rightHit') {
-      if (id === 'X') return 91;
-      else return gameInfo.ballP_Y;
-    } else if (testReturn(gameInfo) === 'obstacleHit') {
-      if (gameInfo.ballVelo_X > 0) {
-        if (id === 'X') return 44;
-        else return gameInfo.ballP_Y;
-      } else {
-        if (id === 'X') return 56;
-        else return gameInfo.ballP_Y;
-      }
-    } else {
-      if (playingGameInfo.gameMode === 'speed') return pos + velo * 2;
-      return pos + velo;
-    }
+    else if (testReturn(gameInfo) === 'leftHit') return id === 'X' ? 10 : gameInfo.ballP_Y;
+    else if (testReturn(gameInfo) === 'rightHit') return id === 'X' ? 91 : gameInfo.ballP_Y;
+    else if (checkObstacle() === 'obCenter') return resObstacle(id, 'obCenter');
+    else if (checkObstacle() === 'obLeft') return resObstacle(id, 'obLeft');
+    else if (checkObstacle() === 'obRight') return resObstacle(id, 'obRight');
+    else return playingGameInfo.gameMode === 'speed' ? pos + velo * 2 : pos + velo;
   };
 
   // 어떤 플레이어가 계산할 차례인지를 반환합니다.
@@ -258,6 +308,8 @@ const GameStart: React.FC = () => {
         return changeVelo('upHit', 'ballP_Y');
       case 'downHit':
         return changeVelo('downHit', 'ballP_Y');
+      case 'obstacleHit':
+        return changeVelo('obstacleHit', 'ballP_Y'); // 넣지도 않고 반영되길 바라다니.. 한심아.
       default:
         return changeVelo('defualt', 'ballP_Y');
     }
@@ -322,8 +374,6 @@ const GameStart: React.FC = () => {
     }
   };
 
-  // 유즈이펙트로 소켓의 변화가 감지되면 끊어버립니다. (블로그 참조)
-  //https://obstinate-developer.tistory.com/entry/React-socket-io-client-%EC%A0%81%EC%9A%A9-%EB%B0%A9%EB%B2%95
   useEffect(() => {
     getData();
     return () => {
@@ -333,22 +383,7 @@ const GameStart: React.FC = () => {
       paddlepaddle[1] = 40;
       calculateOn[0] = true;
       calculateOn[1] = false;
-      //끝났으니까 초기화후 렌더
-      setGameInfo(() => {
-        return {
-          ballP_X: 50,
-          ballP_Y: 50,
-          ballVelo_X: -1,
-          ballVelo_Y: 0,
-          leftPaddlePos: 40,
-          rightPaddlePos: 40,
-          player: 1,
-          turn: 1,
-          leftScore: 0,
-          rightScore: 0,
-          checkPoint: false,
-        };
-      });
+      defaultGameinfo();
       if (user)
         if (user.socket) {
           console.log('socket disconnect:' + user.socket.id);
@@ -362,12 +397,9 @@ const GameStart: React.FC = () => {
   // 그대로 계산안하는쪽 useState에 초당 60번씩 setting하면 좋겠지만, 렉이 심하게 걸려서 우회했습니다.
   // 그리하야, 자신이 계산할 차례가 되는순간에만 받아온값을 setting하고, 이후 계산을 시작합니다.
   const getData = async () => {
-    // 아마도 소켓이있으니까 게스트역시 rtData는 받으러 올거고, 볼과, 패들좌우를 저장할거고
     if (user && user.socket) {
-      ///////
       user.socket.on('gameFinished', () => {
         if (user && playingGameInfo.gameLadder === true) {
-          console.log('gameFinished, 10점획득 disconnect:' + user.socket.id);
           user.socket.emit('roomTerminated', roomid);
           user.socket.disconnect();
         }
@@ -415,34 +447,11 @@ const GameStart: React.FC = () => {
             calculateOn[0] = true;
             calculateOn[1] = false;
           }
-          console.log(playingGameInfo.gameLadder);
-          // if (playingGameInfo.gameLadder === false && (data[8] === 9 || data[9] === 9)) {
-          //   playing[0] = false;
-          //   playing[1] =
-          //     point[0] > point[1]
-          //       ? playingGameInfo.oneNickname.toUpperCase()
-          //       : playingGameInfo.twoNickname.toUpperCase();
-          // }
         }
       });
     } else console.log('ERROR: user undefined');
     return () => {
-      //끝났으니까 초기화후 렌더
-      setGameInfo(() => {
-        return {
-          ballP_X: 50,
-          ballP_Y: 50,
-          ballVelo_X: -1,
-          ballVelo_Y: 0,
-          leftPaddlePos: 40,
-          rightPaddlePos: 40,
-          player: 1,
-          turn: 1,
-          leftScore: 0,
-          rightScore: 0,
-          checkPoint: false,
-        };
-      });
+      defaultGameinfo();
     };
   };
 
@@ -457,9 +466,8 @@ const GameStart: React.FC = () => {
       else if (
         e.keyCode === 37 &&
         ((player === 'p1' && mouseY > 2) || (player === 'p2' && mouseY < 78))
-      ) {
+      )
         mouseY += player === 'p1' ? -2 : 2;
-      }
     }
   }
 
@@ -467,14 +475,13 @@ const GameStart: React.FC = () => {
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext('2d', { alpha: false });
-      // TODO: 여기에 문제가 있는듯
       if (user && user.socket && user.socket.connected && canvas) {
         if (ctx) {
           const test = setInterval(() => {
             calculate();
             clear(ctx);
-            ball(ctx);
             obstacle(ctx);
+            ball(ctx);
             paddle(ctx);
           }, 1000 / HERTZ);
           return () => {
@@ -482,7 +489,6 @@ const GameStart: React.FC = () => {
           };
         }
       }
-      console.log('second');
     }
     return () => {
       if (user) {
