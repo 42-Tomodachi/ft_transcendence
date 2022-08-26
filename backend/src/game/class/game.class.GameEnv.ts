@@ -235,6 +235,20 @@ export class GameEnv {
   //
   // game managing methods
 
+  isDuelAvailable(userId: number): boolean {
+    const player = this.getPlayerByUserId(userId);
+
+    if (player.socketQueue) {
+      console.log('isDuelAvailable: target is on queue');
+      return false;
+    }
+    if (player.socketPlayingGame) {
+      console.log('isDuelAvailable: target is in game');
+      return false;
+    }
+    return true;
+  }
+
   setTimerOfRoomCancel(game: GameAttribute): NodeJS.Timer {
     return setTimeout(() => {
       game.destroy();

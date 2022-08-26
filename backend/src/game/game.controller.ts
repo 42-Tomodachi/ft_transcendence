@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -14,6 +15,7 @@ import { GetJwtUser } from '../auth/jwt.strategy';
 import { User } from '../users/entities/users.entity';
 import { GamerInfoDto } from '../users/dto/users.dto';
 import {
+  ChallengeResponse,
   CreateGameRoomDto,
   GameRoomPasswordDto,
   GameRoomProfileDto,
@@ -78,6 +80,16 @@ export class GameController {
     @Param('userId', ParseIntPipe) userId: number,
   ): Promise<void> {
     await this.gameService.exitGameRoom(user, gameId, userId);
+  }
+
+  @ApiOperation({ summary: '대전신청' })
+  @Get('/dieDieMatch/:userId')
+  async challengeDuel(
+    @GetJwtUser() user: User,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('targetId', ParseIntPipe) targetId: number,
+  ): Promise<ChallengeResponse> {
+    return await this.gameService.challengeDuel(user, userId, targetId);
   }
 
   // @ApiOperation({ summary: 'seungyel✅ 게임 전적 반영' })
