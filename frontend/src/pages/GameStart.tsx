@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME, GameMode } from '../utils/interface';
+import { GAME } from '../utils/interface'; // GameMode
 import { AllContext } from '../store';
 // import { useNavigate } from 'react-router-dom'; //네비
 // import { useBeforeunload } from 'react-beforeunload';
@@ -50,7 +50,7 @@ const GameStart: React.FC = () => {
     ballVelo_Y: 0,
     leftPaddlePos: 40,
     rightPaddlePos: 40,
-    player: 1,
+    player: player === 'p1' ? 1 : 2,
     turn: 1,
     leftScore: 0,
     rightScore: 0,
@@ -377,24 +377,6 @@ const GameStart: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    getData();
-    return () => {
-      console.log('jusnelee: 여기 들어오는순간. 끝났다는것이지.');
-      playing[0] = true;
-      paddlepaddle[0] = 40;
-      paddlepaddle[1] = 40;
-      calculateOn[0] = true;
-      calculateOn[1] = false;
-      defaultGameinfo();
-      if (user)
-        if (user.socket) {
-          console.log('socket disconnect:' + user.socket.id);
-          user.socket.disconnect();
-        }
-    };
-  }, [user && user.socket]);
-
   // 서버가 보내준 갱신데이터를 받습니다.
   // p1, p2가 모두 받아옵니다(계산하는쪽은 상대방 패들위치, 안하는쪽은 그릴 모든 데이터 필요)
   // 그대로 계산안하는쪽 useState에 초당 60번씩 setting하면 좋겠지만, 렉이 심하게 걸려서 우회했습니다.
@@ -415,9 +397,7 @@ const GameStart: React.FC = () => {
       });
       ///////
       user.socket.on('rtData', async (data: number[]) => {
-        //if (ballball[0] !== data[0])
         ballball[0] = data[0];
-        //if (ballball[1] !== data[1])
         ballball[1] = data[1];
         if (data[4]) paddlepaddle[0] = data[4]; //마우스가 움직일때만 받아야 최신
         if (data[5]) paddlepaddle[1] = data[5]; //마우스가 움직일때만 받아야 최신
@@ -461,7 +441,6 @@ const GameStart: React.FC = () => {
             ballVelo_Y: data[3],
             leftPaddlePos: player === 'p2' ? paddlepaddle[0] : mouseY ? mouseY : paddlepaddle[0],
             rightPaddlePos: player === 'p1' ? paddlepaddle[1] : mouseY ? mouseY : paddlepaddle[1],
-            player: player === 'p2' ? 2 : 1,
             turn: data[6],
           });
         }
@@ -475,7 +454,7 @@ const GameStart: React.FC = () => {
   let mouseY: number;
 
   document.addEventListener('keydown', keyDownHandler, false);
-  function keyDownHandler(e: any) {
+  function keyDownHandler(e: KeyboardEvent) {
     if (player === 'p1' || player === 'p2') {
       if (!mouseY) mouseY = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
       if (e.keyCode === 39 && ((player === 'p2' && mouseY > 2) || (player === 'p1' && mouseY < 78)))
@@ -487,6 +466,24 @@ const GameStart: React.FC = () => {
         mouseY += player === 'p1' ? -2 : 2;
     }
   }
+
+  useEffect(() => {
+    getData();
+    return () => {
+      console.log('jusnelee: 여기 들어오는순간. 끝났다는것이지.');
+      playing[0] = true;
+      paddlepaddle[0] = 40;
+      paddlepaddle[1] = 40;
+      calculateOn[0] = true;
+      calculateOn[1] = false;
+      defaultGameinfo();
+      if (user)
+        if (user.socket) {
+          console.log('socket disconnect:' + user.socket.id);
+          user.socket.disconnect();
+        }
+    };
+  }, [user && user.socket, calculateOn]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -513,7 +510,7 @@ const GameStart: React.FC = () => {
         user.socket.disconnect();
       }
     };
-  }, [ball]);
+  }, [calculate]);
 
   // true니까 여기로 넘어와버리고, 방만들기라서, 소켓이 없으니까 else로가면, 결과페이지가 나오는거임.
   // 음... 해결방법 모색은 두가지 생각해볼수있는데, 사용후false상태인 gamestart변수를 다시 false로 되돌리는거

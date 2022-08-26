@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME, UPDATE_USER, PLAY } from '../utils/interface';
+import { GAME } from '../utils/interface'; //UPDATE_USER, PLAY
 import { AllContext } from '../store';
 import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
@@ -10,6 +10,7 @@ import GameStart from './GameStart';
 import { useNavigate } from 'react-router-dom';
 
 interface GameInfoDto {
+  // 내가 쓸 변수
   nicknameOne: string;
   avatarOne: string;
   winCountOne: number;
@@ -20,6 +21,14 @@ interface GameInfoDto {
   winCountTwo: number;
   loseCountTwo: number;
   ladderLevelTwo: number;
+  // 받아올 데이터 담긴변수,
+  nickname: string;
+  avatar: string;
+  winCount: number;
+  loseCount: number;
+  ladderWinCount: number;
+  ladderLoseCount: number;
+  ladderLevel: number;
 }
 
 // interface UserProfileDto {
@@ -39,11 +48,11 @@ interface GameInfoDto {
  * 매칭이 이루어졌다면, 서버에서 매칭유저에 대한 정보를 보내주기로 합의되어있다.
  */
 const GamePage: React.FC = () => {
-  console.log('re-render?\n');
+  // console.log('re-render?\n');
   let socket: Socket;
   const navigate = useNavigate();
   const [gameStart, setGameStart] = useState(false);
-  const { user, setUser } = useContext(AllContext).userData;
+  const { user } = useContext(AllContext).userData; // setUser
   // const { setUserStatus } = useContext(AllContext).userStatus;
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
   const [count, setCount] = useState(5); //오피셜은 10초
@@ -58,6 +67,13 @@ const GamePage: React.FC = () => {
     winCountTwo: 0,
     loseCountTwo: 0,
     ladderLevelTwo: 0,
+    nickname: '',
+    avatar: '',
+    winCount: 0,
+    loseCount: 0,
+    ladderWinCount: 0,
+    ladderLoseCount: 0,
+    ladderLevel: 0,
   });
 
   //console.log(user); // null
@@ -92,20 +108,19 @@ const GamePage: React.FC = () => {
 
       // gameMode가 아니라 래더인지 아닌지를 알려주는 변수여야함!!
       if (playingGameInfo.gameLadder === true) {
-        socket.on('matchData', (p1: any, p2: any) => {
-          setInfo(info => {
-            return {
-              nicknameOne: p1.nickname,
-              avatarOne: p1.avatar,
-              winCountOne: p1.ladderWinCount,
-              loseCountOne: p1.ladderLoseCount,
-              ladderLevelOne: p1.ladderLevel,
-              nicknameTwo: p2.nickname,
-              avatarTwo: p2.avatar,
-              winCountTwo: p2.ladderWinCount,
-              loseCountTwo: p2.ladderLoseCount,
-              ladderLevelTwo: p2.ladderLevel,
-            };
+        socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
+          setInfo({
+            ...info,
+            nicknameOne: p1.nickname,
+            avatarOne: p1.avatar,
+            winCountOne: p1.ladderWinCount,
+            loseCountOne: p1.ladderLoseCount,
+            ladderLevelOne: p1.ladderLevel,
+            nicknameTwo: p2.nickname,
+            avatarTwo: p2.avatar,
+            winCountTwo: p2.ladderWinCount,
+            loseCountTwo: p2.ladderLoseCount,
+            ladderLevelTwo: p2.ladderLevel,
           });
 
           // 여기부터끝까지가 래더랑 일반이 구조가 중복되니까. 이 리팩이 무사히 돌아가면 함수로 빼겠다는 계획. 1111
@@ -134,20 +149,19 @@ const GamePage: React.FC = () => {
         });
       } else {
         // 래더가 아닐때의 소켓온
-        socket.on('matchData', (p1: any, p2: any) => {
-          setInfo(info => {
-            return {
-              nicknameOne: p1.nickname,
-              avatarOne: p1.avatar,
-              winCountOne: p1.winCount,
-              loseCountOne: p1.loseCount,
-              ladderLevelOne: p1.ladderLevel,
-              nicknameTwo: p2 ? p2.nickname : info.nicknameTwo,
-              avatarTwo: p2 ? p2.avatar : info.avatarTwo,
-              winCountTwo: p2 ? p2.winCount : info.winCountTwo,
-              loseCountTwo: p2 ? p2.loseCount : info.loseCountTwo,
-              ladderLevelTwo: p2 ? p2.ladderLevel : info.ladderLevelTwo,
-            };
+        socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
+          setInfo({
+            ...info,
+            nicknameOne: p1.nickname,
+            avatarOne: p1.avatar,
+            winCountOne: p1.winCount,
+            loseCountOne: p1.loseCount,
+            ladderLevelOne: p1.ladderLevel,
+            nicknameTwo: p2 ? p2.nickname : info.nicknameTwo,
+            avatarTwo: p2 ? p2.avatar : info.avatarTwo,
+            winCountTwo: p2 ? p2.winCount : info.winCountTwo,
+            loseCountTwo: p2 ? p2.loseCount : info.loseCountTwo,
+            ladderLevelTwo: p2 ? p2.ladderLevel : info.ladderLevelTwo,
           });
           // 전적표시 바를 승률에 맞게 커스텀 하는 부분
           // 여기부터끝까지가 래더랑 일반이 구조가 중복되니까. 이 리팩이 무사히 돌아가면 함수로 빼겠다는 계획. 2222
