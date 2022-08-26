@@ -9,7 +9,6 @@ export class Player {
   userId: number;
   gamePlaying: GameAttribute;
   gamesWatching: Map<GameAttribute, Socket>;
-  inRoom: boolean;
   inLadderQ: boolean;
 
   constructor(userId: number, game: GameAttribute) {
@@ -20,22 +19,86 @@ export class Player {
     this.userId = userId;
     this.gamePlaying = game;
     this.gamesWatching = new Map<GameAttribute, Socket>();
-    this.inRoom = false;
     this.inLadderQ = false;
   }
 
-  setGamePlaying(game: GameAttribute): void {
-    this.gamePlaying = game;
-    this.inRoom = game ? true : false;
+  clear(): void {
+    this.socketLobby = null;
+    this.socketQueue = null;
+    this.socketPlayingGame = null;
+    delete this.socketsToGameMap;
+    this.socketsToGameMap = new Map<Socket, GameAttribute>();
+    this.gamePlaying = null;
+    delete this.gamesWatching;
+    this.gamesWatching = new Map<GameAttribute, Socket>();
+    this.inLadderQ = false;
   }
 
-  addWatchingGame(game: GameAttribute): void {
-    this.gamesWatching.set(game, null);
-    this.inRoom = true;
+  setGameSocket(game: GameAttribute, socket: Socket): void {
+    if (!game || !socket) return;
+
+    if (game === this.gamePlaying) {
+      this.socketPlayingGame = socket;
+    } else {
+      this.gamesWatching.set(game, socket);
+    }
+    this.socketsToGameMap.set(socket, game);
   }
 
-  leaveGame(game: GameAttribute): void {
-    // do something
+  unsetGameSocket(socket: Socket): void {
+    const game = this.socketsToGameMap.get(socket);
+    if (!game) return;
+
+    this.socketsToGameMap.delete(socket);
+    if (socket === this.socketPlayingGame) this.socketPlayingGame = null;
+    else this.gamesWatching.delete(game);
+  }
+
+  joinGame(game: GameAttribute): boolean {
+    if (!game) return false;
+    if (!game.secondPlayer) {
+      game.secondPlayer = this;
+      this.gamePlaying = game;
+    } else {
+      game.watchers.add(this);
+      this.gamesWatching.set(game, null);
+    }
+    game.playerCount++;
+    game.isSocketUpdated = false;
+    return true;
+  }
+
+  leaveGame(game: GameAttribute): boolean {
+    if (!game) {
+      console.log('leaveGameRoom: no game');
+      return false;
+    }
+    if (
+      game.roomId !== this.gamePlaying.roomId &&
+      !this.gamesWatching.has(game)
+    )
+      return false;
+
+    switch (this) {
+      case game.firstPlayer:
+        this.gamePlaying = null;
+        this.socketsToGameMap.delete(this.socketPlayingGame);
+        this.socketPlayingGame = null;
+        game.destroy();
+        break;
+      case game.secondPlayer:
+        this.gamePlaying = null;
+        this.socketsToGameMap.delete(this.socketPlayingGame);
+        this.socketPlayingGame = null;
+        game.secondPlayer = null;
+        if (game.isOnStartCount()) game.stopStartCount();
+        break;
+      default:
+        this.socketsToGameMap.delete(this.gamesWatching.get(game));
+        this.gamesWatching.delete(game);
+        game.watchers.delete(this);
+    }
+    return true;
   }
 
   findGameHasUnsettedSocket(): GameAttribute {
@@ -45,23 +108,7 @@ export class Player {
     return undefined;
   }
 
-  eraseASocket(client: Socket): void {
-    if (client === this.socketLobby) this.socketLobby = null;
-    else if (client === this.socketPlayingGame) this.socketPlayingGame = null;
-  }
-
-  eraseWatchingGame(game: GameAttribute): void {
-    this.gamesWatching.delete(game);
-    if (!this.gamePlaying && !this.gamesWatching.size) this.inRoom = false;
-  }
-
-  eraseAGame(game: GameAttribute): void {
-    if (this.gamePlaying === game) this.gamePlaying = null;
-    else if (this.gamesWatching.has(game)) this.gamesWatching.delete(game);
-    if (!this.gamePlaying && !this.gamesWatching.size) this.inRoom = false;
-  }
-
-  isJoinedRoom(game: GameAttribute): boolean {
+  isJoinedGame(game: GameAttribute): boolean {
     if (this.gamePlaying === game || this.gamesWatching.has(game)) return true;
     return false;
   }

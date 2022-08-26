@@ -19,8 +19,7 @@ export class GameEnv {
   socketIdToPlayerMap = new Map<string, Player>();
   playerList: Player[] = [];
   gameLobbyTable: Socket[] = [];
-  gameRoomIdList: number[] = new Array(500).fill(0);
-  gameRoomTable: GameAttribute[] = [];
+  gameRoomList: GameAttribute[] = new Array(100);
   ladderQueue: Player[] = [];
 
   //
@@ -61,21 +60,19 @@ export class GameEnv {
   //
   // gameRoom* related methods
 
-  getFreeRoomIndex(): number {
-    let index = 0;
-
-    for (const x of this.gameRoomIdList) {
-      if (x == 0) {
-        this.gameRoomIdList[index] = 1;
-        return index;
+  getFreeGameRoom(): GameAttribute {
+    for (const index in this.gameRoomList) {
+      const game = this.gameRoomList[index];
+      if (game.active === false) {
+        game.roomId = +index;
+        return game;
       }
-      index++;
     }
-    return 0;
+    return null;
   }
 
   getGameRoom(gameId: number): GameAttribute | null {
-    return this.gameRoomTable.at(gameId);
+    return this.gameRoomList.at(gameId);
   }
 
   //
@@ -96,6 +93,17 @@ export class GameEnv {
     });
     if (!player) return this.newPlayer(userId, null);
     else return player;
+  }
+
+  newPlayer(userId: number, game: GameAttribute): Player {
+    for (const player of this.playerList) {
+      if (player.userId === userId) {
+        return player;
+      }
+    }
+    const newPlayer = new Player(userId, game);
+    this.playerList.push(newPlayer);
+    return newPlayer;
   }
 
   //
@@ -119,31 +127,32 @@ export class GameEnv {
     const game = player.gamePlaying;
     player.socketPlayingGame = client;
 
-    this.setSocketOnGame(client, game);
+    this.setSocketJoin(client, game);
   }
 
-  handleConnectionOnNormalGame(client: Socket, player: Player): void {
-    let game: GameAttribute;
-    const socketUnsettedGame = player.findGameHasUnsettedSocket();
-    if (!socketUnsettedGame) {
-      // game is for playing
-      game = player.gamePlaying;
-      player.socketPlayingGame = client;
-    } else {
-      // game is for watching
-      game = socketUnsettedGame;
-      game.watchers.add(player);
-      player.addWatchingGame(game);
-      player.gamesWatching.set(game, client);
-      player.socketsToGameMap.set(client, game);
-    }
+  handleConnectionOnNormalGame(
+    client: Socket,
+    gameId: number,
+    player: Player,
+  ): void {
+    const game = this.getGameRoom(gameId);
+    if (!game) return;
+    if (
+      game.firstPlayer !== player &&
+      game.secondPlayer !== player &&
+      !game.watchers.has(player)
+    )
+      return;
+    if (player.gamePlaying !== game && !player.gamesWatching.has(game)) return;
 
-    this.setSocketOnGame(client, game);
+    player.setGameSocket(game, client);
+    this.setSocketJoin(client, game);
   }
 
   onFirstSocketHandshake(
     client: Socket,
     userId: number,
+    gameId: number,
     connectionType: string,
   ): void {
     const player = this.assertGetPlayerBySocket(client, userId);
@@ -160,7 +169,7 @@ export class GameEnv {
         this.handleConnectionOnLadderGame(client, player);
         break;
       case 'normalGame':
-        this.handleConnectionOnNormalGame(client, player);
+        this.handleConnectionOnNormalGame(client, gameId, player);
         break;
       default:
         const message = `ConnectionHandler: ${connectionType} is not a correct type of connection.`;
@@ -199,21 +208,24 @@ export class GameEnv {
   }
 
   clearPlayerSocket(client: Socket): void {
-    const player = this.socketIdToPlayerMap[client.id];
+    const player: Player = this.socketIdToPlayerMap[client.id];
     if (player === undefined) return;
 
-    if (player.socketLobby === client) player.socketLobby = null;
-    else if (player.socketQueue === client) player.socketQueue = null;
-    else if (player.socketPlayingGame === client)
-      player.socketPlayingGame = null;
+    switch (client) {
+      case player.socketLobby:
+    }
 
-    if (player.inRoom === true) {
-      this.leaveGameRoom(player.gamePlaying, player);
+    const game = player.socketsToGameMap.get(client);
+    if (game) {
+      if (game.isPlaying === true) {
+        player.unsetGameSocket(client);
+        player.socketPlayingGame = undefined;
+        return;
+      }
+      player.unsetGameSocket(client);
+      player.leaveGame(game);
     }
-    if (player.inLadderQ === true) {
-      this.cancelLadderWaiting(client);
-    }
-    player.eraseASocket(client);
+
     this.eraseFromSocketMap(client);
 
     // 해당 유저 퇴장 알림
@@ -223,60 +235,49 @@ export class GameEnv {
   //
   // game managing methods
 
-  newPlayer(userId: number, game: GameAttribute): Player {
-    for (const player of this.playerList) {
-      if (player.userId === userId) {
-        return player;
-      }
-    }
-    const newPlayer = new Player(userId, game);
-    this.playerList.push(newPlayer);
-    return newPlayer;
-  }
-
   setTimerOfRoomCancel(game: GameAttribute): NodeJS.Timer {
     return setTimeout(() => {
-      this.gameRoomClear(game);
+      game.destroy();
     }, 5000);
   }
 
   createGameRoom(player: Player, createGameRoomDto: CreateGameRoomDto): number {
-    const index: number = this.getFreeRoomIndex();
+    const game = this.getFreeGameRoom();
+    game.create(createGameRoomDto, player);
 
-    const gameRoom = new GameAttribute(index, createGameRoomDto, player);
-    this.enrollGameToTable(gameRoom);
+    // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
+    // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
 
-    player.setGamePlaying(gameRoom);
-    return index;
+    return game.roomId;
   }
 
-  enrollGameToTable(game: GameAttribute): void {
-    if (this.gameRoomTable.length == game.roomId) {
-      this.gameRoomTable.push(game);
-    } else {
-      this.gameRoomTable[game.roomId] = game;
-    }
-  }
+  // enrollGameToTable(game: GameAttribute): void {
+  //   if (this.gameRoomTable.length == game.roomId) {
+  //     this.gameRoomTable.push(game);
+  //   } else {
+  //     this.gameRoomTable[game.roomId] = game;
+  //   }
+  // }
 
-  setOwnerToCreatedRoom(player: Player, game: GameAttribute): boolean {
-    if (!player) return false;
-    if (player.gamePlaying.roomId !== game.roomId) return false;
+  // setOwnerToCreatedRoom(player: Player, game: GameAttribute): boolean {
+  //   if (!player) return false;
+  //   if (player.gamePlaying.roomId !== game.roomId) return false;
 
-    if (game.ownerId !== player.userId) return false;
+  //   if (game.ownerId !== player.userId) return false;
 
-    game.firstPlayer = player;
-    player.inRoom = true;
-    return true;
-  }
+  //   game.firstPlayer = player;
+  //   player.inRoom = true;
+  //   return true;
+  // }
 
-  checkGameRoomPassword(
-    gameRoom: GameAttribute,
-    gamePassword: string,
-  ): boolean {
-    return gameRoom.password == gamePassword;
-  }
+  // checkGameRoomPassword(
+  //   gameRoom: GameAttribute,
+  //   gamePassword: string,
+  // ): boolean {
+  //   return gameRoom.password == gamePassword;
+  // }
 
-  setSocketOnGame(client: Socket, game: GameAttribute): void {
+  setSocketJoin(client: Socket, game: GameAttribute): void {
     if (!game) {
       console.log('setSocketonGame: game is undefined.');
       return;
@@ -285,58 +286,52 @@ export class GameEnv {
   }
 
   joinPlayerToGame(player: Player, game: GameAttribute): number {
-    if (!game.secondPlayer) {
-      game.secondPlayer = player;
-      player.setGamePlaying(game);
-    } else {
-      game.watchers.add(player);
-      player.addWatchingGame(game);
-    }
-    game.playerCount++;
-    game.isSocketUpdated = false;
+    player.joinGame(game);
+
+    // socket emit
     return game.playerCount;
   }
 
-  gameRoomClear(game: GameAttribute): void {
-    game.firstPlayer.setGamePlaying(null);
-    game.secondPlayer?.setGamePlaying(null);
-    game.watchers.forEach((player) => {
-      player.eraseWatchingGame(game);
-    });
-    const index = this.gameRoomTable.indexOf(game);
-    delete this.gameRoomTable[index];
-    this.gameRoomTable.splice(index, 1);
-  }
+  // gameRoomClear(game: GameAttribute): void {
+  //   game.firstPlayer.setGamePlaying(null);
+  //   game.secondPlayer?.setGamePlaying(null);
+  //   game.watchers.forEach((player) => {
+  //     player.eraseWatchingGame(game);
+  //   });
+  //   const index = this.gameRoomTable.indexOf(game);
+  //   delete this.gameRoomTable[index];
+  //   this.gameRoomTable.splice(index, 1);
+  // }
 
-  leaveGameRoom(
-    game: GameAttribute,
-    player: Player,
-  ): 'clear' | 'okay' | 'failed' {
-    if (!game) {
-      console.log('leaveGameRoom: no game');
-      return 'failed';
-    }
-    if (game.roomId !== player.gamePlaying.roomId) {
-      return 'failed';
-    }
+  // leaveGameRoom(
+  //   game: GameAttribute,
+  //   player: Player,
+  // ): 'clear' | 'okay' | 'failed' {
+  //   if (!game) {
+  //     console.log('leaveGameRoom: no game');
+  //     return 'failed';
+  //   }
+  //   if (game.roomId !== player.gamePlaying.roomId) {
+  //     return 'failed';
+  //   }
 
-    if (game.firstPlayer == player) {
-      this.gameRoomClear(game);
-      return 'clear';
-    } else if (game.secondPlayer == player) {
-      game.secondPlayer = null;
-    } else {
-      game.watchers.delete(player);
-    }
-    player.inRoom = false;
-    return 'okay';
-  }
+  //   if (game.firstPlayer == player) {
+  //     this.gameRoomClear(game);
+  //     return 'clear';
+  //   } else if (game.secondPlayer == player) {
+  //     game.secondPlayer = null;
+  //   } else {
+  //     game.watchers.delete(player);
+  //   }
+  //   player.inRoom = false;
+  //   return 'okay';
+  // }
 
   postGameProcedure(game: GameAttribute): void {
-    if (game.isLadder() === true) {
-      this.gameRoomClear(game);
+    if (game.isLadder === true) {
+      game.destroy();
     } else {
-      game.initGameData();
+      game.initPlayData();
     }
     // clearInterval(this.streaming);
   }
@@ -366,28 +361,29 @@ export class GameEnv {
     }
     const player1 = this.ladderQueue.shift();
     const player2 = this.ladderQueue.shift();
-    const gameNumber = this.getFreeRoomIndex();
+    const game = this.getFreeGameRoom();
+    if (!game) return undefined;
 
     const createGameRoomDto = new CreateGameRoomDto();
-    createGameRoomDto.roomTitle = `LadderGame${gameNumber}`;
+    createGameRoomDto.roomTitle = `LadderGame${game.roomId}`;
     createGameRoomDto.password = null;
     createGameRoomDto.gameMode = 'speed';
     createGameRoomDto.ownerId = player1.userId;
 
-    const gameRoom = new GameAttribute(gameNumber, createGameRoomDto, player1);
-    gameRoom.secondPlayer = player2;
-    gameRoom.playerCount = 2;
-    gameRoom.isPublic = false;
+    game.create(createGameRoomDto, player1);
+    game.secondPlayer = player2;
+    game.playerCount = 2;
+    game.isLadder = true;
+    game.isPublic = false;
 
-    this.enrollGameToTable(gameRoom);
     console.log(`Ladder match made: ${player1.userId}, ${player2.userId}`);
 
-    player1.gamePlaying = gameRoom;
-    player2.gamePlaying = gameRoom;
-    player1.socketQueue.emit('matchingGame', gameRoom.roomId.toString());
-    player2.socketQueue.emit('matchingGame', gameRoom.roomId.toString());
+    player1.gamePlaying = game;
+    player2.gamePlaying = game;
+    player1.socketQueue.emit('matchingGame', game.roomId.toString());
+    player2.socketQueue.emit('matchingGame', game.roomId.toString());
 
-    return gameRoom;
+    return game;
   }
 
   async waitForPlayerJoins(client: Socket, gameId: number): Promise<void> {
@@ -482,9 +478,9 @@ export class GameEnv {
   async endGame(game: GameAttribute): Promise<void> {
     console.log(`game is finished ${game.roomId}`);
     game.isPlaying = false;
-    this.postGameProcedure(game);
     game.broadcastToRoom('gameFinished');
     await this.writeMatchResult(game);
+    this.postGameProcedure(game);
 
     const userP1 = await this.getUserByPlayer(game.firstPlayer);
     const userP2 = await this.getUserByPlayer(game.secondPlayer);
