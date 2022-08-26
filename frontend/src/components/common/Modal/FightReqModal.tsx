@@ -1,23 +1,71 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import styled from '@emotion/styled';
 import Modal from '.';
 import Button from '../Button';
 import { AllContext } from '../../../store';
+import { io, Socket } from 'socket.io-client';
+import { useNavigate } from 'react-router-dom';
+import { usersAPI } from '../../../API';
+import { CANCEL_MATCH_MODAL, IUserData } from '../../../utils/interface';
 
-const FightReqModal: React.FC<{ userId: number }> = ({ userId }) => {
+let socket: Socket;
+/**
+ * 대전 신청이 온 모달
+ * @param matchUserId 대전 신청한 유저 id
+ * @returns
+ */
+const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
   const { setModal } = useContext(AllContext).modalData;
+  const { user } = useContext(AllContext).userData;
+  const [matchUser, setMatchUser] = useState<IUserData | null>(null);
+  const navigate = useNavigate();
+
   const acceptFight = () => {
     console.log('수락했습니다.');
+    if (socket && user) {
+      // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
+      socket.emit('confirmMatch', { targetId: user.userId, userId: matchUserId });
+    }
   };
+
   const cancelFight = () => {
-    console.log('대결을 취소했습니다(신청받은 사람)');
-    setModal(null);
+    if (socket && user) {
+      // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
+      socket.emit('cancelMatch', { targetId: user.userId, userId: matchUserId });
+    }
+    setModal(CANCEL_MATCH_MODAL);
   };
+
+  const getMatchUser = async () => {
+    if (user && matchUserId) {
+      const data = await usersAPI.getUserProfile(user.userId, matchUserId, user.jwt);
+      if (data) {
+        setMatchUser(data);
+      }
+    }
+  };
+
+  useEffect(() => {
+    getMatchUser();
+    if (user) {
+      socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
+        transports: ['websocket'],
+        multiplex: false,
+        query: { userId: user.userId },
+      });
+      socket.on('startMatch', (roomId: number) => {
+        navigate(`/gameroom/${roomId}`);
+      });
+    }
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, []);
+
   return (
     <Modal width={400} height={200}>
       <ModalWrap>
-        {/* TODO : 대전신청한 유저의 이름이 AAA에 들어가야함 */}
-        <FightMsg>AAA 님에게</FightMsg>
+        <FightMsg>{matchUser ? matchUser.nickname : undefined} 님에게</FightMsg>
         <FightMsg>대전 신청이 왔습니다.</FightMsg>
         <BtnBlock>
           <Button color="white" text="취소" width={110} height={30} onClick={cancelFight} />

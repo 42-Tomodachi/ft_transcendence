@@ -8,9 +8,10 @@ import {
   BAN_OR_KICK_MODAL,
   FIGHT_RES_MODAL,
   IUserData,
+  CANCEL_MATCH_MODAL,
 } from '../../../utils/interface';
 import { useNavigate } from 'react-router-dom';
-import { chatsAPI, usersAPI } from '../../../API';
+import { chatsAPI, gameAPI, usersAPI } from '../../../API';
 import defaultProfile from '../../../assets/default-image.png';
 import ProfileImage from '../ProfileImage';
 
@@ -73,9 +74,13 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   };
   const onApplyGame = async () => {
     console.log('send msg');
-    if (target) {
-      // TODO: 실시간으로 해당 타겟이 대전 가능한 상대인지  확인 필요
-      setModal(FIGHT_RES_MODAL, target.userId);
+    if (target && user) {
+      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
+      if (res) {
+        setModal(FIGHT_RES_MODAL, target.userId);
+      } else {
+        setModal(CANCEL_MATCH_MODAL);
+      }
     }
   };
   const onSendDm = async () => {

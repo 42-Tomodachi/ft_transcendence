@@ -33,8 +33,8 @@ const ModalSet: React.FC = () => {
       {modal.modal &&
         {
           LOADING_LADDER_GAME: <LadderModal />, // 레더 게임 매칭
-          FIGHT_RES_MODAL: <FightResModal userId={modal.userId} />, // 1:1 대전 응답 모달
-          FIGHT_REQ_MODAL: <FightReqModal userId={modal.userId} />, // 1:1 대전 요청 모달
+          FIGHT_RES_MODAL: <FightResModal targetId={modal.userId} />, // 1:1 대전 응답대기 모달(대전 신청한 쪽)
+          FIGHT_REQ_MODAL: <FightReqModal matchUserId={modal.userId} />, // 1:1 대전 요청대기 모달(대전 받은 쪽)
           SHOW_PROFILE: <ShowProfile userId={modal.userId} />, // 프로필 정보 보기
           ON_SECOND_AUTH: <OnSecondAuth />, // 2차 인증 켜기
           OFF_SECOND_AUTH: <OffSecondAuth />, // 2차 인증 끄기
@@ -55,6 +55,11 @@ const ModalSet: React.FC = () => {
             </Modal>
           ),
           BAN_OR_KICK_MODAL: <BanOrKickModal roomId={modal.roomId} userId={modal.userId} />,
+          CANCEL_MATCH_MODAL: (
+            <Modal width={400} height={200}>
+              매칭이 취소되었습니다.
+            </Modal>
+          ),
         }[modal.modal]}
     </>
   );

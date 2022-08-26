@@ -177,6 +177,7 @@ export const FIGHT_REQ_MODAL = 'FIGHT_REQ_MODAL' as const;
 export const EDIT_MY_PROFILE = 'EDIT_MY_PROFILE' as const;
 export const BAN_THIS_CHATROOM = 'BAN_THIS_CHATROOM' as const;
 export const BAN_OR_KICK_MODAL = 'BAN_OR_KICK_MODAL' as const;
+export const CANCEL_MATCH_MODAL = 'CANCEL_MATCH_MODAL' as const;
 
 export type ModalType =
   | 'SHOW_PROFILE' // 프로필 정보 보기
@@ -197,7 +198,8 @@ export type ModalType =
   | 'FIGHT_REQ_MODAL' // 1:1 대전 요청 모달
   | 'EDIT_MY_PROFILE' // 내 프로필 수정하기
   | 'BAN_THIS_CHATROOM' // 밴당한 채팅방 입장 경고 모달
-  | 'BAN_OR_KICK_MODAL'; // 강퇴 or 입장 금지 모달
+  | 'BAN_OR_KICK_MODAL' // 강퇴 or 입장 금지 모달
+  | 'CANCEL_MATCH_MODAL'; // 대전 취소 모달
 
 export interface IModalData {
   modal: ModalType | null;
