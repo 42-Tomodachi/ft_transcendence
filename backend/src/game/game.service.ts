@@ -9,6 +9,7 @@ import {
   GameRoomProfileDto,
   GameResultDto,
   SimpleGameRoomDto,
+  ChallengeResponse,
 } from './dto/game.dto';
 import { GameGateway } from './game.gateway';
 import { GameEnv } from './class/game.class.GameEnv';
@@ -162,6 +163,27 @@ export class GameService {
         game.broadcastToRoom('updateGameUserList', gameUsers);
       // 소켓: 관전자 설정
     }
+  }
+
+  async challengeDuel(
+    user: User,
+    userId: number,
+    targetId: number,
+  ): Promise<ChallengeResponse> {
+    if (user.id != userId)
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    if (userId === targetId)
+      throw new BadRequestException('잘못된 요청입니다.');
+
+    if (false) {
+      // 채팅소켓에서 연결할 수 없는 경우?
+      return { available: false };
+    }
+    if (this.gameEnv.isDuelAvailable(targetId) === false) {
+      return { available: false };
+    }
+
+    return { available: true };
   }
 
   async saveGameRecord(gameRecordSaveDto: GameResultDto): Promise<void> {

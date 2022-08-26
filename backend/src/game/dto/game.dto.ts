@@ -80,3 +80,8 @@ export class GameResultDto {
   @ApiProperty({ description: '승자 id' })
   winnerId: number;
 }
+
+export class ChallengeResponse {
+  @ApiProperty({ description: '대전 가능 여부' })
+  available: boolean;
+}
