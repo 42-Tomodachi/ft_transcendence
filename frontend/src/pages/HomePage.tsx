@@ -41,19 +41,20 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
     } else if (menu === 'GAME') {
       console.log('hello Game world!');
       // TODO: Game로비 연결부
-      socket = io(`${process.env.REACT_APP_BACK_API}`, {
-        transports: ['websocket'],
-        multiplex: false,
-        query: {
-          userId: user && user.userId,
-          connectionType: 'gameLobby',
-        },
-      });
-      socket.on('message', () => {
-        console.log(` 로비 connected socket : ${socket.id}`);
-        console.log(socket.connected); // true
-        if (user) user.socket = socket;
-      });
+      // socket = io(`${process.env.REACT_APP_BACK_API}`, {
+      //   transports: ['websocket'],
+      //   multiplex: false,
+      //   withCredentials: true,
+      //   query: {
+      //     userId: user && user.userId,
+      //     connectionType: 'gameLobby',
+      //   },
+      // });
+      // socket.on('message', () => {
+      //   console.log(` 로비 connected socket : ${socket.id}`);
+      //   console.log(socket.connected); // true
+      //   if (user) user.socket = socket;
+      // });
     }
   }, [menu]);
 

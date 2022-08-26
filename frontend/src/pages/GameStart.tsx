@@ -1,8 +1,11 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME } from '../utils/interface';
+import { GAME, GameMode } from '../utils/interface';
 import { AllContext } from '../store';
+// import { useNavigate } from 'react-router-dom'; //네비
+// import { useBeforeunload } from 'react-beforeunload';
+// import { useHistory } from 'react-router-dom'; // 설치한 패키지
 
 const calculateOn = [true, false]; // useState변수인 turn이 값을바껴도 다음에 값이 바껴서 문제가되는걸로 판단, 추가 및 문제해결.
 const ballball = [50, 50]; // 받아온 rtData중에 공의 위치를 실시간으로 그려주자.
@@ -13,6 +16,7 @@ const PLAYERONE = 1;
 const PLAYERTWO = 2;
 const playing = [true, ''];
 // const obstaclePos = [Math.floor(Math.random() * 500)];
+// const refreshTest = [false];
 
 // 계산에 사용할 변수들 정의(인테페이스)
 interface GameInfo {
@@ -30,6 +34,8 @@ interface GameInfo {
 }
 
 const GameStart: React.FC = () => {
+  // const navigate = useNavigate();
+
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
   const { user } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
@@ -63,6 +69,14 @@ const GameStart: React.FC = () => {
     ctx.fillStyle = '#F87474';
     ctx.fillText(`${playingGameInfo?.twoNickname} : ${point[1]}`, 750, 50);
     ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
+  };
+
+  // 공그리기 (계산하는자는 useState, 안하는자는 socket.on한 data)
+  const ball = function ball(ctx: CanvasRenderingContext2D): void {
+    ctx.beginPath();
+    ctx.arc((ballball[0] / 100) * 1000, (ballball[1] / 100) * 700, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = '#FFB562';
+    ctx.fill();
   };
 
   const obstacle = function obstacle(ctx: CanvasRenderingContext2D): void {
@@ -106,63 +120,41 @@ const GameStart: React.FC = () => {
     });
   };
 
-  // 공그리기 (계산하는자는 useState, 안하는자는 socket.on한 data)
-  const ball = function ball(ctx: CanvasRenderingContext2D): void {
-    ctx.beginPath();
-    if ((player === 'p1' && gameInfo.turn === 1) || (player === 'p2' && gameInfo.turn === 2))
-      ctx.arc((gameInfo.ballP_X / 100) * 1000, (gameInfo.ballP_Y / 100) * 700, 10, 0, 2 * Math.PI);
-    else ctx.arc((ballball[0] / 100) * 1000, (ballball[1] / 100) * 700, 10, 0, 2 * Math.PI);
-    ctx.fillStyle = '#FFB562';
-    ctx.fill();
-  };
-
-  const obstacleUpDwon = () => {
-    if (
-      gameInfo.ballP_X >= 45 &&
-      gameInfo.ballP_X <= 55 &&
-      (gameInfo.ballP_Y <= 45 || gameInfo.ballP_Y >= 55)
-    )
-      return gameInfo.ballP_Y <= 45 ? 'up' : 'down';
-    else if (
-      gameInfo.ballP_X >= 20 &&
-      gameInfo.ballP_X <= 30 &&
-      (gameInfo.ballP_Y <= 15 || gameInfo.ballP_Y >= 25)
-    )
-      return gameInfo.ballP_Y <= 15 ? 'up' : 'down';
-    if (
-      gameInfo.ballP_X >= 70 &&
-      gameInfo.ballP_X <= 80 &&
-      (gameInfo.ballP_Y <= 73 || gameInfo.ballP_Y >= 83)
-    )
-      return gameInfo.ballP_Y <= 73 ? 'up' : 'down';
+  const obstacleUpDwon = (info: GameInfo) => {
+    if (checkObstacle(info) === 'obCenter' && (info.ballP_Y <= 45 || info.ballP_Y >= 55))
+      return info.ballP_Y <= 45 ? 'up' : 'down';
+    else if (checkObstacle(info) === 'obLeft' && (info.ballP_Y <= 15 || info.ballP_Y >= 25))
+      return info.ballP_Y <= 15 ? 'up' : 'down';
+    if (checkObstacle(info) === 'obRight' && (info.ballP_Y <= 73 || info.ballP_Y >= 83))
+      return info.ballP_Y <= 73 ? 'up' : 'down';
     else return 'test';
   };
 
   const obstacleHit = (info: GameInfo) => {
-    if (info.ballP_X >= 20 && info.ballP_X <= 30 && info.ballP_Y >= 14 && info.ballP_Y <= 26)
+    if (info.ballP_X >= 20 && info.ballP_X <= 30 && info.ballP_Y >= 12 && info.ballP_Y <= 27)
       return true;
-    if (info.ballP_X >= 45 && info.ballP_X <= 55 && info.ballP_Y >= 44 && info.ballP_Y <= 56)
+    if (info.ballP_X >= 45 && info.ballP_X <= 55 && info.ballP_Y >= 42 && info.ballP_Y <= 57)
       return true;
-    else if (info.ballP_X >= 70 && info.ballP_X <= 80 && info.ballP_Y >= 72 && info.ballP_Y <= 84)
+    else if (info.ballP_X >= 70 && info.ballP_X <= 80 && info.ballP_Y >= 70 && info.ballP_Y <= 86)
       return true;
     else return false;
   };
 
-  const obstacleVal = function obstacleVal(value: string, normal: number): number {
+  const obstacleVal = function obstacleVal(info: GameInfo, value: string): number {
     if (value === 'ballP_X')
-      return obstacleUpDwon() !== 'test' ? gameInfo.ballVelo_X : (gameInfo.ballVelo_X *= -1);
-    else return obstacleUpDwon() !== 'test' ? (gameInfo.ballVelo_Y *= -1) : gameInfo.ballVelo_Y; //Y는 반사각.
+      return obstacleUpDwon(info) !== 'test' ? info.ballVelo_X : (info.ballVelo_X *= -1);
+    else return obstacleUpDwon(info) !== 'test' ? (info.ballVelo_Y *= -1) : info.ballVelo_Y; //Y는 반사각.
   };
 
   // 상태와 바꿀 밸로시티값을 확인하고 변경값을 리턴합니다.
   // 패들의 위치에 따라 반사각이 달라지는 부분이 조금 지저분합니다.
-  const changeVelo = function changeVelo(type: string, value: string): number {
+  const changeVelo = function changeVelo(info: GameInfo, type: string, value: string): number {
     const relativeIntersectY =
       type == 'leftHit'
-        ? gameInfo.leftPaddlePos + 10 - gameInfo.ballP_Y - 1
+        ? info.leftPaddlePos + 10 - info.ballP_Y - 1
         : paddlepaddle[1]
-        ? paddlepaddle[1] + 10 - gameInfo.ballP_Y - 1
-        : gameInfo.rightPaddlePos + 10 - gameInfo.ballP_Y - 1;
+        ? paddlepaddle[1] + 10 - info.ballP_Y - 1
+        : info.rightPaddlePos + 10 - info.ballP_Y - 1;
     const normalizedRelativeIntersectionY = relativeIntersectY / 10;
     //uphit나 downhit판정으로 리턴되어버리면, goal판정에대한 벨로시티가 이상하게 반영됨
     switch (type) {
@@ -172,12 +164,12 @@ const GameStart: React.FC = () => {
         return value === 'ballP_X' ? 1 : 0;
       case 'upHit':
         if (value === 'ballP_X') {
-          if (gameInfo.ballVelo_X > 0) return 1;
+          if (info.ballVelo_X > 0) return 1;
           else return -1;
         } else return 1;
       case 'downHit':
         if (value === 'ballP_X') {
-          if (gameInfo.ballVelo_X > 0) return 1;
+          if (info.ballVelo_X > 0) return 1;
           else return -1;
         } else return -1;
       case 'leftHit':
@@ -185,9 +177,9 @@ const GameStart: React.FC = () => {
       case 'rightHit':
         return value === 'ballP_X' ? -1 : -normalizedRelativeIntersectionY;
       case 'obstacleHit':
-        return obstacleVal(value, -normalizedRelativeIntersectionY);
+        return obstacleVal(info, value);
       default:
-        return value === 'ballP_X' ? gameInfo.ballVelo_X : gameInfo.ballVelo_Y;
+        return value === 'ballP_X' ? info.ballVelo_X : info.ballVelo_Y;
     }
   };
 
@@ -215,49 +207,64 @@ const GameStart: React.FC = () => {
     else return 'rally';
   };
 
-  const checkObstacle = () => {
-    if (testReturn(gameInfo) === 'obstacleHit') {
-      if (gameInfo.ballP_X >= 20 && gameInfo.ballP_X <= 30) return 'obLeft';
-      else if (gameInfo.ballP_X >= 45 && gameInfo.ballP_X <= 55) return 'obCenter';
-      else if (gameInfo.ballP_X >= 70 && gameInfo.ballP_X <= 80) return 'obRight';
+  const checkObstacle = (info: GameInfo) => {
+    if (testReturn(info) === 'obstacleHit') {
+      if (info.ballP_X >= 20 && info.ballP_X <= 30) return 'obLeft';
+      else if (info.ballP_X >= 45 && info.ballP_X <= 55) return 'obCenter';
+      else if (info.ballP_X >= 70 && info.ballP_X <= 80) return 'obRight';
     }
     return 'default';
   };
 
+  // console.log(`매맨 처음 상태가 뭔디: ${testReturn(gameInfo)}  ${gameInfo.ballVelo_X}`);
+
   // 여기가 방향이 기준이면 짧아서 좋지만, 전부다 커버할수가 없어진다.
-  const resObstacle = (id: string, title: string) => {
+  const resObstacle = (info: GameInfo, id: string, title: string) => {
     if (title === 'obCenter') {
-      if (obstacleUpDwon() === 'up') return id === 'X' ? gameInfo.ballP_X : 43;
-      if (obstacleUpDwon() === 'down') return id === 'X' ? gameInfo.ballP_X : 57;
-      if (gameInfo.ballVelo_X > 0) return id === 'X' ? 44 : gameInfo.ballP_Y;
-      else return id === 'X' ? 56 : gameInfo.ballP_Y;
+      if (obstacleUpDwon(info) === 'up') return id === 'X' ? info.ballP_X : 41;
+      if (obstacleUpDwon(info) === 'down') return id === 'X' ? info.ballP_X : 58;
+      if (info.ballVelo_X > 0) return id === 'X' ? 44 : info.ballP_Y;
+      else return id === 'X' ? 56 : info.ballP_Y;
     } else if (title === 'obLeft') {
-      if (obstacleUpDwon() === 'up') return id === 'X' ? gameInfo.ballP_X : 13;
-      if (obstacleUpDwon() === 'down') return id === 'X' ? gameInfo.ballP_X : 27;
-      if (gameInfo.ballVelo_X > 0) return id === 'X' ? 19 : gameInfo.ballP_Y;
-      else return id === 'X' ? 31 : gameInfo.ballP_Y;
+      if (obstacleUpDwon(info) === 'up') return id === 'X' ? info.ballP_X : 11;
+      if (obstacleUpDwon(info) === 'down') return id === 'X' ? info.ballP_X : 28;
+      if (info.ballVelo_X > 0) return id === 'X' ? 19 : info.ballP_Y;
+      else return id === 'X' ? 31 : info.ballP_Y;
     } else {
-      if (obstacleUpDwon() === 'up') return id === 'X' ? gameInfo.ballP_X : 71;
-      if (obstacleUpDwon() === 'down') return id === 'X' ? gameInfo.ballP_X : 85;
-      if (gameInfo.ballVelo_X > 0) return id === 'X' ? 69 : gameInfo.ballP_Y;
-      else return id === 'X' ? 81 : gameInfo.ballP_Y;
+      if (obstacleUpDwon(info) === 'up') return id === 'X' ? info.ballP_X : 69;
+      if (obstacleUpDwon(info) === 'down') return id === 'X' ? info.ballP_X : 87;
+      if (info.ballVelo_X > 0) return id === 'X' ? 69 : info.ballP_Y;
+      else return id === 'X' ? 81 : info.ballP_Y;
     }
   };
 
   // 공의 진행이나 리셋값을 반환합니다.
-  const ballAction = (pos: number, velo: number, id: string) => {
-    if (testReturn(gameInfo) === 'rightgoal' || testReturn(gameInfo) === 'leftgoal') return 50;
-    else if (testReturn(gameInfo) === 'leftHit') return id === 'X' ? 10 : gameInfo.ballP_Y;
-    else if (testReturn(gameInfo) === 'rightHit') return id === 'X' ? 91 : gameInfo.ballP_Y;
-    else if (checkObstacle() === 'obCenter') return resObstacle(id, 'obCenter');
-    else if (checkObstacle() === 'obLeft') return resObstacle(id, 'obLeft');
-    else if (checkObstacle() === 'obRight') return resObstacle(id, 'obRight');
-    else return playingGameInfo.gameMode === 'speed' ? pos + velo * 2 : pos + velo;
+  const ballAction = (info: GameInfo, id: string) => {
+    // console.log(`ㄱㅗㅇ ㅇㅓ디 ${gameInfo.ballP_X}`);
+    if (testReturn(info) === 'rightgoal' || testReturn(info) === 'leftgoal') return 50;
+    else if (
+      testReturn(info) === 'leftHit' &&
+      info.ballP_Y <= info.leftPaddlePos + 19 &&
+      info.ballP_Y >= info.leftPaddlePos + 2
+    )
+      return id === 'X' ? 10 : info.ballP_Y;
+    else if (testReturn(info) === 'rightHit') return id === 'X' ? 91 : info.ballP_Y;
+    else if (playingGameInfo.gameMode === 'obstacle' && checkObstacle(info) === 'obCenter')
+      return resObstacle(info, id, 'obCenter');
+    else if (playingGameInfo.gameMode === 'obstacle' && checkObstacle(info) === 'obLeft')
+      return resObstacle(info, id, 'obLeft');
+    else if (playingGameInfo.gameMode === 'obstacle' && checkObstacle(info) === 'obRight')
+      return resObstacle(info, id, 'obRight');
+    else {
+      if (playingGameInfo.gameMode === 'speed')
+        return id === 'X' ? info.ballP_X + info.ballVelo_X * 2 : info.ballP_Y + info.ballVelo_Y * 2;
+      else return id === 'X' ? info.ballP_X + info.ballVelo_X : info.ballP_Y + info.ballVelo_Y;
+    }
   };
 
   // 어떤 플레이어가 계산할 차례인지를 반환합니다.
-  const getTurn = () => {
-    switch (testReturn(gameInfo)) {
+  const getTurn = (info: GameInfo) => {
+    switch (testReturn(info)) {
       case 'leftgoal':
         return PLAYERONE;
       case 'rightgoal':
@@ -272,52 +279,53 @@ const GameStart: React.FC = () => {
   };
 
   // 상태에 맞게 밸로시티x 변경함수 호출
-  const getXvelo = () => {
-    switch (testReturn(gameInfo)) {
+  const getXvelo = (info: GameInfo) => {
+    // console.log(`처음 상태가 뭔디 ${testReturn(info)},, ${info.ballVelo_X}`);
+    switch (testReturn(info)) {
       case 'leftgoal':
-        return changeVelo('leftgoal', 'ballP_X');
+        return changeVelo(info, 'leftgoal', 'ballP_X');
       case 'rightgoal':
-        return changeVelo('rightgoal', 'ballP_X');
+        return changeVelo(info, 'rightgoal', 'ballP_X');
       case 'leftHit':
-        return changeVelo('leftHit', 'ballP_X');
+        return changeVelo(info, 'leftHit', 'ballP_X');
       case 'rightHit':
-        return changeVelo('rightHit', 'ballP_X');
+        return changeVelo(info, 'rightHit', 'ballP_X');
       case 'upHit':
-        return changeVelo('upHit', 'ballP_X');
+        return changeVelo(info, 'upHit', 'ballP_X');
       case 'downHit':
-        return changeVelo('downHit', 'ballP_X');
+        return changeVelo(info, 'downHit', 'ballP_X');
       case 'obstacleHit':
-        return changeVelo('obstacleHit', 'ballP_X');
+        return changeVelo(info, 'obstacleHit', 'ballP_X');
       default:
-        return changeVelo('defualt', 'ballP_X');
+        return changeVelo(info, 'defualt', 'ballP_X');
     }
   };
 
   // 상태에 맞게 밸로시티y 변경함수 호출
-  const getYvelo = () => {
-    switch (testReturn(gameInfo)) {
+  const getYvelo = (info: GameInfo) => {
+    switch (testReturn(info)) {
       case 'leftgoal':
-        return changeVelo('leftgoal', 'ballP_Y');
+        return changeVelo(info, 'leftgoal', 'ballP_Y');
       case 'rightgoal':
-        return changeVelo('rightgoal', 'ballP_Y');
+        return changeVelo(info, 'rightgoal', 'ballP_Y');
       case 'leftHit':
-        return changeVelo('leftHit', 'ballP_Y');
+        return changeVelo(info, 'leftHit', 'ballP_Y');
       case 'rightHit':
-        return changeVelo('rightHit', 'ballP_Y');
+        return changeVelo(info, 'rightHit', 'ballP_Y');
       case 'upHit':
-        return changeVelo('upHit', 'ballP_Y');
+        return changeVelo(info, 'upHit', 'ballP_Y');
       case 'downHit':
-        return changeVelo('downHit', 'ballP_Y');
+        return changeVelo(info, 'downHit', 'ballP_Y');
       case 'obstacleHit':
-        return changeVelo('obstacleHit', 'ballP_Y'); // 넣지도 않고 반영되길 바라다니.. 한심아.
+        return changeVelo(info, 'obstacleHit', 'ballP_Y'); // 넣지도 않고 반영되길 바라다니.. 한심아.
       default:
-        return changeVelo('defualt', 'ballP_Y');
+        return changeVelo(info, 'defualt', 'ballP_Y');
     }
   };
 
   // 상대의 실점을 기록합니다(계산하는 유저입장에서)
-  const getCheckPoint = () => {
-    switch (testReturn(gameInfo)) {
+  const getCheckPoint = (info: GameInfo) => {
+    switch (testReturn(info)) {
       case 'leftgoal':
         return true;
       case 'rightgoal':
@@ -328,33 +336,31 @@ const GameStart: React.FC = () => {
   };
 
   // 플레이어의 패들위치를 반환합니다.
-  const getPaddlePos = (player: string | null, pos: string) => {
+  const getPaddlePos = (player: string | null, info: GameInfo, pos: string) => {
     if (pos === 'left') {
-      if (player === 'p1') return mouseY ? mouseY : gameInfo.leftPaddlePos;
+      if (player === 'p1') return mouseY ? mouseY : info.leftPaddlePos;
       else return paddlepaddle[0];
     } else {
-      if (player === 'p2') return mouseY ? mouseY : gameInfo.rightPaddlePos;
+      if (player === 'p2') return mouseY ? mouseY : info.rightPaddlePos;
       else return paddlepaddle[1];
     }
   };
 
-  const test = async () => {
-    setGameInfo(gameInfo => {
-      return {
-        ...gameInfo,
-        ballP_X: ballAction(gameInfo.ballP_X, gameInfo.ballVelo_X, 'X'),
-        ballP_Y: ballAction(gameInfo.ballP_Y, gameInfo.ballVelo_Y, 'Y'),
-        leftPaddlePos: getPaddlePos(player, 'left'),
-        rightPaddlePos: getPaddlePos(player, 'right'),
-        player: player === 'p1' ? 1 : 2,
-        ballVelo_X: getXvelo(),
-        ballVelo_Y: getYvelo(),
-        turn: getTurn(),
-        checkPoint: getCheckPoint(),
-      };
+  const calValue = async (info: GameInfo) => {
+    setGameInfo({
+      ...info,
+      ballP_X: ballAction(info, 'X'),
+      ballP_Y: ballAction(info, 'Y'),
+      leftPaddlePos: getPaddlePos(player, info, 'left'),
+      rightPaddlePos: getPaddlePos(player, info, 'right'),
+      player: player === 'p1' ? 1 : 2,
+      ballVelo_X: getXvelo(info),
+      ballVelo_Y: getYvelo(info),
+      turn: getTurn(info),
+      checkPoint: getCheckPoint(info),
     });
   };
-  const calculate = async () => {
+  const calculate = async (info: GameInfo) => {
     // 사용하면 React는 이 내부 함수에서 제공하는 상태 스냅샷이 항상 최신 상태 스냅샷이 되도록 보장하며 모든 예약된 상태 업데이트를 염두에 두고 있다.
     // 이것은 항상 최신 상태 스냅샷에서 작업하도록 하는 더 안전한 방법이다.
     // 따라서 상태 업데이트가 이전 상태에 따라 달라질 때마다 여기에서 이 함수 구문을 사용하는 것이 좋다.
@@ -364,12 +370,9 @@ const GameStart: React.FC = () => {
         (player === 'p1' && calculateOn[0] === true) ||
         (player === 'p2' && calculateOn[1] === true)
       ) {
-        await test();
-        user.socket.emit('calculatedRTData', gameInfo);
-      } else if (
-        (player === 'p1' && gameInfo.turn === 2) ||
-        (player === 'p2' && gameInfo.turn === 1)
-      )
+        await calValue(info);
+        user.socket.emit('calculatedRTData', info);
+      } else if ((player === 'p1' && info.turn === 2) || (player === 'p2' && info.turn === 1))
         user.socket.emit('paddleRTData', mouseY);
     }
   };
@@ -408,38 +411,30 @@ const GameStart: React.FC = () => {
           point[0] > point[1]
             ? playingGameInfo.oneNickname.toUpperCase()
             : playingGameInfo.twoNickname.toUpperCase();
-        setGameInfo(gameInfo => {
-          return { ...gameInfo };
-        });
+        defaultGameinfo();
       });
       ///////
       user.socket.on('rtData', async (data: number[]) => {
-        if (ballball[0] !== data[0]) ballball[0] = data[0];
-        if (ballball[1] !== data[1]) ballball[1] = data[1];
+        //if (ballball[0] !== data[0])
+        ballball[0] = data[0];
+        //if (ballball[1] !== data[1])
+        ballball[1] = data[1];
         if (data[4]) paddlepaddle[0] = data[4]; //마우스가 움직일때만 받아야 최신
         if (data[5]) paddlepaddle[1] = data[5]; //마우스가 움직일때만 받아야 최신
         if (point[0] !== data[8]) point[0] = data[8]; //left score
         if (point[1] !== data[9]) point[1] = data[9]; //right score
-        if (data[6] === 1) calculateOn[1] = false; //p1이 계산중이면, p2는 아닌거지.
-        if (data[6] === 2) calculateOn[0] = false; //p2가 계산중이면, p1는 아닌거지.
+        if (data[6] === 1) {
+          // calculateOn[0] = true;
+          calculateOn[1] = false; //p1이 계산중이면, p2는 아닌거지.
+        }
+        if (data[6] === 2) {
+          calculateOn[0] = false; // calculateOn[1] = true;
+        } //p2가 계산중이면, p1는 아닌거지.
         // 플레이어 turn이 바껴버리는 그순간에 값이 렌더링순서로 인해 넘어오질 않았다. (calculateOn사용이유)
         if (
           (data[6] === 2 && player === 'p2' && calculateOn[1] === false) ||
           (data[6] === 1 && player === 'p1' && calculateOn[0] === false)
         ) {
-          setGameInfo(() => {
-            return {
-              ...gameInfo,
-              ballP_X: ballball[0],
-              ballP_Y: ballball[1],
-              ballVelo_X: data[2],
-              ballVelo_Y: data[3],
-              leftPaddlePos: player === 'p2' ? paddlepaddle[0] : mouseY ? mouseY : paddlepaddle[0],
-              rightPaddlePos: player === 'p1' ? paddlepaddle[1] : mouseY ? mouseY : paddlepaddle[1],
-              player: player === 'p2' ? 2 : 1,
-              turn: data[6],
-            };
-          });
           if (player === 'p2') {
             calculateOn[0] = false;
             calculateOn[1] = true;
@@ -447,6 +442,28 @@ const GameStart: React.FC = () => {
             calculateOn[0] = true;
             calculateOn[1] = false;
           }
+          // setGameInfo({
+          //   ...gameInfo,
+          //   ballP_X: data[0],
+          //   ballP_Y: data[1],
+          //   ballVelo_X: data[2],
+          //   ballVelo_Y: data[3],
+          //   leftPaddlePos: player === 'p2' ? paddlepaddle[0] : mouseY ? mouseY : paddlepaddle[0],
+          //   rightPaddlePos: player === 'p1' ? paddlepaddle[1] : mouseY ? mouseY : paddlepaddle[1],
+          //   player: player === 'p2' ? 2 : 1,
+          //   turn: data[6],
+          // });
+          setGameInfo({
+            ...gameInfo,
+            ballP_X: ballball[0],
+            ballP_Y: ballball[1],
+            ballVelo_X: data[2],
+            ballVelo_Y: data[3],
+            leftPaddlePos: player === 'p2' ? paddlepaddle[0] : mouseY ? mouseY : paddlepaddle[0],
+            rightPaddlePos: player === 'p1' ? paddlepaddle[1] : mouseY ? mouseY : paddlepaddle[1],
+            player: player === 'p2' ? 2 : 1,
+            turn: data[6],
+          });
         }
       });
     } else console.log('ERROR: user undefined');
@@ -478,7 +495,7 @@ const GameStart: React.FC = () => {
       if (user && user.socket && user.socket.connected && canvas) {
         if (ctx) {
           const test = setInterval(() => {
-            calculate();
+            calculate(gameInfo);
             clear(ctx);
             obstacle(ctx);
             ball(ctx);

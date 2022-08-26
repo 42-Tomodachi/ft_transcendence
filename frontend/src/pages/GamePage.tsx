@@ -7,6 +7,7 @@ import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
 import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
 import GameStart from './GameStart';
+import { useNavigate } from 'react-router-dom';
 
 interface GameInfoDto {
   nicknameOne: string;
@@ -21,12 +22,26 @@ interface GameInfoDto {
   ladderLevelTwo: number;
 }
 
+// interface UserProfileDto {
+//   userId: number;
+//   nickname: string;
+//   avatar: string | null;
+//   email: string;
+//   winCount: number;
+//   loseCount: number;
+//   ladderWinCount: number;
+//   ladderLoseCount: number;
+//   ladderLevel: number;
+// }
+
 /*
  * 모달 페이지로 큐에 게임매칭을 수행하게 되면, 이 페이지로 이동합니다.
  * 매칭이 이루어졌다면, 서버에서 매칭유저에 대한 정보를 보내주기로 합의되어있다.
  */
 const GamePage: React.FC = () => {
+  console.log('re-render?\n');
   let socket: Socket;
+  const navigate = useNavigate();
   const [gameStart, setGameStart] = useState(false);
   const { user, setUser } = useContext(AllContext).userData;
   // const { setUserStatus } = useContext(AllContext).userStatus;
@@ -45,15 +60,15 @@ const GamePage: React.FC = () => {
     ladderLevelTwo: 0,
   });
 
-  console.log(count);
-  console.log('게임:' + gameStart);
-  const roomid: number = playingGameInfo?.gameRoomId;
+  //console.log(user); // null
+  //console.log('게임:' + gameStart); // false
 
   useEffect(() => {
     const win: HTMLElement | null = document.getElementById('win');
     const win2: HTMLElement | null = document.getElementById('win2');
+    const roomid: number = playingGameInfo.gameRoomId;
 
-    if (user) {
+    if (user && playingGameInfo) {
       //이제 무조건 소켓을 연결할겁니다. 커넥션타입을 어떻게 분기해줄것인지.. 생각해봅시다.
       //gameMode가 아니고, 모달에서 ladder인걸 기록해놓는 무언가 필요한것입니다아...
       socket = io(`${process.env.REACT_APP_BACK_API}`, {
@@ -172,13 +187,26 @@ const GamePage: React.FC = () => {
           setGameStart(true);
         }
       });
+    } else {
+      // setGameStart(true);
+
+      console.log('junselee: user정보가 없어지니까 날라가서 여기로 오는데');
+      console.log('junselee: 그냥 홈페이지 /game으로 보내버리는 상황');
+      if (socket) {
+        console.log('머야 소켓이있었어?');
+        socket.disconnect();
+      }
+      navigate('/game');
     }
     return () => {
-      console.log('일로오긴해?: ' + roomid);
-      socket.off('gameStartCount');
-      socket.off('matchData');
+      console.log('일로오긴해?: ' + roomid); // -1
+      if (socket) {
+        socket.off('gameStartCount');
+        socket.off('matchData');
+        // socket.disconnect();
+      }
     };
-  }, [roomid]);
+  }, [user]);
 
   // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
   // 함수형으로 반환하는 느낌으로 ..
