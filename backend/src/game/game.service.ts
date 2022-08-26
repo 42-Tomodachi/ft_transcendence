@@ -44,8 +44,8 @@ export class GameService {
 
   getGameRoomList(): GameRoomProfileDto[] {
     const gameRoomDtoArray: GameRoomProfileDto[] = [];
-    for (const item of this.gameEnv.gameRoomTable) {
-      if (!item) {
+    for (const item of this.gameEnv.gameRoomList) {
+      if (!item.active || item.isLadder) {
         continue;
       }
       gameRoomDtoArray.push(item.toGameRoomProfileDto());
@@ -65,13 +65,7 @@ export class GameService {
       throw new BadRequestException('이미 게임을 생성한 유저입니다.');
     }
 
-    const gameId: number = this.gameEnv.createGameRoom(
-      player,
-      createGameRoomDto,
-    );
-
-    // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
-    // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
+    const gameId = this.gameEnv.createGameRoom(player, createGameRoomDto);
 
     const gameRoomDto = new SimpleGameRoomDto();
     gameRoomDto.gameMode = createGameRoomDto.gameMode;
@@ -124,7 +118,7 @@ export class GameService {
     if (game == null) throw new BadRequestException('게임을 찾을 수 없습니다.');
     if (game.password != gamePassword)
       throw new BadRequestException('잘못된 비밀번호.');
-    if (player.isJoinedRoom(game))
+    if (player.isJoinedGame(game))
       throw new BadRequestException('이미 입장 된 방입니다.');
 
     const peopleCount = this.gameEnv.joinPlayerToGame(player, game);
@@ -157,14 +151,13 @@ export class GameService {
 
     switch (userId) {
       case game.firstPlayer.userId:
-        this.gameEnv.gameRoomClear(game);
-
+        game.destroy();
         // 소켓: 로비 리스트 갱신
         game.broadcastToRoom('deleteGameRoom', 'boom!');
         break;
+      case game.secondPlayer.userId:
+        game.secondPlayer.leaveGame(game);
       default:
-        this.gameEnv.leaveGameRoom(game, game.secondPlayer);
-
         const gameUsers = await this.getPlayersInfo(gameId);
         game.broadcastToRoom('updateGameUserList', gameUsers);
       // 소켓: 관전자 설정

@@ -8,6 +8,7 @@ import { GameInfo } from './game.class.interface';
 import { Player } from './game.class.Player';
 
 export class GameAttribute {
+  active: boolean;
   roomId: number;
   ownerId: number;
   roomTitle: string;
@@ -17,18 +18,34 @@ export class GameAttribute {
   secondPlayer: Player | null;
   watchers: Set<Player>;
   playerCount: number;
+  isLadder: boolean;
   isPublic: boolean;
   isPlaying: boolean;
   rtData: GameRtData;
   isSocketUpdated: boolean;
   timers: Map<string, NodeJS.Timer>;
 
-  constructor(
-    roomId: number,
-    createGameRoomDto: CreateGameRoomDto,
-    player1: Player,
-  ) {
-    this.roomId = roomId;
+  constructor() {
+    this.active = false;
+    this.roomId = undefined;
+    this.roomTitle = '';
+    this.ownerId = undefined;
+    this.password = undefined;
+    this.gameMode = undefined;
+    this.firstPlayer = null;
+    this.secondPlayer = null;
+    this.watchers = new Set();
+    this.playerCount = 0;
+    this.isLadder = false;
+    this.isPublic = false;
+    this.isPlaying = false;
+    this.isSocketUpdated = false;
+    this.rtData = new GameRtData();
+    this.timers = new Map();
+  }
+
+  create(createGameRoomDto: CreateGameRoomDto, player1: Player) {
+    this.active = true;
     this.roomTitle = createGameRoomDto.roomTitle;
     this.ownerId = createGameRoomDto.ownerId;
     this.password = createGameRoomDto.password;
@@ -44,6 +61,32 @@ export class GameAttribute {
     this.timers = new Map();
   }
 
+  destroy(): void {
+    this.active = false;
+    this.roomTitle = '';
+    this.ownerId = undefined;
+    this.password = undefined;
+    this.gameMode = undefined;
+    this.firstPlayer.leaveGame(this);
+    this.firstPlayer = null;
+    this.secondPlayer?.leaveGame(this);
+    this.secondPlayer = null;
+    this.watchers.forEach((player) => {
+      player.leaveGame(this);
+    });
+    this.watchers.clear();
+    this.playerCount = 0;
+    this.isLadder = false;
+    this.isPublic = false;
+    this.isPlaying = false;
+    this.isSocketUpdated = false;
+    this.initPlayData();
+    this.timers.forEach((timer) => {
+      clearInterval(timer);
+    });
+    this.timers.clear();
+  }
+
   toGameRoomProfileDto(): GameRoomProfileDto {
     const gameRoomProfileDto = new GameRoomProfileDto();
     gameRoomProfileDto.gameId = this.roomId;
@@ -57,7 +100,7 @@ export class GameAttribute {
 
   toGameResultDto(): GameResultDto {
     const gameResultDto = new GameResultDto();
-    gameResultDto.isLadder = this.isLadder();
+    gameResultDto.isLadder = this.isLadder;
     gameResultDto.playerOneId = this.firstPlayer.userId;
     gameResultDto.playerTwoId = this.secondPlayer.userId;
     gameResultDto.playerOneScore = this.rtData.scoreLeft;
@@ -65,10 +108,6 @@ export class GameAttribute {
     gameResultDto.winnerId = this.getWinner().userId;
 
     return gameResultDto;
-  }
-
-  isLadder(): boolean {
-    return !this.password && !this.isPublic;
   }
 
   getWinner(): Player {
@@ -86,7 +125,21 @@ export class GameAttribute {
     return players;
   }
 
-  initGameData(): void {
+  setOwner(player: Player): boolean {
+    if (!player) return false;
+    if (player.gamePlaying.roomId !== this.roomId) return false;
+
+    if (this.ownerId !== player.userId) return false;
+
+    this.firstPlayer = player;
+    return true;
+  }
+
+  checkPassWord(password: string): boolean {
+    return this.password === password;
+  }
+
+  initPlayData(): void {
     this.isPlaying = false;
     delete this.rtData;
     this.rtData = new GameRtData();
@@ -117,7 +170,18 @@ export class GameAttribute {
     rtData.updateFlag = false;
   }
 
+  isOnStartCount(): boolean {
+    return this.timers.has('gameStartCount');
+  }
+
+  stopStartCount(): void {
+    clearInterval(this.timers['gameStartCount']);
+    this.timers.delete('gameStartCount');
+  }
+
   startCountdown(): void {
+    if (this.timers.has('gameStartCount')) return;
+
     let counting = 5;
     this.broadcastToRoom('gameStartCount', `${counting}`);
 
@@ -125,31 +189,20 @@ export class GameAttribute {
       this.broadcastToRoom('gameStartCount', `${counting}`);
       counting--;
       if (counting < 0) {
-        clearInterval(timer);
-        // this.startGame(game); // careful: async
+        this.stopStartCount();
         this.gameStart();
       }
     }, 1000);
+    this.timers.set('gameStartCount', timer);
   }
+
   gameStart(): void {
     this.isPlaying = true;
+    // change player's status
     this.sendRtData();
   }
 
   isFinished(): boolean {
     return this.rtData.scoreLeft >= 10 || this.rtData.scoreRight >= 10;
   }
-
-  //   addPlayer(player: Player): number {
-  //     if (!this.secondPlayer) {
-  //       this.secondPlayer = player;
-  //       player.setGamePlaying(this);
-  //     } else {
-  //       this.watchers.push(player);
-  //       player.addWatchingGame(this);
-  //     }
-  //     this.playerCount++;
-  //     this.isSocketUpdated = false;
-  //     return this.playerCount;
-  //   }
 }

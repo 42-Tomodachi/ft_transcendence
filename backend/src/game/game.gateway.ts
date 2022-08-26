@@ -23,16 +23,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(client: Socket): Promise<void> {
     const connectionType = client.handshake.query['connectionType']?.toString();
-    const userId: number = parseInt(
-      client.handshake.query['userId']?.toString(),
-      10,
-    );
+    const userId: number = +client.handshake.query['userId'];
+    const gameId: number = +client.handshake.query['roomId'];
     if (!userId) {
       console.log(`connection: New client has no userId`);
       client.send('no userId');
       client.disconnect();
     }
-    this.gameEnv.onFirstSocketHandshake(client, userId, connectionType);
+    this.gameEnv.onFirstSocketHandshake(client, userId, gameId, connectionType);
   }
 
   handleDisconnect(client: Socket): void {
