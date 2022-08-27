@@ -11,7 +11,6 @@ import {
   SimpleGameRoomDto,
   ChallengeResponse,
 } from './dto/game.dto';
-import { GameGateway } from './game.gateway';
 import { GameEnv } from './class/game.class.GameEnv';
 
 // class RtLogger {
@@ -63,7 +62,7 @@ export class GameService {
     }
     const player = this.gameEnv.getPlayerByUserId(user.id);
     if (player.gamePlaying) {
-      throw new BadRequestException('이미 게임을 생성한 유저입니다.');
+      throw new BadRequestException(`이미 게임을 생성한 유저입니다.`);
     }
 
     const gameId = this.gameEnv.createGameRoom(player, createGameRoomDto);

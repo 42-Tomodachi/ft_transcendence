@@ -21,13 +21,14 @@ export class GameAttribute {
   isLadder: boolean;
   isPublic: boolean;
   isPlaying: boolean;
+  isDestroying: boolean;
   rtData: GameRtData;
   isSocketUpdated: boolean;
   timers: Map<string, NodeJS.Timer>;
 
-  constructor() {
+  constructor(gameId: number) {
     this.active = false;
-    this.roomId = undefined;
+    this.roomId = gameId;
     this.roomTitle = '';
     this.ownerId = undefined;
     this.password = undefined;
@@ -39,6 +40,7 @@ export class GameAttribute {
     this.isLadder = false;
     this.isPublic = false;
     this.isPlaying = false;
+    this.isDestroying = false;
     this.isSocketUpdated = false;
     this.rtData = new GameRtData();
     this.timers = new Map();
@@ -62,6 +64,7 @@ export class GameAttribute {
   }
 
   destroy(): void {
+    this.isDestroying = true;
     this.active = false;
     this.roomTitle = '';
     this.ownerId = undefined;
@@ -85,6 +88,7 @@ export class GameAttribute {
       clearInterval(timer);
     });
     this.timers.clear();
+    this.isDestroying = false;
   }
 
   toGameRoomProfileDto(): GameRoomProfileDto {
@@ -154,6 +158,10 @@ export class GameAttribute {
   }
 
   broadcastToRoom(event: string, ...data: any[]): void {
+    if (!this.firstPlayer) {
+      console.log('broadcastToRoom: no player in Game');
+      return;
+    }
     const socket = this.firstPlayer.socketPlayingGame;
     socket.to(this.roomId.toString()).emit(event, ...data);
     socket.emit(event, ...data);
@@ -173,7 +181,7 @@ export class GameAttribute {
   }
 
   stopStartCount(): void {
-    clearInterval(this.timers['gameStartCount']);
+    clearInterval(this.timers.get('gameStartCount'));
     this.timers.delete('gameStartCount');
   }
 
