@@ -161,7 +161,7 @@ export class ChatService {
     const { id: createdChatContentId } = await this.chatContentsRepo.save({
       chatRoomId: roomId,
       userId: targetUserId,
-      content: `님이 일정 시간동안 강퇴당했습니다.`,
+      content: `님이 10초 동안 강퇴당했습니다.`,
       isNotice: true,
     });
 
@@ -621,22 +621,22 @@ export class ChatService {
         10 * 1000,
         targetChatParticipant,
       );
+
+      // 음소거 메세지 db에 저장
+      const { id: createdChatContentId } = await this.chatContentsRepo.save({
+        chatRoomId: targetChatParticipant.chatRoomId,
+        userId: targetChatParticipant.userId,
+        content: `님은 10초 동안 채팅이 금지되었습니다.`,
+        isNotice: true,
+      });
+
+      // 채널 유저들에게 음소거해제 메세지 전송
+      this.chatGateway.sendNoticeMessage(
+        targetChatParticipant.chatRoomId,
+        await this.getChatContentDtoForEmit(createdChatContentId),
+      );
     }
     await targetChatParticipant.save();
-
-    // 음소거 메세지 db에 저장
-    const { id: createdChatContentId } = await this.chatContentsRepo.save({
-      chatRoomId: targetChatParticipant.chatRoomId,
-      userId: targetChatParticipant.userId,
-      content: `님은 채팅이 금지되었습니다.`,
-      isNotice: true,
-    });
-
-    // 채널 유저들에게 음소거해제 메세지 전송
-    this.chatGateway.sendNoticeMessage(
-      targetChatParticipant.chatRoomId,
-      await this.getChatContentDtoForEmit(createdChatContentId),
-    );
 
     this.chatGateway.wss
       .to(roomId.toString())
