@@ -110,6 +110,7 @@ const GamePage: React.FC = () => {
       // gameMode가 아니라 래더인지 아닌지를 알려주는 변수여야함!!
       if (playingGameInfo.gameLadder === true) {
         socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
+          console.log('MMMMMMMAttata');
           setInfo({
             ...info,
             nicknameOne: p1.nickname,
@@ -151,6 +152,17 @@ const GamePage: React.FC = () => {
       } else {
         // 래더가 아닐때의 소켓온
         socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
+          if (!p1 && !p2) {
+            // console.log('received both null');
+            setInfo({
+              ...info,
+              nicknameTwo: '',
+              avatarTwo: '',
+              winCountTwo: 0,
+              loseCountTwo: 0,
+              ladderLevelTwo: 0,
+            });
+          } else {
           setInfo({
             ...info,
             nicknameOne: p1.nickname,
@@ -169,28 +181,28 @@ const GamePage: React.FC = () => {
           if (win) win.style.width = `${(p1.winCount / (p1.winCount + p1.loseCount)) * 100}%`;
           if (win2 && p2)
             win2.style.width = `${(p2.winCount / (p2.winCount + p2.loseCount)) * 100}%`;
-
+          }
           // 플레이어가 p1이거나 p2이거나, g1임 (관전자)
-          if (user?.nickname === p1.nickname)
+          if (user?.nickname === info.nicknameOne)
             setPlayingGameInfo({
               ...playingGameInfo,
               player: 'p1',
-              oneNickname: p1.nickname,
-              twoNickname: p2?.nickname,
+              oneNickname: info.nicknameOne,
+              twoNickname: info.nicknameTwo,
             });
-          else if (user?.nickname === p2?.nickname)
+          else if (user?.nickname === info.nicknameTwo)
             setPlayingGameInfo({
               ...playingGameInfo,
               player: 'p2',
-              oneNickname: p1.nickname,
-              twoNickname: p2?.nickname,
+              oneNickname: info.nicknameOne,
+              twoNickname: info.nicknameTwo,
             });
           else {
             setPlayingGameInfo({
               ...playingGameInfo,
               player: 'g1',
-              oneNickname: p1.nickname,
-              twoNickname: p2?.nickname,
+              oneNickname: info.nicknameOne,
+              twoNickname: info.nicknameTwo,
             });
           }
         });
@@ -217,7 +229,7 @@ const GamePage: React.FC = () => {
       console.log('일로오긴해?: ' + roomid); // -1
       if (socket) {
         socket.off('gameStartCount');
-        socket.off('matchData');
+        // socket.off('matchData');
         // socket.disconnect();
       }
     };

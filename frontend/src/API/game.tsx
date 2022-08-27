@@ -37,7 +37,7 @@ const gameAPI = {
       );
       return res.data;
     } catch (e) {
-      if (e instanceof Error) console.error(e.message);
+      if (e instanceof Error) {console.error(e.message); console.dir(e);}
       else console.error(e);
       return null;
     }
@@ -71,7 +71,7 @@ const gameAPI = {
       );
       return res.data;
     } catch (e) {
-      if (e instanceof Error) console.error(e.message);
+      if (e instanceof Error) {console.error(e.message); console.dir(e);}
       else console.error(e);
       return null;
     }
