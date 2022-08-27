@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME } from '../utils/interface'; // GameMode
+import { GAME, CHECK_SCORE } from '../utils/interface'; // GameMode
 import { AllContext } from '../store';
 // import { useNavigate } from 'react-router-dom'; //네비
 // import { useBeforeunload } from 'react-beforeunload';
@@ -35,7 +35,7 @@ interface GameInfo {
 
 const GameStart: React.FC = () => {
   // const navigate = useNavigate();
-
+  const { setModal } = useContext(AllContext).modalData;
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
   const { user } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
@@ -191,13 +191,13 @@ const GameStart: React.FC = () => {
     else if (info.ballP_Y >= 97) return 'downHit';
     else if (
       info.ballP_X >= 4 &&
-      info.ballP_X <= 9 &&
+      info.ballP_X <= 8 &&
       info.ballP_Y >= info.leftPaddlePos &&
       info.ballP_Y <= info.leftPaddlePos + 21
     )
       return 'leftHit';
     else if (
-      info.ballP_X >= 92 &&
+      info.ballP_X >= 93 &&
       info.ballP_X <= 96 &&
       info.ballP_Y >= info.rightPaddlePos &&
       info.ballP_Y <= info.rightPaddlePos + 21
@@ -247,8 +247,13 @@ const GameStart: React.FC = () => {
       info.ballP_Y <= info.leftPaddlePos + 19 &&
       info.ballP_Y >= info.leftPaddlePos + 2
     )
-      return id === 'X' ? 10 : info.ballP_Y;
-    else if (testReturn(info) === 'rightHit') return id === 'X' ? 91 : info.ballP_Y;
+      return id === 'X' ? 9 : info.ballP_Y;
+    else if (
+      testReturn(info) === 'rightHit' &&
+      info.ballP_Y <= info.rightPaddlePos + 19 &&
+      info.ballP_Y >= info.rightPaddlePos + 2
+    )
+      return id === 'X' ? 92 : info.ballP_Y;
     else if (playingGameInfo.gameMode === 'obstacle' && checkObstacle(info) === 'obCenter')
       return resObstacle(info, id, 'obCenter');
     else if (playingGameInfo.gameMode === 'obstacle' && checkObstacle(info) === 'obLeft')
@@ -443,6 +448,8 @@ const GameStart: React.FC = () => {
             rightPaddlePos: player === 'p1' ? paddlepaddle[1] : mouseY ? mouseY : paddlepaddle[1],
             turn: data[6],
           });
+
+          //setModal(CHECK_SCORE);
         }
       });
     } else console.log('ERROR: user undefined');
@@ -455,12 +462,17 @@ const GameStart: React.FC = () => {
 
   document.addEventListener('keydown', keyDownHandler, false);
   function keyDownHandler(e: KeyboardEvent) {
+    // console.log(`키이벤트 ${e.code}, ${e.key}`);
     if (player === 'p1' || player === 'p2') {
       if (!mouseY) mouseY = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
-      if (e.keyCode === 39 && ((player === 'p2' && mouseY > 2) || (player === 'p1' && mouseY < 78)))
+      if (
+        e.key === 'ArrowRight' &&
+        ((player === 'p2' && mouseY > 2) || (player === 'p1' && mouseY < 78))
+      )
         mouseY += player === 'p1' ? 2 : -2;
+      // 키코드 줄 왜저렇게 나오지.
       else if (
-        e.keyCode === 37 &&
+        e.key === 'ArrowLeft' &&
         ((player === 'p1' && mouseY > 2) || (player === 'p2' && mouseY < 78))
       )
         mouseY += player === 'p1' ? -2 : 2;

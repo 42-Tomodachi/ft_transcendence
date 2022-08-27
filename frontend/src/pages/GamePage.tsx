@@ -92,9 +92,10 @@ const GamePage: React.FC = () => {
         multiplex: false,
         query: {
           userId: user && user.userId,
+          roomId: roomid && roomid,
           connectionType: playingGameInfo.gameLadder ? 'ladderGame' : 'normalGame',
         },
-      });
+      }); // roomid 유저상태
 
       socket.on('message', () => {
         console.log(` 일반 connected socket : ${socket.id}`);
