@@ -180,6 +180,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  async emitChatHistoryToSocketThatSpecificUserIsParticipating(
+    userId: number,
+  ): Promise<void> {
+    const participantingChatRoomIds = this.getParticipatingChatRoomIds(userId);
+
+    participantingChatRoomIds.forEach((roomId) => {
+      this.connectedSocketMap
+        .get(roomId.toString())
+        .forEach(async (socketId, userIdInRoom) => {
+          const chatContentDtos = await this.chatService.getChatContentsForEmit(
+            +roomId,
+            +userIdInRoom,
+          );
+          if (chatContentDtos === '참여중인 채팅방이 아닙니다.')
+            this.wss.to(socketId).emit('disconnectSocket', chatContentDtos);
+          else this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
+        });
+    });
+  }
+
   getParticipatingSocketIds(userId: string): string[] {
     const socketIds: string[] = [];
 

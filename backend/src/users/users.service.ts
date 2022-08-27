@@ -291,6 +291,9 @@ export class UsersService {
 
     if (block) {
       await this.blockedUserRepo.delete({ id: block.id });
+      this.chatGateway.emitChatHistoryToSocketThatSpecificUserIsParticipating(
+        myId,
+      );
 
       return { isBlocked: false };
     } else {
