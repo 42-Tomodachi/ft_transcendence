@@ -14,7 +14,11 @@ export class GameEnv {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
-  ) {}
+  ) {
+    for (let index = 0; index < 100; index++) {
+      this.gameRoomList[index] = new GameAttribute(index + 1);
+    }
+  }
 
   socketIdToPlayerMap = new Map<string, Player>();
   playerList: Player[] = [];
@@ -61,10 +65,8 @@ export class GameEnv {
   // gameRoom* related methods
 
   getFreeGameRoom(): GameAttribute {
-    for (const index in this.gameRoomList) {
-      const game = this.gameRoomList[index];
+    for (const game of this.gameRoomList) {
       if (game.active === false) {
-        game.roomId = +index;
         return game;
       }
     }
@@ -72,7 +74,7 @@ export class GameEnv {
   }
 
   getGameRoom(gameId: number): GameAttribute {
-    return this.gameRoomTable.at(gameId);
+    return this.gameRoomList.at(gameId - 1);
   }
 
   //
@@ -135,8 +137,13 @@ export class GameEnv {
     gameId: number,
     player: Player,
   ): void {
+    if (!gameId) {
+      console.log(`connection: New client has no gameId`);
+      client.send('no gameId');
+      client.emit('fatalError'); //
+      return;
+    }
     const game = this.getGameRoom(gameId);
-    if (!game) return;
     if (
       game.firstPlayer !== player &&
       game.secondPlayer !== player &&
@@ -176,13 +183,31 @@ export class GameEnv {
         console.log(message);
         client.send(message);
     }
-    console.log(`New client connected: ${client.id}`);
-    client.send(`New client connected: ${client.id}`);
+    console.log(
+      `New client connected: ${client.id.slice(
+        0,
+        6,
+      )} ${connectionType} user:${userId} game:${gameId}`,
+    );
+    client.send(
+      `New client connected: ${client.id.slice(
+        0,
+        6,
+      )} ${connectionType} user:${userId} game:${gameId}`,
+    );
   }
 
-  onSocketDisconnect(client: Socket, connectionType: string): void {
+  onSocketDisconnect(
+    client: Socket,
+    connectionType: string,
+    userId: number,
+    gameId: number,
+  ): void {
     const player = this.getPlayerBySocket(client);
-    this.socketIdToPlayerMap[client.id] = player;
+    if (!player) {
+      console.log('onSocketDisconnect: Cannot get Player with socket');
+    }
+    // this.socketIdToPlayerMap[client.id] = player;
 
     switch (connectionType) {
       case 'gameLobby':
@@ -203,25 +228,31 @@ export class GameEnv {
         console.log(message);
         client.send(message);
     }
-    console.log(`New client connected: ${client.id}`);
-    client.send(`New client connected: ${client.id}`);
+    console.log(
+      `Client disconnected: ${client.id.slice(
+        0,
+        6,
+      )} ${connectionType} user:${userId} game:${gameId}`,
+    );
+    client.send(
+      `Client disconnected: ${client.id.slice(
+        0,
+        6,
+      )} ${connectionType} user:${userId} game:${gameId}`,
+    );
   }
 
   clearPlayerSocket(client: Socket): void {
     const player: Player = this.socketIdToPlayerMap[client.id];
     if (player === undefined) return;
 
-    switch (client) {
-      case player.socketLobby:
-    }
-
     const game = player.socketsToGameMap.get(client);
     if (game) {
-      if (game.isPlaying === true) {
-        player.unsetGameSocket(client);
-        player.socketPlayingGame = undefined;
-        return;
-      }
+      // if (game.isPlaying === true) {
+      //   player.unsetGameSocket(client);
+      //   player.socketPlayingGame = undefined;
+      //   return;
+      // }
       player.unsetGameSocket(client);
       player.leaveGame(game);
     }
@@ -258,6 +289,7 @@ export class GameEnv {
   createGameRoom(player: Player, createGameRoomDto: CreateGameRoomDto): number {
     const game = this.getFreeGameRoom();
     game.create(createGameRoomDto, player);
+    player.gamePlaying = game;
 
     // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
     // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
@@ -293,7 +325,7 @@ export class GameEnv {
 
   setSocketJoin(client: Socket, game: GameAttribute): void {
     if (!game) {
-      console.log('setSocketonGame: game is undefined.');
+      console.log('setSocketJoin: game is undefined.');
       return;
     }
     client.join(game.roomId.toString());
@@ -373,10 +405,13 @@ export class GameEnv {
     if (this.ladderQueue.length < 2) {
       return undefined;
     }
+    const game = this.getFreeGameRoom();
+    if (!game) {
+      console.log('makeLadderMatch: Cannot get Empty Room');
+      return undefined;
+    }
     const player1 = this.ladderQueue.shift();
     const player2 = this.ladderQueue.shift();
-    const game = this.getFreeGameRoom();
-    if (!game) return undefined;
 
     const createGameRoomDto = new CreateGameRoomDto();
     createGameRoomDto.roomTitle = `LadderGame${game.roomId}`;
@@ -403,8 +438,8 @@ export class GameEnv {
   async waitForPlayerJoins(client: Socket, gameId: number): Promise<void> {
     const player = this.getPlayerBySocket(client);
     const game = this.getGameRoom(gameId);
-    const isPlaying: boolean = player.gamePlaying === game;
-    if (!isPlaying && player.gamesWatching.get(game) !== client) {
+    const isRightGame = player.gamePlaying === game;
+    if (!isRightGame && player.gamesWatching.get(game) !== client) {
       console.log(
         `waitForPlayerJoins: ${player.userId} sent wrong roomNo.${gameId}`,
       );

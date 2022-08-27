@@ -28,14 +28,17 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!userId) {
       console.log(`connection: New client has no userId`);
       client.send('no userId');
-      client.disconnect();
+      client.emit('fatalError'); //
     }
     this.gameEnv.onFirstSocketHandshake(client, userId, gameId, connectionType);
   }
 
   handleDisconnect(client: Socket): void {
     const connectionType = client.handshake.query['connectionType']?.toString();
-    this.gameEnv.onSocketDisconnect(client, connectionType);
+    const userId: number = +client.handshake.query['userId'];
+    const gameId: number = +client.handshake.query['roomId'];
+
+    this.gameEnv.onSocketDisconnect(client, connectionType, userId, gameId);
   }
 
   @SubscribeMessage('cancelLadderQueue')

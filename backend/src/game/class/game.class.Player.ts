@@ -35,7 +35,10 @@ export class Player {
   }
 
   setGameSocket(game: GameAttribute, socket: Socket): void {
-    if (!game || !socket) return;
+    if (!game || !socket) {
+      console.log(`setGameSocket: null game or socket`);
+      return;
+    }
 
     if (game === this.gamePlaying) {
       this.socketPlayingGame = socket;
@@ -73,29 +76,35 @@ export class Player {
       console.log('leaveGameRoom: no game');
       return false;
     }
+    if (game.isDestroying === true) return true;
     if (
       game.roomId !== this.gamePlaying.roomId &&
       !this.gamesWatching.has(game)
-    )
+    ) {
+      console.log('leaveGameRoom: no target game');
       return false;
+    }
 
     switch (this) {
       case game.firstPlayer:
+        game.destroy();
         this.gamePlaying = null;
         this.socketsToGameMap.delete(this.socketPlayingGame);
         this.socketPlayingGame = null;
-        game.destroy();
         break;
       case game.secondPlayer:
         this.gamePlaying = null;
         this.socketsToGameMap.delete(this.socketPlayingGame);
         this.socketPlayingGame = null;
         game.secondPlayer = null;
+        game.playerCount--;
         if (game.isOnStartCount()) game.stopStartCount();
+        game.broadcastToRoom('matchData', null, null);
         break;
       default:
         this.socketsToGameMap.delete(this.gamesWatching.get(game));
         this.gamesWatching.delete(game);
+        game.playerCount--;
         game.watchers.delete(this);
     }
     return true;
@@ -109,7 +118,6 @@ export class Player {
   }
 
   isJoinedGame(game: GameAttribute): boolean {
-    if (this.gamePlaying === game || this.gamesWatching.has(game)) return true;
-    return false;
+    return this.gamePlaying === game || this.gamesWatching.has(game);
   }
 }
