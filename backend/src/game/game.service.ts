@@ -145,7 +145,7 @@ export class GameService {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
 
     const game = this.gameEnv.getGameRoom(gameId);
-    if (game == null) {
+    if (!game) {
       throw new BadRequestException('게임을 찾을 수 없습니다.');
     }
 
@@ -153,7 +153,6 @@ export class GameService {
       case game.firstPlayer.userId:
         game.destroy();
         // 소켓: 로비 리스트 갱신
-        game.broadcastToRoom('deleteGameRoom', 'boom!');
         break;
       case game.secondPlayer.userId:
         game.secondPlayer.leaveGame(game);

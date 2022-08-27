@@ -10,6 +10,7 @@ export class Player {
   gamePlaying: GameAttribute;
   gamesWatching: Map<GameAttribute, Socket>;
   inLadderQ: boolean;
+  isLeaving: boolean;
 
   constructor(userId: number, game: GameAttribute) {
     this.socketLobby = null;
@@ -20,6 +21,7 @@ export class Player {
     this.gamePlaying = game;
     this.gamesWatching = new Map<GameAttribute, Socket>();
     this.inLadderQ = false;
+    this.isLeaving = false;
   }
 
   clear(): void {
@@ -72,11 +74,11 @@ export class Player {
   }
 
   leaveGame(game: GameAttribute): boolean {
+    if (this.isLeaving === true) return true;
     if (!game) {
       console.log('leaveGameRoom: no game');
       return false;
     }
-    if (game.isDestroying === true) return true;
     if (
       game.roomId !== this.gamePlaying.roomId &&
       !this.gamesWatching.has(game)
@@ -85,6 +87,7 @@ export class Player {
       return false;
     }
 
+    this.isLeaving = true;
     switch (this) {
       case game.firstPlayer:
         game.destroy();
@@ -107,6 +110,7 @@ export class Player {
         game.playerCount--;
         game.watchers.delete(this);
     }
+    this.isLeaving = false;
     return true;
   }
 
