@@ -7,7 +7,7 @@ import { GameGateway } from './game.gateway';
 import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from 'src/auth/auth.module';
 import { GameEnv } from './class/game.class.GameEnv';
-import { UserStatusModule } from 'userStatus/userStatus.module';
+import { UserStatusModule } from 'src/userStatus/userStatus.module';
 
 @Module({
   imports: [

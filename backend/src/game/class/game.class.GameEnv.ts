@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/users.entity';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { GameInfo } from './game.class.interface';
-import { UserStatusContainer } from 'userStatus/userStatus.service';
+import { UserStatusContainer } from 'src/userStatus/userStatus.service';
 
 @Injectable()
 export class GameEnv {

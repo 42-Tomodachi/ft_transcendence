@@ -22,7 +22,7 @@ import { BlockedUser } from './entities/blockedUser.entity';
 import { Follow } from './entities/follow.entity';
 import { GameRecord } from './entities/gameRecord.entity';
 import { User } from './entities/users.entity';
-import { UserStatusContainer } from '../../userStatus/userStatus.service';
+import { UserStatusContainer } from '../userStatus/userStatus.service';
 
 @Injectable()
 export class UsersService {

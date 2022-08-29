@@ -16,9 +16,11 @@ class UserStatus {
   setChatLobbySocket(socket: Socket): void {
     if (!socket) {
       this.sockets.delete('chatLobby');
+      this.changeStatus();
       return;
     }
     this.sockets.set('chatLobby', socket);
+    this.changeStatus();
   }
 
   setGameLobbySocket(socket: Socket): void {
@@ -65,7 +67,7 @@ class UserStatus {
 
   changeStatus(): void {
     if (this.gameSockets.size !== 0) this.status = 'play';
-    else if (this.sockets.size === 0) this.status = 'on';
+    else if (this.sockets.size !== 0) this.status = 'on';
     else this.status = 'off';
   }
 }

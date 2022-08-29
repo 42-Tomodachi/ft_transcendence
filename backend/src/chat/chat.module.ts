@@ -4,7 +4,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { UsersModule } from 'src/users/users.module';
-import { UserStatusModule } from 'userStatus/userStatus.module';
+import { UserStatusModule } from 'src/userStatus/userStatus.module';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';

@@ -10,7 +10,7 @@ import { GameRecord } from './entities/gameRecord.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ChatModule } from 'src/chat/chat.module';
-import { UserStatusModule } from 'userStatus/userStatus.module';
+import { UserStatusModule } from 'src/userStatus/userStatus.module';
 
 @Module({
   exports: [UsersService],

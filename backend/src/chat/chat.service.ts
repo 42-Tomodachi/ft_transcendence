@@ -30,7 +30,7 @@ import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
 import * as bcrypt from 'bcryptjs';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { ChatLobbyGateway } from './chatLobby.gateway';
-import { UserStatusContainer } from 'userStatus/userStatus.service';
+import { UserStatusContainer } from 'src/userStatus/userStatus.service';
 
 @Injectable()
 export class ChatService {

@@ -10,7 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { User } from 'src/users/entities/users.entity';
-import { UserStatusContainer } from 'userStatus/userStatus.service';
+import { UserStatusContainer } from 'src/userStatus/userStatus.service';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import { ChatContentDto } from './dto/chatContents.dto';
