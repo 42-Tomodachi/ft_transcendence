@@ -16,41 +16,33 @@ class UserStatus {
   setChatLobbySocket(socket: Socket): void {
     if (!socket) {
       this.sockets.delete('chatLobby');
-      this.changeStatus();
       return;
     }
     this.sockets.set('chatLobby', socket);
-    this.changeStatus();
   }
 
   setGameLobbySocket(socket: Socket): void {
     if (!socket) {
       this.sockets.delete('gameLobby');
-      this.changeStatus();
       return;
     }
     this.sockets.set('gameLobby', socket);
-    this.changeStatus();
   }
 
   setChatRoomSocket(socket: Socket): void {
     if (!socket) {
       this.sockets.delete('chatRoom');
-      this.changeStatus();
       return;
     }
     this.sockets.set('chatRoom', socket);
-    this.changeStatus();
   }
 
   setGameRoomSocket(socket: Socket): void {
     this.gameSockets.add(socket);
-    this.changeStatus();
   }
 
   removeGameRoomSocket(socket: Socket): void {
     this.gameSockets.delete(socket);
-    this.changeStatus();
   }
 
   getSockets(): Socket[] {
@@ -65,10 +57,29 @@ class UserStatus {
     return found;
   }
 
-  changeStatus(): void {
+  changeStatus(): boolean {
+    const lastStatus = this.status;
+
     if (this.gameSockets.size !== 0) this.status = 'play';
     else if (this.sockets.size !== 0) this.status = 'on';
     else this.status = 'off';
+
+    return this.status !== lastStatus;
+  }
+
+  broadcastToLobbies(ev: string, ...args: any[]): void {
+    const cLobby = this.sockets.get('chatLobby');
+    const gLobby = this.sockets.get('gameLobby');
+
+    if (cLobby) {
+      gLobby.broadcast.emit(ev, ...args);
+      gLobby.emit(ev, ...args);
+      return;
+    }
+    if (gLobby) {
+      gLobby.to('gameLobby').emit(ev, ...args);
+      gLobby.emit(ev, ...args);
+    }
   }
 }
 
@@ -94,14 +105,13 @@ export class UserStatusContainer {
     return this.get(userId).getSockets();
   }
 
+  // return: 유저상태 변경 여부
   setSocket(
     userId: number,
     socket: Socket,
     type: 'chatLobby' | 'chatRoom' | 'gameLobby' | 'gameRoom',
     rm?: boolean,
-  ): void {
-    console.log('this.userContainer.at(userId)');
-    console.log(this.userContainer.at(userId));
+  ): boolean {
     switch (type) {
       case 'chatLobby':
         this.get(userId).setChatLobbySocket(socket);
@@ -117,6 +127,6 @@ export class UserStatusContainer {
         else this.get(userId).setGameRoomSocket(socket);
         break;
     }
-    console.log(this.userContainer.at(userId));
+    return this.get(userId).changeStatus();
   }
 }

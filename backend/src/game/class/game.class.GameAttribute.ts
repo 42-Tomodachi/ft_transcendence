@@ -71,7 +71,7 @@ export class GameAttribute {
     this.ownerId = undefined;
     this.password = undefined;
     this.gameMode = undefined;
-    this.firstPlayer.leaveGame(this);
+    this.firstPlayer?.leaveGame(this);
     this.firstPlayer = null;
     this.secondPlayer?.leaveGame(this);
     this.secondPlayer = null;

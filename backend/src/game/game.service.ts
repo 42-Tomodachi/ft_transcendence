@@ -154,6 +154,11 @@ export class GameService {
       throw new BadRequestException('플레이어를 찾을 수 없습니다.');
     }
 
+    if (game.isPlaying === true) {
+      const winner =
+        game.firstPlayer === player ? game.secondPlayer : game.firstPlayer;
+      this.gameEnv.terminateGame(game, winner);
+    }
     player.leaveGame(game);
 
     // // old code
