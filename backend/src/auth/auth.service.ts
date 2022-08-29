@@ -19,6 +19,7 @@ import * as bcrypt from 'bcryptjs';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { ChatGateway } from 'src/chat/chat.gateway';
 import { ChatService } from 'src/chat/chat.service';
+import { ChatLobbyGateway } from 'src/chat/chatLobby.gateway';
 
 @Injectable()
 export class AuthService {
@@ -29,6 +30,7 @@ export class AuthService {
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
     private readonly chatGateway: ChatGateway,
+    private readonly chatLobbyGateway: ChatLobbyGateway,
     private readonly jwtService: JwtService,
     private readonly jwtStrategy: JwtStrategy,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
@@ -135,6 +137,8 @@ export class AuthService {
     });
 
     this.chatGateway.emitFriendList(user.id);
+    this.chatLobbyGateway.emitUserList();
+    this.chatLobbyGateway.emitFriendList(user.id);
 
     return this.userToIsSignedUpDto(user, jwt);
   }
@@ -166,6 +170,8 @@ export class AuthService {
     });
 
     this.chatGateway.emitFriendList(user.id);
+    this.chatLobbyGateway.emitUserList();
+    this.chatLobbyGateway.emitFriendList(user.id);
   }
 
   async startSecondAuth(

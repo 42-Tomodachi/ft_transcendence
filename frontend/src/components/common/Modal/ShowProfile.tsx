@@ -4,8 +4,13 @@ import Button from '../Button';
 import Modal from '.';
 import ProfileImage from '../ProfileImage';
 import { AllContext } from '../../../store';
-import { CHECK_SCORE, IUserData } from '../../../utils/interface';
-import { chatsAPI, usersAPI } from '../../../API';
+import {
+  CANCEL_MATCH_MODAL,
+  CHECK_SCORE,
+  FIGHT_RES_MODAL,
+  IUserData,
+} from '../../../utils/interface';
+import { chatsAPI, gameAPI, usersAPI } from '../../../API';
 import { useNavigate } from 'react-router-dom';
 import defaultProfile from '../../../assets/default-image.png';
 
@@ -29,6 +34,14 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
   }, []);
   const onApplyGame = async () => {
     console.log('send msg');
+    if (target && user) {
+      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
+      if (res) {
+        setModal(FIGHT_RES_MODAL, target.userId);
+      } else {
+        setModal(CANCEL_MATCH_MODAL);
+      }
+    }
   };
   const onSendDm = async () => {
     if (user && target) {

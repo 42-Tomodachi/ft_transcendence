@@ -167,7 +167,7 @@ export class ChatController {
     );
   }
 
-  @ApiOperation({ summary: 'seungyel✅ 강퇴 시키기' })
+  @ApiOperation({ summary: 'seungyel✅ ban 시키기' })
   @Put(':roomId/ban/:userId')
   async banParticipant(
     @GetJwtUser() user: User,
@@ -176,6 +176,18 @@ export class ChatController {
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
   ): Promise<void> {
     return this.chatService.banUser(user, roomId, userId, targetUserId);
+  }
+
+  @ApiOperation({ summary: 'kankim✅ kick 시키기' })
+  @Put(':roomId/kick/:userId')
+  async kickParticipant(
+    @GetJwtUser() user: User,
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('targetUserId', ParseIntPipe) targetUserId: number,
+  ): Promise<void> {
+    console.log('\n ### 1');
+    await this.chatService.kickUser(user, roomId, userId, targetUserId);
   }
 
   @ApiOperation({ summary: '✅ 음소거 시키기 토글: jihokim' })

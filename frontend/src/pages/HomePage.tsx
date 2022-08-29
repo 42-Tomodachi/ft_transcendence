@@ -8,10 +8,13 @@ import { HOME, MenuType, UPDATE_RECORD } from '../utils/interface';
 import Chat from '../components/Chat';
 import { AllContext } from '../store';
 import { usersAPI } from '../API';
+import { io, Socket } from 'socket.io-client';
 
 interface HomePageProps {
   menu?: MenuType;
 }
+
+let socket: Socket;
 
 const HomePage: React.FC<HomePageProps> = ({ menu }) => {
   const { setUser, user } = useContext(AllContext).userData;
@@ -26,7 +29,27 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
       };
       getWinLoseCount();
     }
+    if (menu === 'CHAT') {
+      socket = io(`${process.env.REACT_APP_BACK_API}/ws-chatLobby`, {
+        transports: ['websocket'],
+        multiplex: false,
+        query: {
+          userId: user && user.userId,
+        },
+      });
+    } else if (menu === 'GAME') {
+      console.log('hello Game world!');
+      // TODO: Game로비 연결부
+    }
   }, [menu]);
+
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -34,9 +57,9 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
         <HomeContainer>
           <Header type={HOME} />
           <HomeContents>
-            <MainArea>{menu && menu === 'CHAT' ? <Chat /> : <Game />}</MainArea>
+            <MainArea>{menu && menu === 'CHAT' ? <Chat socket={socket} /> : <Game />}</MainArea>
             <HomeMenus>
-              <UserList menuType={'ALL'} />
+              <UserList menuType={'ALL'} socket={socket} />
               <UserProfile />
             </HomeMenus>
           </HomeContents>

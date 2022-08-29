@@ -29,6 +29,7 @@ import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
 import * as bcrypt from 'bcryptjs';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { ChatLobbyGateway } from './chatLobby.gateway';
 
 @Injectable()
 export class ChatService {
@@ -41,6 +42,8 @@ export class ChatService {
     private readonly chatRoomRepo: Repository<ChatRoom>,
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+    @Inject(forwardRef(() => ChatLobbyGateway))
+    private readonly chatLobbyGateway: ChatLobbyGateway,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private dataSource: DataSource,
@@ -94,6 +97,7 @@ export class ChatService {
       .createQueryBuilder('chatParticipant')
       .leftJoinAndSelect('chatParticipant.user', 'user')
       .where('chatParticipant.chatRoomId = :roomId', { roomId })
+      .andWhere('chatParticipant.isBanned = false')
       .getMany();
 
     return chatParticipants.map((chatParticipant) => {
@@ -157,7 +161,7 @@ export class ChatService {
     const { id: createdChatContentId } = await this.chatContentsRepo.save({
       chatRoomId: roomId,
       userId: targetUserId,
-      content: `님이 강퇴당했습니다.`,
+      content: `님이 10초 동안 강퇴당했습니다.`,
       isNotice: true,
     });
 
@@ -166,7 +170,67 @@ export class ChatService {
       roomId,
       await this.getChatContentDtoForEmit(createdChatContentId),
     );
+    this.chatGateway.emitChatRoomParticipants(roomId.toString());
     this.chatGateway.disconnectUser(roomId, targetUserId);
+  }
+
+  async kickUser(
+    user: User,
+    roomId: number,
+    callingUserId: number,
+    targetUserId: number,
+  ) {
+    if (user.id !== callingUserId) {
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    }
+    const room = await this.chatRoomRepo.findOneBy({ id: roomId });
+    if (!room) {
+      throw new BadRequestException('채팅방이 존재하지 않습니다.');
+    }
+    const targetChatParticipant = await ChatParticipant.findOneBy({
+      userId: targetUserId,
+      chatRoomId: roomId,
+    });
+    if (!targetChatParticipant) {
+      throw new BadRequestException('존재하지 않는 참여자입니다.');
+    }
+    if (targetChatParticipant.isBanned) {
+      throw new BadRequestException('이미 강퇴당한 유저입니다.');
+    }
+    if (room.isDm === true) {
+      throw new BadRequestException('DM방 입니다.');
+    }
+    if (targetChatParticipant.role === 'owner') {
+      throw new BadRequestException('방장을 강퇴할 수 없습니다.');
+    }
+    const callingChatParticipant = await ChatParticipant.findOneBy({
+      userId: callingUserId,
+      chatRoomId: roomId,
+    });
+    if (callingChatParticipant.role === 'guest') {
+      throw new BadRequestException('권한이 없는 사용자입니다.');
+    }
+    console.log('\n ### 2');
+
+    await this.chatParticipantRepo.remove(targetChatParticipant);
+
+    // 강퇴 메세지 db에 저장
+    const { id: createdChatContentId } = await this.chatContentsRepo.save({
+      chatRoomId: roomId,
+      userId: targetUserId,
+      content: `님이 강퇴당했습니다.`,
+      isNotice: true,
+    });
+    console.log('\n ### 3');
+
+    // 채널 유저들에게 강퇴 메세지 전송
+    this.chatGateway.sendNoticeMessage(
+      roomId,
+      await this.getChatContentDtoForEmit(createdChatContentId),
+    );
+    this.chatGateway.emitChatRoomParticipants(roomId.toString());
+    this.chatGateway.disconnectUser(roomId, targetUserId);
+    console.log('\n ### 4');
   }
 
   async getParticipatingChatRooms(
@@ -254,6 +318,8 @@ export class ChatService {
     chatRoomDataDto.isDm = createdChatRoom.isDm;
 
     this.chatGateway.emitChatRoomParticipants(createdChatRoom.id.toString());
+    this.chatLobbyGateway.emitChatRoomList();
+    this.chatLobbyGateway.emitParticipantingChatRoomList(createdChatRoom.id);
     return chatRoomDataDto;
   }
 
@@ -345,6 +411,8 @@ export class ChatService {
     }
 
     this.chatGateway.emitChatRoomParticipants(roomId.toString());
+    this.chatLobbyGateway.emitChatRoomList();
+    this.chatLobbyGateway.emitParticipantingChatRoomList(roomId);
     return { roomId: roomId };
   }
 
@@ -378,6 +446,9 @@ export class ChatService {
       updatedRoom.id.toString(),
       updatedRoom.title,
     );
+
+    this.chatLobbyGateway.emitChatRoomList();
+    this.chatLobbyGateway.emitParticipantingChatRoomList(roomId);
     return updatedRoom.toChatRoomDataDto();
   }
 
@@ -428,6 +499,9 @@ export class ChatService {
 
       this.chatGateway.emitChatRoomParticipants(roomId.toString());
     }
+
+    this.chatLobbyGateway.emitChatRoomList();
+    this.chatLobbyGateway.emitParticipantingChatRoomList();
   }
 
   async toggleParticipantRole(
@@ -547,22 +621,22 @@ export class ChatService {
         10 * 1000,
         targetChatParticipant,
       );
+
+      // 음소거 메세지 db에 저장
+      const { id: createdChatContentId } = await this.chatContentsRepo.save({
+        chatRoomId: targetChatParticipant.chatRoomId,
+        userId: targetChatParticipant.userId,
+        content: `님은 10초 동안 채팅이 금지되었습니다.`,
+        isNotice: true,
+      });
+
+      // 채널 유저들에게 음소거해제 메세지 전송
+      this.chatGateway.sendNoticeMessage(
+        targetChatParticipant.chatRoomId,
+        await this.getChatContentDtoForEmit(createdChatContentId),
+      );
     }
     await targetChatParticipant.save();
-
-    // 음소거 메세지 db에 저장
-    const { id: createdChatContentId } = await this.chatContentsRepo.save({
-      chatRoomId: targetChatParticipant.chatRoomId,
-      userId: targetChatParticipant.userId,
-      content: `님은 채팅이 금지되었습니다.`,
-      isNotice: true,
-    });
-
-    // 채널 유저들에게 음소거해제 메세지 전송
-    this.chatGateway.sendNoticeMessage(
-      targetChatParticipant.chatRoomId,
-      await this.getChatContentDtoForEmit(createdChatContentId),
-    );
 
     this.chatGateway.wss
       .to(roomId.toString())
@@ -702,6 +776,9 @@ export class ChatService {
       await t.save(chatParticipantForPartner);
     });
 
+    this.chatLobbyGateway.emitParticipantingChatRoomList(
+      chatRoomDataDto.roomId,
+    );
     return { roomId: chatRoomDataDto.roomId };
   }
 
@@ -953,4 +1030,33 @@ export class ChatService {
   //   this.schedulerRegistry.deleteTimeout(name);
   //   this.logger.warn(`Scheduler ${name}(name) deleted!`);
   // }
+
+  async getParticipantingChatRoomsForEmit(
+    userId: number,
+  ): Promise<ChatRoomDto[]> {
+    const chatParticipants = await this.chatParticipantRepo
+      .createQueryBuilder('chatParticipant')
+      .where('chatParticipant.isBanned = false')
+      .andWhere('chatParticipant.userId = :userId', { userId })
+      .getMany();
+
+    const participantingChatRoomIds = chatParticipants.map((p) => p.chatRoomId);
+
+    let query = this.chatRoomRepo
+      .createQueryBuilder('chatRoom')
+      .leftJoinAndSelect('chatRoom.chatParticipant', 'chatParticipant');
+
+    if (participantingChatRoomIds.length) {
+      query = query.where('chatRoom.id in (:...chatRoomIds)', {
+        chatRoomIds: participantingChatRoomIds,
+      });
+    }
+
+    const participantingChatRooms = await query.getMany();
+
+    return participantingChatRooms.map((chatRoom) => {
+      console.log('\n chat participants cnt', chatRoom.chatParticipant);
+      return chatRoom.toChatRoomDto();
+    });
+  }
 }
