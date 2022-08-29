@@ -1,24 +1,28 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME, CHECK_SCORE } from '../utils/interface'; // GameMode
+import { GAME } from '../utils/interface'; // GameMode
 import { AllContext } from '../store';
-// import { useNavigate } from 'react-router-dom'; //네비
-// import { useBeforeunload } from 'react-beforeunload';
-// import { useHistory } from 'react-router-dom'; // 설치한 패키지
 
-const calculateOn = [true, false]; // useState변수인 turn이 값을바껴도 다음에 값이 바껴서 문제가되는걸로 판단, 추가 및 문제해결.
-const ballball = [50, 50]; // 받아온 rtData중에 공의 위치를 실시간으로 그려주자.
-const paddlepaddle = [40, 40]; // 플레이어들의 패들을 실시간으로 그려야해서 저장해주자.
-const point = [0, 0]; // 플레이어들의 점수를 그려야해서, 실시간으로 저장해주자.
-const HERTZ = 60; //
-const PLAYERONE = 1;
-const PLAYERTWO = 2;
-const playing = [true, ''];
-// const obstaclePos = [Math.floor(Math.random() * 500)];
-// const refreshTest = [false];
+// test00 :  console.log(`처음 상태가 뭔디 ${ballState(info)},, ${info.ballVelo_X}`);
+// test01 :  console.log(`여기서 턴이 바꼈을거란말이지 : ${getTurn(info)}, ${info.turn}`);
+// test02 :  console.log('jusnelee: 여기 들어오는순간. 끝났다는것이지.');
+// test03 :  console.log(`매맨 처음 상태가 뭔디: ${ballState(gameInfo)}  ${gameInfo.ballVelo_X}`);
 
-// 계산에 사용할 변수들 정의(인테페이스)
+// 코드 가독성을 위해서라도, 고정적인 값들은 상수로 박아놓고 사용중입니다.
+const PLAYERONE = 1; // 플레이어정보.
+const PLAYERTWO = 2; // 플레이어정보.
+const HERTZ = 65; // 초당 장면 드로우 횟수
+const PADDLEMOVE = 2; // 한번에 움직이는 거리
+const LPADDLEHIT = 8; // 왼쪽패들 충돌지점 (X축)
+const RPADDLEHIT = 93; // 오른쪽패들 충돌지점 (X축)
+const turnG = [true, false]; // 계산할차례 전환에 대한 더블체크
+const ballG = [50, 50]; // Realtime ball position
+const paddleG = [40, 40]; // Realtime paddle position
+const scoreG = [0, 0]; // Realtime socre
+const playing = [true, '']; // 게임상태확인 및 승자기록
+
+// 인터페이스 타입정의
 interface GameInfo {
   ballP_X: number;
   ballP_Y: number;
@@ -34,17 +38,15 @@ interface GameInfo {
 }
 
 const GameStart: React.FC = () => {
-  // const navigate = useNavigate();
-  const { setModal } = useContext(AllContext).modalData;
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
   const { user } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
   const player = user && playingGameInfo.player;
   const roomid = user && playingGameInfo.gameRoomId;
 
-  // 서버와 통신하기 위한 정보변수들을 useState로 관리
+  // player 1 방향으로 시작되는게 기본이고, 장애물맵 경우, 중앙에 장애물이 위치해서 시작위치가 다름.
   const [gameInfo, setGameInfo] = useState<GameInfo>({
-    ballP_X: 50,
+    ballP_X: playingGameInfo.gameMode === 'obstacle' ? 40 : 50,
     ballP_Y: 50,
     ballVelo_X: -1,
     ballVelo_Y: 0,
@@ -57,32 +59,30 @@ const GameStart: React.FC = () => {
     checkPoint: false,
   });
 
-  // 패들위치를 클라이언트의 마우스 위치에 맞게 그려줍니다.
-  // 마우스가 움직이지 않을때는, 가장 마지막에 마우스가 머물던 좌표를 기억해야합니다.
-  // 마우스 좌표를 받아오는 변수를 그대로 그리는데에 사용하면, 움직이지 않을때 좌표가 사라지기 때문이죠.(null)
+  // 패들 그리기.
   const paddle = function paddle(ctx: CanvasRenderingContext2D): void {
     ctx.font = '32px Roboto';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#3AB0FF';
-    ctx.fillText(` ${playingGameInfo?.oneNickname} : ${point[0]}`, 250, 50);
-    ctx.fillRect(0.05 * 1000, paddlepaddle[0] * 7, 0.015 * 1000, 0.2 * 700);
+    ctx.fillText(` ${playingGameInfo?.oneNickname} : ${scoreG[0]}`, 250, 50);
+    ctx.fillRect(0.05 * 1000, paddleG[0] * 7, 0.015 * 1000, 0.2 * 700);
     ctx.fillStyle = '#F87474';
-    ctx.fillText(`${playingGameInfo?.twoNickname} : ${point[1]}`, 750, 50);
-    ctx.fillRect(0.945 * 1000, paddlepaddle[1] * 7, 0.015 * 1000, 0.2 * 700);
+    ctx.fillText(`${playingGameInfo?.twoNickname} : ${scoreG[1]}`, 750, 50);
+    ctx.fillRect(0.945 * 1000, paddleG[1] * 7, 0.015 * 1000, 0.2 * 700);
   };
 
-  // 공그리기 (계산하는자는 useState, 안하는자는 socket.on한 data)
+  // 공그리기
   const ball = function ball(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath();
-    ctx.arc((ballball[0] / 100) * 1000, (ballball[1] / 100) * 700, 10, 0, 2 * Math.PI);
+    ctx.arc((ballG[0] / 100) * 1000, (ballG[1] / 100) * 700, 10, 0, 2 * Math.PI);
     ctx.fillStyle = '#FFB562';
     ctx.fill();
   };
 
+  // 장애물맵일경우 장애물그리기.
   const obstacle = function obstacle(ctx: CanvasRenderingContext2D): void {
     if (playingGameInfo.gameMode === 'obstacle') {
       ctx.fillStyle = '#FFB562';
-      // ctx.fillStyle = 'black';
       ctx.fillRect(450, 300, 100, 100); // x, y, width, height
       ctx.fillRect(700, 500, 100, 100); // x, y, width, height
       ctx.fillRect(200, 100, 100, 100); // x, y, width, height
@@ -102,9 +102,18 @@ const GameStart: React.FC = () => {
     ctx.fillRect(990, 0, 10, 700); //오
   };
 
+  const defaultGvalue = () => {
+    playing[0] = true;
+    paddleG[0] = 40;
+    paddleG[1] = 40;
+    turnG[0] = true;
+    turnG[1] = false;
+  };
+
   const defaultGameinfo = () => {
-    return setGameInfo(() => {
+    return setGameInfo(info => {
       return {
+        ...info,
         ballP_X: 50,
         ballP_Y: 50,
         ballVelo_X: -1,
@@ -120,23 +129,55 @@ const GameStart: React.FC = () => {
     });
   };
 
+  // info.ballP_X + info.ballVelo_X : info.ballP_Y + info.ballVelo_Y 다음수 예측
+
+  const checkObstacle = (info: GameInfo) => {
+    if (ballState(info) === 'obstacleHit') {
+      if (info.ballP_X >= 20 && info.ballP_X <= 30) return 'obLeft';
+      else if (info.ballP_X >= 70 && info.ballP_X <= 80) return 'obRight';
+      else if (info.ballP_X >= 45 && info.ballP_X <= 55) return 'obCenter';
+    }
+    return 'default';
+  };
+
   const obstacleUpDwon = (info: GameInfo) => {
-    if (checkObstacle(info) === 'obCenter' && (info.ballP_Y <= 45 || info.ballP_Y >= 55))
+    const obstaclePos = checkObstacle(info);
+    if (obstaclePos === 'obCenter' && (info.ballP_Y <= 45 || info.ballP_Y >= 55))
       return info.ballP_Y <= 45 ? 'up' : 'down';
-    else if (checkObstacle(info) === 'obLeft' && (info.ballP_Y <= 15 || info.ballP_Y >= 25))
+    else if (obstaclePos === 'obLeft' && (info.ballP_Y <= 15 || info.ballP_Y >= 25))
       return info.ballP_Y <= 15 ? 'up' : 'down';
-    if (checkObstacle(info) === 'obRight' && (info.ballP_Y <= 73 || info.ballP_Y >= 83))
+    else if (obstaclePos === 'obRight' && (info.ballP_Y <= 73 || info.ballP_Y >= 83))
       return info.ballP_Y <= 73 ? 'up' : 'down';
     else return 'test';
   };
 
+  // 여기가 방향이 기준이면 짧아서 좋지만, 전부다 커버할수가 없어진다.
+  const resObstacle = (info: GameInfo, id: string, title: string) => {
+    const upDown = obstacleUpDwon(info);
+    if (title === 'obCenter') {
+      if (upDown === 'up') return id === 'X' ? info.ballP_X : 41;
+      if (upDown === 'down') return id === 'X' ? info.ballP_X : 58;
+      if (info.ballVelo_X > 0) return id === 'X' ? 44 : info.ballP_Y;
+      else return id === 'X' ? 56 : info.ballP_Y;
+    } else if (title === 'obLeft') {
+      if (upDown === 'up') return id === 'X' ? info.ballP_X : 11;
+      if (upDown === 'down') return id === 'X' ? info.ballP_X : 28;
+      if (info.ballVelo_X > 0) return id === 'X' ? 19 : info.ballP_Y;
+      else return id === 'X' ? 31 : info.ballP_Y;
+    } else {
+      if (upDown === 'up') return id === 'X' ? info.ballP_X : 69;
+      if (upDown === 'down') return id === 'X' ? info.ballP_X : 87;
+      if (info.ballVelo_X > 0) return id === 'X' ? 69 : info.ballP_Y;
+      else return id === 'X' ? 81 : info.ballP_Y;
+    }
+  };
+
   const obstacleHit = (info: GameInfo) => {
-    if (info.ballP_X >= 20 && info.ballP_X <= 30 && info.ballP_Y >= 12 && info.ballP_Y <= 27)
-      return true;
-    if (info.ballP_X >= 45 && info.ballP_X <= 55 && info.ballP_Y >= 42 && info.ballP_Y <= 57)
-      return true;
-    else if (info.ballP_X >= 70 && info.ballP_X <= 80 && info.ballP_Y >= 70 && info.ballP_Y <= 86)
-      return true;
+    const x = info.ballP_X + info.ballVelo_X;
+    const y = info.ballP_Y + info.ballVelo_Y;
+    if (x >= 20 && x <= 30 && y >= 12 && y <= 27) return true;
+    if (x >= 45 && x <= 55 && y >= 42 && y <= 57) return true;
+    else if (x >= 70 && x <= 80 && y >= 70 && y <= 86) return true;
     else return false;
   };
 
@@ -152,30 +193,29 @@ const GameStart: React.FC = () => {
     const relativeIntersectY =
       type == 'leftHit'
         ? info.leftPaddlePos + 10 - info.ballP_Y - 1
-        : paddlepaddle[1]
-        ? paddlepaddle[1] + 10 - info.ballP_Y - 1
+        : paddleG[1]
+        ? paddleG[1] + 10 - info.ballP_Y - 1
         : info.rightPaddlePos + 10 - info.ballP_Y - 1;
     const normalizedRelativeIntersectionY = relativeIntersectY / 10;
-    //uphit나 downhit판정으로 리턴되어버리면, goal판정에대한 벨로시티가 이상하게 반영됨
     switch (type) {
       case 'leftgoal':
-        return value === 'ballP_X' ? -1 : 0;
+        return value === 'ballP_X' ? 1.5 : 0;
       case 'rightgoal':
-        return value === 'ballP_X' ? 1 : 0;
+        return value === 'ballP_X' ? -1.5 : 0;
       case 'upHit':
         if (value === 'ballP_X') {
-          if (info.ballVelo_X > 0) return 1;
-          else return -1;
-        } else return 1;
+          if (info.ballVelo_X > 0) return 1.5;
+          else return -1.5;
+        } else return 1.5;
       case 'downHit':
         if (value === 'ballP_X') {
-          if (info.ballVelo_X > 0) return 1;
-          else return -1;
-        } else return -1;
+          if (info.ballVelo_X > 0) return 1.5;
+          else return -1.5;
+        } else return -1.5;
       case 'leftHit':
-        return value === 'ballP_X' ? 1 : -normalizedRelativeIntersectionY;
+        return value === 'ballP_X' ? 1.5 : -normalizedRelativeIntersectionY;
       case 'rightHit':
-        return value === 'ballP_X' ? -1 : -normalizedRelativeIntersectionY;
+        return value === 'ballP_X' ? -1.5 : -normalizedRelativeIntersectionY;
       case 'obstacleHit':
         return obstacleVal(info, value);
       default:
@@ -184,21 +224,21 @@ const GameStart: React.FC = () => {
   };
 
   // 밸로시티가 바뀌는 조건
-  const testReturn = (info: GameInfo) => {
+  const ballState = (info: GameInfo) => {
     if (info.ballP_X >= 100) return 'leftgoal';
     else if (info.ballP_X <= 0) return 'rightgoal';
     else if (info.ballP_Y <= 2) return 'upHit';
     else if (info.ballP_Y >= 97) return 'downHit';
     else if (
-      info.ballP_X >= 4 &&
-      info.ballP_X <= 8 &&
+      info.ballP_X >= LPADDLEHIT - 4 &&
+      info.ballP_X <= LPADDLEHIT &&
       info.ballP_Y >= info.leftPaddlePos &&
       info.ballP_Y <= info.leftPaddlePos + 21
     )
       return 'leftHit';
     else if (
-      info.ballP_X >= 93 &&
-      info.ballP_X <= 96 &&
+      info.ballP_X >= RPADDLEHIT &&
+      info.ballP_X <= RPADDLEHIT + 4 &&
       info.ballP_Y >= info.rightPaddlePos &&
       info.ballP_Y <= info.rightPaddlePos + 21
     )
@@ -207,134 +247,85 @@ const GameStart: React.FC = () => {
     else return 'rally';
   };
 
-  const checkObstacle = (info: GameInfo) => {
-    if (testReturn(info) === 'obstacleHit') {
-      if (info.ballP_X >= 20 && info.ballP_X <= 30) return 'obLeft';
-      else if (info.ballP_X >= 45 && info.ballP_X <= 55) return 'obCenter';
-      else if (info.ballP_X >= 70 && info.ballP_X <= 80) return 'obRight';
-    }
-    return 'default';
-  };
-
-  // console.log(`매맨 처음 상태가 뭔디: ${testReturn(gameInfo)}  ${gameInfo.ballVelo_X}`);
-
-  // 여기가 방향이 기준이면 짧아서 좋지만, 전부다 커버할수가 없어진다.
-  const resObstacle = (info: GameInfo, id: string, title: string) => {
-    if (title === 'obCenter') {
-      if (obstacleUpDwon(info) === 'up') return id === 'X' ? info.ballP_X : 41;
-      if (obstacleUpDwon(info) === 'down') return id === 'X' ? info.ballP_X : 58;
-      if (info.ballVelo_X > 0) return id === 'X' ? 44 : info.ballP_Y;
-      else return id === 'X' ? 56 : info.ballP_Y;
-    } else if (title === 'obLeft') {
-      if (obstacleUpDwon(info) === 'up') return id === 'X' ? info.ballP_X : 11;
-      if (obstacleUpDwon(info) === 'down') return id === 'X' ? info.ballP_X : 28;
-      if (info.ballVelo_X > 0) return id === 'X' ? 19 : info.ballP_Y;
-      else return id === 'X' ? 31 : info.ballP_Y;
-    } else {
-      if (obstacleUpDwon(info) === 'up') return id === 'X' ? info.ballP_X : 69;
-      if (obstacleUpDwon(info) === 'down') return id === 'X' ? info.ballP_X : 87;
-      if (info.ballVelo_X > 0) return id === 'X' ? 69 : info.ballP_Y;
-      else return id === 'X' ? 81 : info.ballP_Y;
-    }
-  };
-
   // 공의 진행이나 리셋값을 반환합니다.
   const ballAction = (info: GameInfo, id: string) => {
-    // console.log(`ㄱㅗㅇ ㅇㅓ디 ${gameInfo.ballP_X}`);
-    if (testReturn(info) === 'rightgoal' || testReturn(info) === 'leftgoal') return 50;
+    const ballCheck = ballState(info);
+    if (playingGameInfo.gameMode === 'obstacle') {
+      if (ballCheck === 'rightgoal' || ballCheck === 'leftgoal') {
+        if (id === 'X') return ballCheck === 'rightgoal' ? 40 : 60;
+        else return 50;
+      }
+      switch (checkObstacle(info)) {
+        case 'obLeft':
+          return resObstacle(info, id, 'obLeft');
+        case 'obRight':
+          return resObstacle(info, id, 'obRight');
+        case 'obCenter':
+          return resObstacle(info, id, 'obCenter');
+        default:
+          return id === 'X' ? info.ballP_X + info.ballVelo_X : info.ballP_Y + info.ballVelo_Y;
+      }
+    } else if (ballCheck === 'rightgoal' || ballCheck === 'leftgoal') return 50;
     else if (
-      testReturn(info) === 'leftHit' &&
+      ballCheck === 'leftHit' &&
       info.ballP_Y <= info.leftPaddlePos + 19 &&
       info.ballP_Y >= info.leftPaddlePos + 2
     )
       return id === 'X' ? 9 : info.ballP_Y;
     else if (
-      testReturn(info) === 'rightHit' &&
+      ballCheck === 'rightHit' &&
       info.ballP_Y <= info.rightPaddlePos + 19 &&
       info.ballP_Y >= info.rightPaddlePos + 2
     )
       return id === 'X' ? 92 : info.ballP_Y;
-    else if (playingGameInfo.gameMode === 'obstacle' && checkObstacle(info) === 'obCenter')
-      return resObstacle(info, id, 'obCenter');
-    else if (playingGameInfo.gameMode === 'obstacle' && checkObstacle(info) === 'obLeft')
-      return resObstacle(info, id, 'obLeft');
-    else if (playingGameInfo.gameMode === 'obstacle' && checkObstacle(info) === 'obRight')
-      return resObstacle(info, id, 'obRight');
-    else {
-      if (playingGameInfo.gameMode === 'speed')
-        return id === 'X' ? info.ballP_X + info.ballVelo_X * 2 : info.ballP_Y + info.ballVelo_Y * 2;
-      else return id === 'X' ? info.ballP_X + info.ballVelo_X : info.ballP_Y + info.ballVelo_Y;
-    }
+    else if (playingGameInfo.gameMode === 'speed')
+      return id === 'X' ? info.ballP_X + info.ballVelo_X * 2 : info.ballP_Y + info.ballVelo_Y * 2;
+    else return id === 'X' ? info.ballP_X + info.ballVelo_X : info.ballP_Y + info.ballVelo_Y;
   };
 
   // 어떤 플레이어가 계산할 차례인지를 반환합니다.
   const getTurn = (info: GameInfo) => {
-    switch (testReturn(info)) {
+    switch (ballState(info)) {
       case 'leftgoal':
         return PLAYERONE;
       case 'rightgoal':
         return PLAYERTWO;
-      case 'leftHit':
-        return PLAYERTWO;
-      case 'rightHit':
-        return PLAYERONE;
       default:
-        return gameInfo.turn;
+        if (info.ballVelo_X > 0) return PLAYERTWO;
+        else return PLAYERONE;
     }
   };
 
-  // 상태에 맞게 밸로시티x 변경함수 호출
-  const getXvelo = (info: GameInfo) => {
-    // console.log(`처음 상태가 뭔디 ${testReturn(info)},, ${info.ballVelo_X}`);
-    switch (testReturn(info)) {
+  const getVelocity = (info: GameInfo, pos: string) => {
+    switch (ballState(info)) {
       case 'leftgoal':
-        return changeVelo(info, 'leftgoal', 'ballP_X');
+        return changeVelo(info, 'leftgoal', pos);
       case 'rightgoal':
-        return changeVelo(info, 'rightgoal', 'ballP_X');
+        return changeVelo(info, 'rightgoal', pos);
       case 'leftHit':
-        return changeVelo(info, 'leftHit', 'ballP_X');
+        return changeVelo(info, 'leftHit', pos);
       case 'rightHit':
-        return changeVelo(info, 'rightHit', 'ballP_X');
+        return changeVelo(info, 'rightHit', pos);
       case 'upHit':
-        return changeVelo(info, 'upHit', 'ballP_X');
+        return changeVelo(info, 'upHit', pos);
       case 'downHit':
-        return changeVelo(info, 'downHit', 'ballP_X');
+        return changeVelo(info, 'downHit', pos);
       case 'obstacleHit':
-        return changeVelo(info, 'obstacleHit', 'ballP_X');
+        return changeVelo(info, 'obstacleHit', pos);
       default:
-        return changeVelo(info, 'defualt', 'ballP_X');
-    }
-  };
-
-  // 상태에 맞게 밸로시티y 변경함수 호출
-  const getYvelo = (info: GameInfo) => {
-    switch (testReturn(info)) {
-      case 'leftgoal':
-        return changeVelo(info, 'leftgoal', 'ballP_Y');
-      case 'rightgoal':
-        return changeVelo(info, 'rightgoal', 'ballP_Y');
-      case 'leftHit':
-        return changeVelo(info, 'leftHit', 'ballP_Y');
-      case 'rightHit':
-        return changeVelo(info, 'rightHit', 'ballP_Y');
-      case 'upHit':
-        return changeVelo(info, 'upHit', 'ballP_Y');
-      case 'downHit':
-        return changeVelo(info, 'downHit', 'ballP_Y');
-      case 'obstacleHit':
-        return changeVelo(info, 'obstacleHit', 'ballP_Y'); // 넣지도 않고 반영되길 바라다니.. 한심아.
-      default:
-        return changeVelo(info, 'defualt', 'ballP_Y');
+        return changeVelo(info, 'defualt', pos);
     }
   };
 
   // 상대의 실점을 기록합니다(계산하는 유저입장에서)
   const getCheckPoint = (info: GameInfo) => {
-    switch (testReturn(info)) {
+    switch (ballState(info)) {
       case 'leftgoal':
-        return true;
+        if (player === 'p2') return true;
+        else return false;
       case 'rightgoal':
-        return true;
+        if (player === 'p1') return true;
+        else return false;
       default:
         return false;
     }
@@ -343,113 +334,117 @@ const GameStart: React.FC = () => {
   // 플레이어의 패들위치를 반환합니다.
   const getPaddlePos = (player: string | null, info: GameInfo, pos: string) => {
     if (pos === 'left') {
-      if (player === 'p1') return mouseY ? mouseY : info.leftPaddlePos;
-      else return paddlepaddle[0];
+      if (player === 'p1') return paddleYpos ? paddleYpos : info.leftPaddlePos;
+      else return paddleG[0];
     } else {
-      if (player === 'p2') return mouseY ? mouseY : info.rightPaddlePos;
-      else return paddlepaddle[1];
+      if (player === 'p2') return paddleYpos ? paddleYpos : info.rightPaddlePos;
+      else return paddleG[1];
     }
   };
 
-  const calValue = async (info: GameInfo) => {
-    setGameInfo({
-      ...info,
-      ballP_X: ballAction(info, 'X'),
-      ballP_Y: ballAction(info, 'Y'),
-      leftPaddlePos: getPaddlePos(player, info, 'left'),
-      rightPaddlePos: getPaddlePos(player, info, 'right'),
-      player: player === 'p1' ? 1 : 2,
-      ballVelo_X: getXvelo(info),
-      ballVelo_Y: getYvelo(info),
-      turn: getTurn(info),
-      checkPoint: getCheckPoint(info),
+  const calValue = async () => {
+    setGameInfo(info => {
+      return {
+        ...info,
+        ballP_X: ballAction(info, 'X'),
+        ballP_Y: ballAction(info, 'Y'),
+        leftPaddlePos: getPaddlePos(player, info, 'left'),
+        rightPaddlePos: getPaddlePos(player, info, 'right'),
+        player: player === 'p1' ? 1 : 2,
+        ballVelo_X: getVelocity(info, 'ballP_X'),
+        ballVelo_Y: getVelocity(info, 'ballP_Y'),
+        turn: getTurn(info),
+        checkPoint: getCheckPoint(info),
+      };
     });
   };
-  const calculate = async (info: GameInfo) => {
-    // 사용하면 React는 이 내부 함수에서 제공하는 상태 스냅샷이 항상 최신 상태 스냅샷이 되도록 보장하며 모든 예약된 상태 업데이트를 염두에 두고 있다.
-    // 이것은 항상 최신 상태 스냅샷에서 작업하도록 하는 더 안전한 방법이다.
-    // 따라서 상태 업데이트가 이전 상태에 따라 달라질 때마다 여기에서 이 함수 구문을 사용하는 것이 좋다.
-    // 이전에 패들좌표보내는조건 player === 'p1' && calculateOn[0] === false || player === 'p2' && calculateOn[1] === false
-    if (user && user.socket && user.socket.connected) {
-      if (
-        (player === 'p1' && calculateOn[0] === true) ||
-        (player === 'p2' && calculateOn[1] === true)
-      ) {
-        await calValue(info);
-        user.socket.emit('calculatedRTData', info);
-      } else if ((player === 'p1' && info.turn === 2) || (player === 'p2' && info.turn === 1))
-        user.socket.emit('paddleRTData', mouseY);
+
+  const settingPlayerStatus = async (value: boolean[]) => {
+    if (player === 'p2') {
+      value[0] = false;
+      value[1] = true;
+    } else if (player === 'p1') {
+      value[0] = true;
+      value[1] = false;
     }
   };
 
-  // 서버가 보내준 갱신데이터를 받습니다.
-  // p1, p2가 모두 받아옵니다(계산하는쪽은 상대방 패들위치, 안하는쪽은 그릴 모든 데이터 필요)
-  // 그대로 계산안하는쪽 useState에 초당 60번씩 setting하면 좋겠지만, 렉이 심하게 걸려서 우회했습니다.
-  // 그리하야, 자신이 계산할 차례가 되는순간에만 받아온값을 setting하고, 이후 계산을 시작합니다.
-  const getData = async () => {
-    if (user && user.socket) {
+  const checkTurn = (info: GameInfo) => {
+    if ((player === 'p1' && info.turn === 1) || (player === 'p2' && info.turn === 2)) return true;
+    else return false;
+  };
+
+  const eventCalculate = async (info: GameInfo) => {
+    if (player !== 'g1' && user && user.socket && user.socket.connected) {
+      if (checkTurn(info) === true) {
+        await calValue();
+        user.socket.emit('calculatedRTData', {
+          ballP_X: info.ballP_X,
+          ballP_Y: info.ballP_Y,
+          leftPaddlePos: getPaddlePos(player, info, 'left'),
+          rightPaddlePos: getPaddlePos(player, info, 'right'),
+          ballVelo_X: getVelocity(info, 'ballP_X'),
+          ballVelo_Y: getVelocity(info, 'ballP_Y'),
+          turn: getTurn(info),
+          checkPoint: getCheckPoint(info),
+        });
+      } else if (checkTurn(info) === false) user.socket.emit('paddleRTData', paddleYpos);
+    }
+  };
+
+  const settingRealTimeData = async (data: number[]) => {
+    setGameInfo(gameInfo => {
+      return {
+        ...gameInfo,
+        ballP_X: data[0],
+        ballP_Y: data[1],
+        ballVelo_X: data[2],
+        ballVelo_Y: data[3],
+        leftPaddlePos: paddleG[0],
+        rightPaddlePos: paddleG[1],
+        turn: data[6],
+      };
+    });
+  };
+
+  const settingResultPage = () => {
+    playing[0] = false;
+    playing[1] =
+      scoreG[0] > scoreG[1]
+        ? playingGameInfo.oneNickname.toUpperCase()
+        : playingGameInfo.twoNickname.toUpperCase();
+    defaultGameinfo();
+  };
+
+  const eventGetFinished = () => {
+    if (user)
       user.socket.on('gameFinished', () => {
         if (user && playingGameInfo.gameLadder === true) {
           user.socket.emit('roomTerminated', roomid);
           user.socket.disconnect();
         }
-        playing[0] = false;
-        playing[1] =
-          point[0] > point[1]
-            ? playingGameInfo.oneNickname.toUpperCase()
-            : playingGameInfo.twoNickname.toUpperCase();
-        defaultGameinfo();
+        settingResultPage();
       });
-      ///////
-      user.socket.on('rtData', async (data: number[]) => {
-        ballball[0] = data[0];
-        ballball[1] = data[1];
-        if (data[4]) paddlepaddle[0] = data[4]; //마우스가 움직일때만 받아야 최신
-        if (data[5]) paddlepaddle[1] = data[5]; //마우스가 움직일때만 받아야 최신
-        if (point[0] !== data[8]) point[0] = data[8]; //left score
-        if (point[1] !== data[9]) point[1] = data[9]; //right score
-        if (data[6] === 1) {
-          // calculateOn[0] = true;
-          calculateOn[1] = false; //p1이 계산중이면, p2는 아닌거지.
-        }
-        if (data[6] === 2) {
-          calculateOn[0] = false; // calculateOn[1] = true;
-        } //p2가 계산중이면, p1는 아닌거지.
-        // 플레이어 turn이 바껴버리는 그순간에 값이 렌더링순서로 인해 넘어오질 않았다. (calculateOn사용이유)
-        if (
-          (data[6] === 2 && player === 'p2' && calculateOn[1] === false) ||
-          (data[6] === 1 && player === 'p1' && calculateOn[0] === false)
-        ) {
-          if (player === 'p2') {
-            calculateOn[0] = false;
-            calculateOn[1] = true;
-          } else if (player === 'p1') {
-            calculateOn[0] = true;
-            calculateOn[1] = false;
-          }
-          // setGameInfo({
-          //   ...gameInfo,
-          //   ballP_X: data[0],
-          //   ballP_Y: data[1],
-          //   ballVelo_X: data[2],
-          //   ballVelo_Y: data[3],
-          //   leftPaddlePos: player === 'p2' ? paddlepaddle[0] : mouseY ? mouseY : paddlepaddle[0],
-          //   rightPaddlePos: player === 'p1' ? paddlepaddle[1] : mouseY ? mouseY : paddlepaddle[1],
-          //   player: player === 'p2' ? 2 : 1,
-          //   turn: data[6],
-          // });
-          setGameInfo({
-            ...gameInfo,
-            ballP_X: ballball[0],
-            ballP_Y: ballball[1],
-            ballVelo_X: data[2],
-            ballVelo_Y: data[3],
-            leftPaddlePos: player === 'p2' ? paddlepaddle[0] : mouseY ? mouseY : paddlepaddle[0],
-            rightPaddlePos: player === 'p1' ? paddlepaddle[1] : mouseY ? mouseY : paddlepaddle[1],
-            turn: data[6],
-          });
+  };
 
-          //setModal(CHECK_SCORE);
+  const eventRealTimeData = async () => {
+    if (user && user.socket) {
+      eventGetFinished();
+      user.socket.on('rtData', async (data: number[]) => {
+        ballG[0] = data[0];
+        ballG[1] = data[1];
+        if (data[4]) paddleG[0] = data[4]; //마우스가 움직일때만 받아야 최신
+        if (data[5]) paddleG[1] = data[5]; //마우스가 움직일때만 받아야 최신
+        scoreG[0] = data[8]; //left score
+        scoreG[1] = data[9]; //right score
+        if (data[6] === PLAYERONE) turnG[1] = false;
+        if (data[6] === PLAYERTWO) turnG[0] = false;
+        if (
+          (data[6] === PLAYERTWO && player === 'p2' && turnG[1] === false) ||
+          (data[6] === PLAYERONE && player === 'p1' && turnG[0] === false)
+        ) {
+          await settingRealTimeData(data);
+          await settingPlayerStatus(turnG); // 딜레이 줄이려면 쓰긴해야겠다.
         }
       });
     } else console.log('ERROR: user undefined');
@@ -458,53 +453,43 @@ const GameStart: React.FC = () => {
     };
   };
 
-  let mouseY: number;
+  let paddleYpos: number;
 
   document.addEventListener('keydown', keyDownHandler, false);
   function keyDownHandler(e: KeyboardEvent) {
-    // console.log(`키이벤트 ${e.code}, ${e.key}`);
-    if (player === 'p1' || player === 'p2') {
-      if (!mouseY) mouseY = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
-      if (
-        e.key === 'ArrowRight' &&
-        ((player === 'p2' && mouseY > 2) || (player === 'p1' && mouseY < 78))
-      )
-        mouseY += player === 'p1' ? 2 : -2;
-      // 키코드 줄 왜저렇게 나오지.
-      else if (
-        e.key === 'ArrowLeft' &&
-        ((player === 'p1' && mouseY > 2) || (player === 'p2' && mouseY < 78))
-      )
-        mouseY += player === 'p1' ? -2 : 2;
+    if (player !== 'g1') {
+      if (!paddleYpos) paddleYpos = player === 'p1' ? paddleG[0] : paddleG[1];
+      if (e.key === 'ArrowRight') {
+        if ((player === 'p2' && paddleYpos > 2) || (player === 'p1' && paddleYpos < 78))
+          paddleYpos += player === 'p1' ? PADDLEMOVE : -PADDLEMOVE;
+      } else if (e.key === 'ArrowLeft')
+        if ((player === 'p1' && paddleYpos > 2) || (player === 'p2' && paddleYpos < 78))
+          paddleYpos += player === 'p1' ? -PADDLEMOVE : PADDLEMOVE;
     }
   }
 
   useEffect(() => {
-    getData();
     return () => {
-      console.log('jusnelee: 여기 들어오는순간. 끝났다는것이지.');
-      playing[0] = true;
-      paddlepaddle[0] = 40;
-      paddlepaddle[1] = 40;
-      calculateOn[0] = true;
-      calculateOn[1] = false;
+      defaultGvalue();
       defaultGameinfo();
       if (user)
         if (user.socket) {
           console.log('socket disconnect:' + user.socket.id);
+          user.socket.off('rtData');
           user.socket.disconnect();
         }
     };
-  }, [user && user.socket, calculateOn]);
+  }, [user && user.socket]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
       const ctx = canvas.getContext('2d', { alpha: false });
-      if (user && user.socket && user.socket.connected && canvas) {
+      if (user && user.socket && user.socket.connected) {
         if (ctx) {
           const test = setInterval(() => {
-            calculate(gameInfo);
+            eventCalculate(gameInfo);
+            eventRealTimeData();
             clear(ctx);
             obstacle(ctx);
             ball(ctx);
@@ -522,13 +507,7 @@ const GameStart: React.FC = () => {
         user.socket.disconnect();
       }
     };
-  }, [calculate]);
-
-  // true니까 여기로 넘어와버리고, 방만들기라서, 소켓이 없으니까 else로가면, 결과페이지가 나오는거임.
-  // 음... 해결방법 모색은 두가지 생각해볼수있는데, 사용후false상태인 gamestart변수를 다시 false로 되돌리는거
-  // 다른하나는, 분기조건을 다른방식으로 하는법.
-  // 오늘은 이거 해결하고, 지호킴님이 백엔드 해결해놓으면, 합쳐서 테스트한다.
-  // 앞에서 소켓을 연결해버리니까 이제 소켓이 무조건 있어버리네,
+  }, [eventCalculate]);
   if (playing[0] === true) {
     return (
       <Background>
@@ -617,5 +596,4 @@ const ResultArea = styled.div`
   border-radius: 20px;
 `;
 
-// 리렌더 방지 memo
-export default React.memo(GameStart);
+export default React.memo(GameStart); //무의미한 리렌더방지

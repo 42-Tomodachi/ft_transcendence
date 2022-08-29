@@ -43,6 +43,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
     }
   };
 
+  //1925*
   const onClickExitBtn = async (type: string) => {
     if (user && roomId) {
       if (type === CHAT) {

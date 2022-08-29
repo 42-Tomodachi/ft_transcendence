@@ -48,7 +48,7 @@ interface GameInfoDto {
  * 매칭이 이루어졌다면, 서버에서 매칭유저에 대한 정보를 보내주기로 합의되어있다.
  */
 const GamePage: React.FC = () => {
-  // console.log('re-render?\n');
+  console.log('re-render?\n');
   let socket: Socket;
   const navigate = useNavigate();
   const [gameStart, setGameStart] = useState(false);
@@ -87,6 +87,7 @@ const GamePage: React.FC = () => {
     if (user && playingGameInfo) {
       //이제 무조건 소켓을 연결할겁니다. 커넥션타입을 어떻게 분기해줄것인지.. 생각해봅시다.
       //gameMode가 아니고, 모달에서 ladder인걸 기록해놓는 무언가 필요한것입니다아...
+      //socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`
       socket = io(`${process.env.REACT_APP_BACK_API}`, {
         transports: ['websocket'],
         multiplex: false,
@@ -96,35 +97,34 @@ const GamePage: React.FC = () => {
           connectionType: playingGameInfo.gameLadder ? 'ladderGame' : 'normalGame',
         },
       }); // roomid 유저상태
-
       socket.on('message', () => {
         console.log(` 일반 connected socket : ${socket.id}`);
         console.log(socket.connected);
         if (user) user.socket = socket;
       });
-
+      socket.emit('onMatchingScreen', roomid);
       // 래더든 일반이든 지금 데이터가 필요하다는걸 서버한테 알려주고,
       // matchData 이벤트로 보내주길..하염없이 기다리는 코드.
-      socket.emit('onMatchingScreen', roomid);
-
       // gameMode가 아니라 래더인지 아닌지를 알려주는 변수여야함!!
       if (playingGameInfo.gameLadder === true) {
+        playingGameInfo.gameLadder = false;
         socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
-          console.log('MMMMMMMAttata');
-          setInfo({
-            ...info,
-            nicknameOne: p1.nickname,
-            avatarOne: p1.avatar,
-            winCountOne: p1.ladderWinCount,
-            loseCountOne: p1.ladderLoseCount,
-            ladderLevelOne: p1.ladderLevel,
-            nicknameTwo: p2.nickname,
-            avatarTwo: p2.avatar,
-            winCountTwo: p2.ladderWinCount,
-            loseCountTwo: p2.ladderLoseCount,
-            ladderLevelTwo: p2.ladderLevel,
+          // console.log('MMMMMMMAttata');
+          setInfo(info => {
+            return {
+              ...info,
+              nicknameOne: p1.nickname,
+              avatarOne: p1.avatar,
+              winCountOne: p1.ladderWinCount,
+              loseCountOne: p1.ladderLoseCount,
+              ladderLevelOne: p1.ladderLevel,
+              nicknameTwo: p2.nickname,
+              avatarTwo: p2.avatar,
+              winCountTwo: p2.ladderWinCount,
+              loseCountTwo: p2.ladderLoseCount,
+              ladderLevelTwo: p2.ladderLevel,
+            };
           });
-
           // 여기부터끝까지가 래더랑 일반이 구조가 중복되니까. 이 리팩이 무사히 돌아가면 함수로 빼겠다는 계획. 1111
           if (win)
             win.style.width = `${
@@ -153,57 +153,68 @@ const GamePage: React.FC = () => {
         // 래더가 아닐때의 소켓온
         socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
           if (!p1 && !p2) {
-            // console.log('received both null');
+            setInfo(info => {
+              return {
+                ...info,
+                nicknameTwo: '곧 들어와요!',
+                avatarTwo: '',
+                winCountTwo: 0,
+                loseCountTwo: 0,
+                ladderLevelTwo: 0,
+              };
+            });
+            // setInfo({
+            //   ...info,
+            //   nicknameTwo: '곧 들어와요?!',
+            //   avatarTwo: '',
+            //   winCountTwo: 0,
+            //   loseCountTwo: 0,
+            //   ladderLevelTwo: 0,
+            // });
+            if (win2) win2.style.width = `50%`;
+          } else {
             setInfo({
               ...info,
-              nicknameTwo: '',
-              avatarTwo: '',
-              winCountTwo: 0,
-              loseCountTwo: 0,
-              ladderLevelTwo: 0,
+              nicknameOne: p1.nickname,
+              avatarOne: p1.avatar,
+              winCountOne: p1.winCount,
+              loseCountOne: p1.loseCount,
+              ladderLevelOne: p1.ladderLevel,
+              nicknameTwo: p2 ? p2.nickname : info.nicknameTwo,
+              avatarTwo: p2 ? p2.avatar : info.avatarTwo,
+              winCountTwo: p2 ? p2.winCount : info.winCountTwo,
+              loseCountTwo: p2 ? p2.loseCount : info.loseCountTwo,
+              ladderLevelTwo: p2 ? p2.ladderLevel : info.ladderLevelTwo,
             });
-          } else {
-          setInfo({
-            ...info,
-            nicknameOne: p1.nickname,
-            avatarOne: p1.avatar,
-            winCountOne: p1.winCount,
-            loseCountOne: p1.loseCount,
-            ladderLevelOne: p1.ladderLevel,
-            nicknameTwo: p2 ? p2.nickname : info.nicknameTwo,
-            avatarTwo: p2 ? p2.avatar : info.avatarTwo,
-            winCountTwo: p2 ? p2.winCount : info.winCountTwo,
-            loseCountTwo: p2 ? p2.loseCount : info.loseCountTwo,
-            ladderLevelTwo: p2 ? p2.ladderLevel : info.ladderLevelTwo,
-          });
-          // 전적표시 바를 승률에 맞게 커스텀 하는 부분
-          // 여기부터끝까지가 래더랑 일반이 구조가 중복되니까. 이 리팩이 무사히 돌아가면 함수로 빼겠다는 계획. 2222
-          if (win) win.style.width = `${(p1.winCount / (p1.winCount + p1.loseCount)) * 100}%`;
-          if (win2 && p2)
-            win2.style.width = `${(p2.winCount / (p2.winCount + p2.loseCount)) * 100}%`;
-          }
-          // 플레이어가 p1이거나 p2이거나, g1임 (관전자)
-          if (user?.nickname === info.nicknameOne)
-            setPlayingGameInfo({
-              ...playingGameInfo,
-              player: 'p1',
-              oneNickname: info.nicknameOne,
-              twoNickname: info.nicknameTwo,
-            });
-          else if (user?.nickname === info.nicknameTwo)
-            setPlayingGameInfo({
-              ...playingGameInfo,
-              player: 'p2',
-              oneNickname: info.nicknameOne,
-              twoNickname: info.nicknameTwo,
-            });
-          else {
-            setPlayingGameInfo({
-              ...playingGameInfo,
-              player: 'g1',
-              oneNickname: info.nicknameOne,
-              twoNickname: info.nicknameTwo,
-            });
+            // 전적표시 바를 승률에 맞게 커스텀 하는 부분
+            // 여기부터끝까지가 래더랑 일반이 구조가 중복되니까. 이 리팩이 무사히 돌아가면 함수로 빼겠다는 계획. 2222
+            if (win) win.style.width = `${(p1.winCount / (p1.winCount + p1.loseCount)) * 100}%`;
+            if (win2 && p2)
+              win2.style.width = `${(p2.winCount / (p2.winCount + p2.loseCount)) * 100}%`;
+
+            // 플레이어가 p1이거나 p2이거나, g1임 (관전자)
+            if (user?.nickname === p1.nickname)
+              setPlayingGameInfo({
+                ...playingGameInfo,
+                player: 'p1',
+                oneNickname: p1.nickname,
+                twoNickname: p2 ? p2.nickname : '',
+              });
+            else if (p2 && user?.nickname === p2.nickname)
+              setPlayingGameInfo({
+                ...playingGameInfo,
+                player: 'p2',
+                oneNickname: p1.nickname,
+                twoNickname: p2.nickname,
+              });
+            else {
+              setPlayingGameInfo({
+                ...playingGameInfo,
+                player: 'g1',
+                oneNickname: p1.nickname,
+                twoNickname: p2.nickname,
+              });
+            }
           }
         });
       }
@@ -229,12 +240,11 @@ const GamePage: React.FC = () => {
       console.log('일로오긴해?: ' + roomid); // -1
       if (socket) {
         socket.off('gameStartCount');
-        // socket.off('matchData');
-        // socket.disconnect();
+        socket.off('matchData');
+        socket.disconnect();
       }
     };
   }, [user]);
-
   // 페이지 이동말고, 특정컴포넌트를 보여주게 하는 방식으로 바꿔야 합니다.
   // 함수형으로 반환하는 느낌으로 ..
   if (gameStart === false)

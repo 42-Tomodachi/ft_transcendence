@@ -27,7 +27,7 @@ const LadderModal: React.FC = () => {
     });
 
     socket.on('message', data => {
-      console.log(`junselee: 모달들어와서 소켓연결했다.(Game/)`);
+      console.log(`junselee: 모달들어와서 소켓연결했다.(Game/) ${data}`);
       console.log(`junselee: 연결된 소켓 아이디는.. : ${socket.id}`);
     });
 
