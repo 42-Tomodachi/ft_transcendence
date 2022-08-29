@@ -50,8 +50,8 @@ export class AuthService {
       accessToken: hashToken,
     });
     this.jwtStrategy.setJwtAccessToken(user.id, hashToken);
-    user.userStatus = 'on';
-    await user.save();
+    // user.userStatus = 'on';
+    // await user.save();
 
     return jwt;
   }
@@ -156,8 +156,8 @@ export class AuthService {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
 
-    user.userStatus = 'off';
-    await user.save();
+    // user.userStatus = 'off';
+    // await user.save();
     this.jwtStrategy.deletejwtAccessToken(user.id);
 
     const participatingChatRooms =
