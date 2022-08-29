@@ -8,11 +8,10 @@ import {
   CreateGameRoomDto,
   GameRoomProfileDto,
   GameResultDto,
-  GameRoomIdDto,
   SimpleGameRoomDto,
+  ChallengeResponse,
 } from './dto/game.dto';
-import { GameGateway } from './game.gateway';
-import { GameEnv } from './game.gameenv';
+import { GameEnv } from './class/game.class.GameEnv';
 
 // class RtLogger {
 //   lastLogged: number = Date.now();
@@ -45,8 +44,8 @@ export class GameService {
 
   getGameRoomList(): GameRoomProfileDto[] {
     const gameRoomDtoArray: GameRoomProfileDto[] = [];
-    for (const item of this.gameEnv.gameRoomTable) {
-      if (!item) {
+    for (const item of this.gameEnv.gameRoomList) {
+      if (!item.active || item.isLadder) {
         continue;
       }
       gameRoomDtoArray.push(item.toGameRoomProfileDto());
@@ -55,19 +54,18 @@ export class GameService {
   }
 
   createGameRoom(
-    gateway: GameGateway,
     user: User,
     createGameRoomDto: CreateGameRoomDto,
   ): SimpleGameRoomDto {
     if (user.id !== createGameRoomDto.ownerId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
-    // 같은 유저가 게임방을 여럿 만들 수 없도록 수정
+    const player = this.gameEnv.getPlayerByUserId(user.id);
+    if (player.gamePlaying) {
+      throw new BadRequestException(`이미 게임을 생성한 유저입니다.`);
+    }
 
-    const gameId: number = this.gameEnv.createGameRoom(createGameRoomDto);
-
-    // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
-    // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
+    const gameId = this.gameEnv.createGameRoom(player, createGameRoomDto);
 
     const gameRoomDto = new SimpleGameRoomDto();
     gameRoomDto.gameMode = createGameRoomDto.gameMode;
@@ -107,49 +105,38 @@ export class GameService {
   }
 
   async enterGameRoom(
-    gateway: GameGateway,
     user: User,
     gameId: number,
     userId: number,
     gamePassword: string | null,
-  ): Promise<GameRoomIdDto> {
+  ): Promise<SimpleGameRoomDto> {
     if (user.id != userId)
       throw new BadRequestException('잘못된 유저의 접근입니다.');
-    const index = this.gameEnv.getRoomIndexOfGame(gameId);
-    if (index == null)
-      throw new BadRequestException('방 정보를 찾을 수 없습니다.');
+    const player = this.gameEnv.getPlayerByUserId(userId);
+    if (!player) throw new BadRequestException('플레이어 정보가 없습니다.');
     const game = this.gameEnv.getGameRoom(gameId);
-    if (game == null) {
-      throw new BadRequestException('게임을 찾을 수 없습니다.');
-    }
-    if (game.password != gamePassword) {
+    if (game == null) throw new BadRequestException('게임을 찾을 수 없습니다.');
+    if (game.password != gamePassword)
       throw new BadRequestException('잘못된 비밀번호.');
-    }
+    if (player.isJoinedGame(game))
+      throw new BadRequestException('이미 입장 된 방입니다.');
 
-    // 동일 유저의 재입장 막아야함
+    const peopleCount = this.gameEnv.joinPlayerToGame(player, game);
+    console.log(
+      `Player ${player.userId} joined room ${game.roomId}, ${peopleCount}`,
+    );
+    // 소켓: 로비에 변경사항 반영
 
-    if (!this.gameEnv.gameRoomTable[index].secondPlayer) {
-      this.gameEnv.gameRoomTable[index].secondPlayer =
-        this.gameEnv.getPlayerById(userId);
+    const gameRoomDto = new SimpleGameRoomDto();
+    gameRoomDto.gameMode = game.gameMode;
+    gameRoomDto.ownerId = game.ownerId;
+    gameRoomDto.roomTitle = game.roomTitle;
+    gameRoomDto.gameId = gameId;
 
-      // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
-      // this.emitEvent('renewGameRoom', gameRoomAtt.toGameRoomProfileDto());
-      // 소켓: 로비에 변경사항 반영
-      // 소켓: 플레이어에 변경사항 전달
-      const gameUsers = await this.getPlayersInfo(gameId);
-      gateway.server
-        .to(gameId.toString())
-        .emit('updateGameUserList', gameUsers);
-    } else {
-      this.gameEnv.gameRoomTable[index].playerCount++;
-      // 소켓: 관전자 설정
-    }
-    // return this.gameEnv.gameRoomTable[index].roomTitle;
-    return { gameId: gameId };
+    return gameRoomDto;
   }
 
   async exitGameRoom(
-    gateway: GameGateway,
     user: User,
     gameId: number,
     userId: number,
@@ -158,26 +145,43 @@ export class GameService {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
 
     const game = this.gameEnv.getGameRoom(gameId);
-    if (game == null) {
+    if (!game) {
       throw new BadRequestException('게임을 찾을 수 없습니다.');
     }
 
     switch (userId) {
       case game.firstPlayer.userId:
-        this.gameEnv.gameRoomClear(game);
-
+        game.destroy();
         // 소켓: 로비 리스트 갱신
-        gateway.server.to(gameId.toString()).emit('deleteGameRoom', 'boom!');
         break;
+      case game.secondPlayer.userId:
+        game.secondPlayer.leaveGame(game);
       default:
-        this.gameEnv.leaveGameRoom(game, game.secondPlayer);
-
         const gameUsers = await this.getPlayersInfo(gameId);
-        gateway.server
-          .to(gameId.toString())
-          .emit('updateGameUserList', gameUsers);
+        game.broadcastToRoom('updateGameUserList', gameUsers);
       // 소켓: 관전자 설정
     }
+  }
+
+  async challengeDuel(
+    user: User,
+    userId: number,
+    targetId: number,
+  ): Promise<ChallengeResponse> {
+    if (user.id != userId)
+      throw new BadRequestException('잘못된 유저의 접근입니다.');
+    if (userId === targetId)
+      throw new BadRequestException('잘못된 요청입니다.');
+
+    if (false) {
+      // 채팅소켓에서 연결할 수 없는 경우?
+      return { available: false };
+    }
+    if (this.gameEnv.isDuelAvailable(targetId) === false) {
+      return { available: false };
+    }
+
+    return { available: true };
   }
 
   async saveGameRecord(gameRecordSaveDto: GameResultDto): Promise<void> {
