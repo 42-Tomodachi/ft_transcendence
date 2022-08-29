@@ -1,3 +1,4 @@
+import { plainToClass } from 'class-transformer';
 import { Socket } from 'socket.io';
 import { GameAttribute } from './game.class.GameAttribute';
 
@@ -54,6 +55,7 @@ export class Player {
     const game = this.socketsToGameMap.get(socket);
     if (!game) return;
 
+    socket.to(game.roomId.toString()).emit('playerDisconnected', this.userId);
     this.socketsToGameMap.delete(socket);
     if (socket === this.socketPlayingGame) this.socketPlayingGame = null;
     else this.gamesWatching.delete(game);
@@ -80,7 +82,7 @@ export class Player {
       return false;
     }
     if (
-      game.roomId !== this.gamePlaying.roomId &&
+      game.roomId !== this.gamePlaying?.roomId &&
       !this.gamesWatching.has(game)
     ) {
       console.log('leaveGameRoom: no target game');

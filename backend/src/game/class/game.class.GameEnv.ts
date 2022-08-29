@@ -163,7 +163,6 @@ export class GameEnv {
 
     this.userStats.setSocket(player.userId, client, 'gameRoom');
   }
-    // this.socketIdToPlayerMap[client.id] = player;
 
   onFirstSocketHandshake(
     client: Socket,
@@ -389,7 +388,8 @@ export class GameEnv {
     if (game.isLadder === true) {
       game.destroy();
     } else {
-      game.initPlayData();
+      game.destroy();
+      // game.initPlayData();
     }
     // clearInterval(this.streaming);
   }

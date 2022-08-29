@@ -64,6 +64,7 @@ export class GameAttribute {
   }
 
   destroy(): void {
+    this.broadcastToRoom('gameDestroyed');
     this.isDestroying = true;
     this.active = false;
     this.roomTitle = '';
@@ -163,6 +164,7 @@ export class GameAttribute {
       return;
     }
     const socket = this.firstPlayer.socketPlayingGame;
+    if (!socket) return;
     socket.to(this.roomId.toString()).emit(event, ...data);
     socket.emit(event, ...data);
   }
