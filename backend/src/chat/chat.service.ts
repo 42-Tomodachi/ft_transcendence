@@ -30,6 +30,7 @@ import { ChatRoom as ChatRoom } from './entities/chatRoom.entity';
 import * as bcrypt from 'bcryptjs';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { ChatLobbyGateway } from './chatLobby.gateway';
+import { UserStatusContainer } from 'userStatus/userStatus.service';
 
 @Injectable()
 export class ChatService {
@@ -50,6 +51,7 @@ export class ChatService {
     @InjectRepository(BlockedUser)
     private readonly blockedUserRepo: Repository<BlockedUser>,
     private readonly schedulerRegistry: SchedulerRegistry,
+    private readonly userStats: UserStatusContainer,
   ) {}
 
   private logger: Logger = new Logger('ChatService');
@@ -104,7 +106,8 @@ export class ChatService {
       const chatRoomUserDto = new ChatRoomUserDto();
       chatRoomUserDto.userId = chatParticipant.userId;
       chatRoomUserDto.nickname = chatParticipant.user.nickname;
-      chatRoomUserDto.status = chatParticipant.user.userStatus;
+      chatRoomUserDto.status = this.userStats.getStatus(chatParticipant.userId);
+      // chatRoomUserDto.status = chatParticipant.user.userStatus;
       chatRoomUserDto.role = chatParticipant.role;
 
       return chatRoomUserDto;

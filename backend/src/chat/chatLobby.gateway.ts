@@ -7,6 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UsersService } from 'src/users/users.service';
+import { UserStatusContainer } from 'userStatus/userStatus.service';
 import { ChatService } from './chat.service';
 import { ChatRoomUserDto } from './dto/chatParticipant.dto';
 
@@ -19,6 +20,7 @@ export class ChatLobbyGateway
     private readonly chatService: ChatService,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
+    private readonly userStats: UserStatusContainer,
   ) {}
 
   @WebSocketServer() wss: Server;
@@ -41,6 +43,8 @@ export class ChatLobbyGateway
       const set = new Set([client.id]);
       this.connectedSocketMap.set(userId, set);
     }
+
+    this.userStats.setSocket(+userId, client, 'chatLobby');
     // 최초 목록들은 api 요청으로 처리하는걸로 협의
     // 특정 소켓에 채팅방 목록 emit
     // this.emitChatRoomList(client.id);
@@ -51,8 +55,9 @@ export class ChatLobbyGateway
   handleDisconnect(client: Socket): void {
     this.logger.log(`socket id: ${client.id} disconnected`);
 
-    this.connectedSocketMap.forEach((map) => {
-      map.delete(client.id);
+    this.connectedSocketMap.forEach((set, userId) => {
+      set.delete(client.id);
+      this.userStats.setSocket(+userId, null, 'chatLobby');
     });
   }
 

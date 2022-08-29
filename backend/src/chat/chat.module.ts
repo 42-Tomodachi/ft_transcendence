@@ -4,6 +4,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { UsersModule } from 'src/users/users.module';
+import { UserStatusModule } from 'userStatus/userStatus.module';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
@@ -24,6 +25,7 @@ import { ChatRoom } from './entities/chatRoom.entity';
     ]),
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
+    UserStatusModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway, ChatLobbyGateway],
