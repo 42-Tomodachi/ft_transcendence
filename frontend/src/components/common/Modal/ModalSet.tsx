@@ -20,6 +20,7 @@ import CheckScore from './CheckScore';
 import Modal from '.';
 import { useLocation } from 'react-router-dom';
 import BanOrKickModal from './BanOrKickModal';
+import styled from '@emotion/styled';
 
 const ModalSet: React.FC = () => {
   const { modal, setModal } = useContext(AllContext).modalData;
@@ -50,14 +51,18 @@ const ModalSet: React.FC = () => {
           EDIT_MY_PROFILE: <EditMyProfile />, // 채팅방 관리자 프로필
           CHECK_LOGOUT: <LogoutModal />, // 로그아웃 확인
           BAN_THIS_CHATROOM: (
-            <Modal width={300} height={300} title={'경고'}>
-              강퇴당한 채팅방입니다.
+            <Modal width={400} height={200}>
+              <ModalWrap>
+                <h3>강퇴당한 채팅방입니다.</h3>
+              </ModalWrap>
             </Modal>
           ),
           BAN_OR_KICK_MODAL: <BanOrKickModal roomId={modal.roomId} userId={modal.userId} />,
           CANCEL_MATCH_MODAL: (
             <Modal width={400} height={200}>
-              매칭이 취소되었습니다.
+              <ModalWrap>
+                <h3>매칭이 취소되었습니다.</h3>
+              </ModalWrap>
             </Modal>
           ),
         }[modal.modal]}
@@ -65,4 +70,10 @@ const ModalSet: React.FC = () => {
   );
 };
 
+const ModalWrap = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`;
 export default ModalSet;
