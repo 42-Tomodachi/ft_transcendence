@@ -86,8 +86,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.connectedSocketMap.set(roomId, socketUser);
     }
 
-    this.userStats.setSocket(+userId, client, 'chatRoom');
-
+    const statChanged = this.userStats.setSocket(+userId, client, 'chatRoom');
+    if (statChanged) {
+      // TODO: 상태변화 전송
+    }
     this.emitChatHistoryToParticipatingChatRooms(+userId);
   }
 
@@ -97,7 +99,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userSocket.forEach((socketId, userId) => {
         if (socketId === client.id) {
           userSocket.delete(userId);
-          this.userStats.setSocket(+userId, null, 'chatRoom');
+          const statChanged = this.userStats.setSocket(
+            +userId,
+            null,
+            'chatRoom',
+          );
+          if (statChanged) {
+            // TODO: 상태변화 전송
+          }
         }
       });
     });

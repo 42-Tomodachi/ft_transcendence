@@ -24,7 +24,7 @@ export class GameEnv {
 
   socketIdToPlayerMap = new Map<string, Player>();
   playerList: Player[] = [];
-  gameLobbyTable: Socket[] = [];
+  gameLobbyTable: Set<Socket> = new Set();
   gameRoomList: GameAttribute[] = new Array(100);
   ladderQueue: Player[] = [];
 
@@ -115,12 +115,19 @@ export class GameEnv {
   // 소켓 연결 전에, 소켓을 제외한 모든 셋업은 api를 통해 처리되어 있어야 함.
 
   handleConnectionOnLobby(client: Socket, player: Player): void {
-    this.gameLobbyTable.push(client);
+    this.gameLobbyTable.add(client);
     client.join('gameLobby');
 
     player.socketLobby = client;
 
-    this.userStats.setSocket(player.userId, client, 'gameLobby');
+    const statChanged = this.userStats.setSocket(
+      player.userId,
+      client,
+      'gameLobby',
+    );
+    if (statChanged) {
+      // TODO: 상태변화 전송
+    }
   }
 
   handleConnectionOnLadderQueue(client: Socket, player: Player): void {
@@ -135,7 +142,14 @@ export class GameEnv {
 
     this.setSocketJoin(client, game);
 
-    this.userStats.setSocket(player.userId, client, 'gameRoom');
+    const statChanged = this.userStats.setSocket(
+      player.userId,
+      client,
+      'gameRoom',
+    );
+    if (statChanged) {
+      // TODO: 상태변화 전송
+    }
   }
 
   handleConnectionOnNormalGame(
@@ -161,7 +175,14 @@ export class GameEnv {
     player.setGameSocket(game, client);
     this.setSocketJoin(client, game);
 
-    this.userStats.setSocket(player.userId, client, 'gameRoom');
+    const statChanged = this.userStats.setSocket(
+      player.userId,
+      client,
+      'gameRoom',
+    );
+    if (statChanged) {
+      // TODO: 상태변화 전송
+    }
   }
 
   onFirstSocketHandshake(
@@ -211,6 +232,7 @@ export class GameEnv {
     userId: number,
     gameId: number,
   ): void {
+    let statChanged: boolean;
     const player = this.getPlayerBySocket(client);
     if (!player) {
       console.log('onSocketDisconnect: Cannot get Player with socket');
@@ -220,7 +242,12 @@ export class GameEnv {
     switch (connectionType) {
       case 'gameLobby':
         player.socketLobby = null;
-        this.userStats.setSocket(player.userId, null, 'gameLobby');
+        this.gameLobbyTable.delete(client);
+        statChanged = this.userStats.setSocket(
+          player.userId,
+          null,
+          'gameLobby',
+        );
         break;
       case 'ladderQueue':
         player.socketQueue = null;
@@ -228,16 +255,29 @@ export class GameEnv {
         break;
       case 'ladderGame':
         this.clearPlayerSocket(client);
-        this.userStats.setSocket(player.userId, client, 'gameRoom', true);
+        statChanged = this.userStats.setSocket(
+          player.userId,
+          client,
+          'gameRoom',
+          true,
+        );
         break;
       case 'normalGame':
         this.clearPlayerSocket(client);
-        this.userStats.setSocket(player.userId, client, 'gameRoom', true);
+        statChanged = this.userStats.setSocket(
+          player.userId,
+          client,
+          'gameRoom',
+          true,
+        );
         break;
       default:
         const message = `ConnectionHandler: ${connectionType} is not a correct type of connection.`;
         console.log(message);
         client.send(message);
+    }
+    if (statChanged) {
+      // TODO: 상태변화 전송
     }
     console.log(
       `Client disconnected: ${client.id.slice(
@@ -264,6 +304,11 @@ export class GameEnv {
       //   player.socketPlayingGame = undefined;
       //   return;
       // }
+      if (game.isPlaying === true) {
+        const winner =
+          game.firstPlayer === player ? game.secondPlayer : game.firstPlayer;
+        this.terminateGame(game, winner);
+      }
       player.unsetGameSocket(client);
       player.leaveGame(game);
     }
@@ -349,6 +394,15 @@ export class GameEnv {
     return game.playerCount;
   }
 
+  broadcastToLobby(ev: string, ...args: any[]): void {
+    if (this.gameLobbyTable.size === 0) {
+      console.log('broadcastToLobby: No game lobby on connected');
+      return;
+    }
+    const randomLobby: Socket = this.gameLobbyTable.values().next().value;
+    randomLobby.to('gameLobby').emit(ev, ...args);
+    randomLobby.emit(ev, ...args);
+  }
   // gameRoomClear(game: GameAttribute): void {
   //   game.firstPlayer.setGamePlaying(null);
   //   game.secondPlayer?.setGamePlaying(null);
@@ -551,17 +605,46 @@ export class GameEnv {
     // await userP2.save();
   }
 
+  async terminateGame(game: GameAttribute, winner: Player): Promise<void> {
+    console.log(
+      `game ${game.roomId} is terminated, winner is ${winner.userId}`,
+    );
+    if (winner === game.firstPlayer) {
+      game.rtData.scoreLeft = 11;
+      game.rtData.scoreRight = 0;
+    } else {
+      game.rtData.scoreLeft = 0;
+      game.rtData.scoreRight = 11;
+    }
+    game.isPlaying = false;
+    game.broadcastToRoom('gameTerminated', winner.userId);
+    await this.writeMatchResult(game);
+    this.postGameProcedure(game);
+  }
+
   async writeMatchResult(game: GameAttribute): Promise<void> {
-    const firstPlayer = await this.getUserByPlayer(game.firstPlayer);
-    const secondPlayer = await this.getUserByPlayer(game.secondPlayer);
+    const winnerId = game.getWinner().userId;
+
+    const p1 = game.firstPlayer;
+    const p2 = game.secondPlayer;
+    const isLadder = game.isLadder;
+
+    const newRecord = new GameRecord();
+    newRecord.playerOneId = game.firstPlayer.userId;
+    newRecord.playerOneScore = game.rtData.scoreLeft;
+    newRecord.playerTwoId = game.secondPlayer.userId;
+    newRecord.playerTwoScore = game.rtData.scoreRight;
+    newRecord.winnerId = winnerId;
+
+    const firstPlayer = await this.getUserByPlayer(p1);
+    const secondPlayer = await this.getUserByPlayer(p2);
     if (!firstPlayer || !secondPlayer) {
       console.log('writeMatchResult: cannot get user from the database');
       return;
     }
-    const winnerId = game.getWinner().userId;
 
     if (winnerId === firstPlayer.id) {
-      if (game.isLadder) {
+      if (isLadder) {
         firstPlayer.ladderWinCount++;
         secondPlayer.ladderLoseCount++;
       } else {
@@ -569,7 +652,7 @@ export class GameEnv {
         secondPlayer.loseCount++;
       }
     } else {
-      if (game.isLadder) {
+      if (isLadder) {
         secondPlayer.ladderWinCount++;
         firstPlayer.ladderLoseCount++;
       } else {
@@ -580,12 +663,6 @@ export class GameEnv {
     await firstPlayer.save();
     await secondPlayer.save();
 
-    const newRecord = new GameRecord();
-    newRecord.playerOneId = game.firstPlayer.userId;
-    newRecord.playerOneScore = game.rtData.scoreLeft;
-    newRecord.playerTwoId = game.secondPlayer.userId;
-    newRecord.playerTwoScore = game.rtData.scoreRight;
-    newRecord.winnerId = winnerId;
     await newRecord.save();
   }
 }
