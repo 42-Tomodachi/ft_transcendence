@@ -117,7 +117,7 @@ const ChatPage: React.FC = () => {
             <ChatTitle>
               <BackawayWrap
                 onClick={() => {
-                  navigate('/');
+                  navigate('/chat');
                 }}
               >
                 <Backaway src={backaway} alt="backaway" />
