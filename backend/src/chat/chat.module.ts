@@ -4,15 +4,17 @@ import { AuthModule } from 'src/auth/auth.module';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { UsersModule } from 'src/users/users.module';
+import { UserStatusModule } from 'src/userStatus/userStatus.module';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
+import { ChatLobbyGateway } from './chatLobby.gateway';
 import { ChatContents } from './entities/chatContents.entity';
 import { ChatParticipant } from './entities/chatParticipant.entity';
 import { ChatRoom } from './entities/chatRoom.entity';
 
 @Module({
-  exports: [ChatGateway, ChatService],
+  exports: [ChatGateway, ChatService, ChatLobbyGateway],
   imports: [
     TypeOrmModule.forFeature([
       ChatContents,
@@ -23,8 +25,9 @@ import { ChatRoom } from './entities/chatRoom.entity';
     ]),
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
+    UserStatusModule,
   ],
   controllers: [ChatController],
-  providers: [ChatService, ChatGateway],
+  providers: [ChatService, ChatGateway, ChatLobbyGateway],
 })
 export class ChatModule {}

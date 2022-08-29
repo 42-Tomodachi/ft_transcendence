@@ -64,29 +64,35 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
 
   const getUserList = async () => {
     const data = await selectActiveMenu(activeMenu);
-    console.log(data);
     sortedUserList(data);
   };
 
   useEffect(() => {
     if (socket) {
-      switch (activeMenu) {
-        case 'FRIEND':
-          socket.on('updateFriendList', data => {
-            sortedUserList(data);
-          });
-          break;
-        case 'INCHAT':
-          socket.on('updateChatRoomParticipants', data => {
-            sortedUserList(data);
-          });
-          break;
+      if (activeMenu === 'ALL') {
+        socket.on('updateUserList', (data: IGetUser[]) => {
+          sortedUserList(data); // 전체 유저 목록
+        });
+      } else if (activeMenu === 'FRIEND') {
+        socket.on('updateFriendList', (data: IGetUser[]) => {
+          sortedUserList(data);
+        });
+      } else if (activeMenu === 'INCHAT') {
+        socket.on('updateChatRoomParticipants', (data: IGetUser[]) => {
+          sortedUserList(data);
+        });
+        socket.on('updateRole', (data: UserRole) => {
+          setLoginUserRole(data);
+        });
       }
     }
     return () => {
       if (socket) {
+        // console.log('userList socket off');
+        socket.off('updateUserList');
         socket.off('updateFriendList');
         socket.off('updateChatRoomParticipants');
+        socket.off('updateRole');
       }
     };
   }, [socket, activeMenu]);

@@ -8,7 +8,6 @@ import { HOME, MenuType, UPDATE_RECORD } from '../utils/interface';
 import Chat from '../components/Chat';
 import { AllContext } from '../store';
 import { usersAPI } from '../API';
-
 import { io, Socket } from 'socket.io-client';
 
 interface HomePageProps {
@@ -58,15 +57,23 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
     }
   }, [menu]);
 
+  useEffect(() => {
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, []);
+
   return (
     <>
       <Background>
         <HomeContainer>
           <Header type={HOME} />
           <HomeContents>
-            <MainArea>{menu && menu === 'CHAT' ? <Chat /> : <Game />}</MainArea>
+            <MainArea>{menu && menu === 'CHAT' ? <Chat socket={socket} /> : <Game />}</MainArea>
             <HomeMenus>
-              <UserList menuType={'ALL'} />
+              <UserList menuType={'ALL'} socket={socket} />
               <UserProfile />
             </HomeMenus>
           </HomeContents>

@@ -19,6 +19,8 @@ import EditMyProfile from './EditMyProfile';
 import CheckScore from './CheckScore';
 import Modal from '.';
 import { useLocation } from 'react-router-dom';
+import BanOrKickModal from './BanOrKickModal';
+import styled from '@emotion/styled';
 
 const ModalSet: React.FC = () => {
   const { modal, setModal } = useContext(AllContext).modalData;
@@ -32,8 +34,8 @@ const ModalSet: React.FC = () => {
       {modal.modal &&
         {
           LOADING_LADDER_GAME: <LadderModal />, // 레더 게임 매칭
-          FIGHT_RES_MODAL: <FightResModal userId={modal.userId} />, // 1:1 대전 응답 모달
-          FIGHT_REQ_MODAL: <FightReqModal userId={modal.userId} />, // 1:1 대전 요청 모달
+          FIGHT_RES_MODAL: <FightResModal targetId={modal.userId} />, // 1:1 대전 응답대기 모달(대전 신청한 쪽)
+          FIGHT_REQ_MODAL: <FightReqModal matchUserId={modal.userId} />, // 1:1 대전 요청대기 모달(대전 받은 쪽)
           SHOW_PROFILE: <ShowProfile userId={modal.userId} />, // 프로필 정보 보기
           ON_SECOND_AUTH: <OnSecondAuth />, // 2차 인증 켜기
           OFF_SECOND_AUTH: <OffSecondAuth />, // 2차 인증 끄기
@@ -49,8 +51,18 @@ const ModalSet: React.FC = () => {
           EDIT_MY_PROFILE: <EditMyProfile />, // 채팅방 관리자 프로필
           CHECK_LOGOUT: <LogoutModal />, // 로그아웃 확인
           BAN_THIS_CHATROOM: (
-            <Modal width={300} height={300} title={'경고'}>
-              강퇴당한 채팅방입니다.
+            <Modal width={400} height={200}>
+              <ModalWrap>
+                <h3>강퇴당한 채팅방입니다.</h3>
+              </ModalWrap>
+            </Modal>
+          ),
+          BAN_OR_KICK_MODAL: <BanOrKickModal roomId={modal.roomId} userId={modal.userId} />,
+          CANCEL_MATCH_MODAL: (
+            <Modal width={400} height={200}>
+              <ModalWrap>
+                <h3>매칭이 취소되었습니다.</h3>
+              </ModalWrap>
             </Modal>
           ),
         }[modal.modal]}
@@ -58,4 +70,10 @@ const ModalSet: React.FC = () => {
   );
 };
 
+const ModalWrap = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`;
 export default ModalSet;

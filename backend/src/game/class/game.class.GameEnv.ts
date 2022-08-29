@@ -8,12 +8,14 @@ import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/users.entity';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { GameInfo } from './game.class.interface';
+import { UserStatusContainer } from 'src/userStatus/userStatus.service';
 
 @Injectable()
 export class GameEnv {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private userStats: UserStatusContainer,
   ) {
     for (let index = 0; index < 100; index++) {
       this.gameRoomList[index] = new GameAttribute(index + 1);
@@ -117,6 +119,8 @@ export class GameEnv {
     client.join('gameLobby');
 
     player.socketLobby = client;
+
+    this.userStats.setSocket(player.userId, client, 'gameLobby');
   }
 
   handleConnectionOnLadderQueue(client: Socket, player: Player): void {
@@ -130,6 +134,8 @@ export class GameEnv {
     player.socketPlayingGame = client;
 
     this.setSocketJoin(client, game);
+
+    this.userStats.setSocket(player.userId, client, 'gameRoom');
   }
 
   handleConnectionOnNormalGame(
@@ -154,7 +160,10 @@ export class GameEnv {
 
     player.setGameSocket(game, client);
     this.setSocketJoin(client, game);
+
+    this.userStats.setSocket(player.userId, client, 'gameRoom');
   }
+    // this.socketIdToPlayerMap[client.id] = player;
 
   onFirstSocketHandshake(
     client: Socket,
@@ -212,6 +221,7 @@ export class GameEnv {
     switch (connectionType) {
       case 'gameLobby':
         player.socketLobby = null;
+        this.userStats.setSocket(player.userId, null, 'gameLobby');
         break;
       case 'ladderQueue':
         player.socketQueue = null;
@@ -219,9 +229,11 @@ export class GameEnv {
         break;
       case 'ladderGame':
         this.clearPlayerSocket(client);
+        this.userStats.setSocket(player.userId, client, 'gameRoom', true);
         break;
       case 'normalGame':
         this.clearPlayerSocket(client);
+        this.userStats.setSocket(player.userId, client, 'gameRoom', true);
         break;
       default:
         const message = `ConnectionHandler: ${connectionType} is not a correct type of connection.`;
@@ -531,12 +543,12 @@ export class GameEnv {
     await this.writeMatchResult(game);
     this.postGameProcedure(game);
 
-    const userP1 = await this.getUserByPlayer(game.firstPlayer);
-    const userP2 = await this.getUserByPlayer(game.secondPlayer);
-    userP1.userStatus = 'on';
-    userP2.userStatus = 'on';
-    await userP1.save();
-    await userP2.save();
+    // const userP1 = await this.getUserByPlayer(game.firstPlayer);
+    // const userP2 = await this.getUserByPlayer(game.secondPlayer);
+    // userP1.userStatus = 'on';
+    // userP2.userStatus = 'on';
+    // await userP1.save();
+    // await userP2.save();
   }
 
   async writeMatchResult(game: GameAttribute): Promise<void> {

@@ -51,9 +51,10 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && roomId) {
       socket = io(`${process.env.REACT_APP_BACK_API}/ws-chat`, {
         transports: ['websocket'],
+        multiplex: false,
         query: {
           userId: user.userId,
           roomId: roomId,
@@ -116,7 +117,7 @@ const ChatPage: React.FC = () => {
             <ChatTitle>
               <BackawayWrap
                 onClick={() => {
-                  navigate('/');
+                  navigate('/chat');
                 }}
               >
                 <Backaway src={backaway} alt="backaway" />

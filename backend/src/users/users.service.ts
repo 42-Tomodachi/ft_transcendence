@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsDuplicateDto, IsSignedUpDto } from 'src/auth/dto/auth.dto';
 import { ChatGateway } from 'src/chat/chat.gateway';
+import { ChatLobbyGateway } from 'src/chat/chatLobby.gateway';
 import { Repository } from 'typeorm';
 import { BlockResultDto } from './dto/blockedUser.dto';
 import { GameRecordDto } from './dto/users.dto';
@@ -21,6 +22,7 @@ import { BlockedUser } from './entities/blockedUser.entity';
 import { Follow } from './entities/follow.entity';
 import { GameRecord } from './entities/gameRecord.entity';
 import { User } from './entities/users.entity';
+import { UserStatusContainer } from '../userStatus/userStatus.service';
 
 @Injectable()
 export class UsersService {
@@ -33,6 +35,9 @@ export class UsersService {
     private readonly gameRecordRepo: Repository<GameRecord>,
     @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+    @Inject(forwardRef(() => ChatLobbyGateway))
+    private readonly chatLobbyGateway: ChatLobbyGateway,
+    private readonly userStats: UserStatusContainer,
   ) {}
 
   async getUsers(): Promise<SimpleUserDto[]> {
@@ -42,7 +47,8 @@ export class UsersService {
       return {
         userId: user.id,
         nickname: user.nickname,
-        status: user.userStatus,
+        status: this.userStats.getStatus(user.id),
+        // status: user.userStatus,
       };
     });
   }
@@ -66,7 +72,8 @@ export class UsersService {
       return {
         userId: friend.follow.id,
         nickname: friend.follow.nickname,
-        status: friend.follow.userStatus,
+        status: this.userStats.getStatus(friend.follow.id),
+        // status: friend.follow.userStatus,
       };
     });
   }
@@ -82,7 +89,8 @@ export class UsersService {
       return {
         userId: followEntity.follow.id,
         nickname: followEntity.follow.nickname,
-        status: followEntity.follow.userStatus,
+        status: this.userStats.getStatus(followEntity.follow.id),
+        // status: followEntity.follow.userStatus,
       };
     });
   }
@@ -140,7 +148,7 @@ export class UsersService {
   async createUser(emailDto: EmailDto): Promise<User> {
     const user = new User();
     user.email = emailDto.email;
-    user.userStatus = 'on';
+    // user.userStatus = 'on';
 
     return await this.userRepo.save(user);
   }
@@ -248,6 +256,8 @@ export class UsersService {
 
     this.chatGateway.updateUserInfoToJoinedChatRooms(user, userId);
     // this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
+    this.chatLobbyGateway.emitUserList();
+    this.chatLobbyGateway.emitFriendList(userId);
 
     return updatedUser.toUserProfileDto();
   }
@@ -286,6 +296,9 @@ export class UsersService {
 
     if (block) {
       await this.blockedUserRepo.delete({ id: block.id });
+      this.chatGateway.emitChatHistoryToSocketThatSpecificUserIsParticipating(
+        myId,
+      );
 
       return { isBlocked: false };
     } else {

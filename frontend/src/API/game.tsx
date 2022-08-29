@@ -86,6 +86,24 @@ const gameAPI = {
       else console.error(e);
     }
   },
+  /**
+   * 프로필 모달에서 대전 신청하기
+   * @param userId 대전 신청한 유저
+   * @param targetId 대전 신청당한 유저
+   * @param jwt
+   * @returns 대전 신청 가능한 상대면 true, 아니면 false
+   */
+  dieDieMatch: async (userId: number, targetId: number, jwt: string): Promise<boolean> => {
+    try {
+      const url = gamePath(`/dieDieMatch/${userId}?targetId=${targetId}`);
+      const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      return res.data;
+    } catch (e) {
+      if (e instanceof Error) console.error(e.message);
+      else console.error(e);
+      return false;
+    }
+  },
 };
 
 export { gameAPI };

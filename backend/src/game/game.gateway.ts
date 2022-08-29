@@ -14,7 +14,7 @@ import { GameInfo } from './class/game.class.interface';
 // @UseGuards(AuthGuard())
 @WebSocketGateway({
   cors: true,
-  // namespace: 'gameConn',
+  namespace: 'ws-game',
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private readonly gameEnv: GameEnv) {}

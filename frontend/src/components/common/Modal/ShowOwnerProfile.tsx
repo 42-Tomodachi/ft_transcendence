@@ -3,23 +3,30 @@ import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
 import defaultProfile from '../../../assets/default-image.png';
-import { CHECK_SCORE, IUserData } from '../../../utils/interface';
+import {
+  BAN_OR_KICK_MODAL,
+  CANCEL_MATCH_MODAL,
+  CHECK_SCORE,
+  FIGHT_RES_MODAL,
+  IUserData,
+} from '../../../utils/interface';
 import { AllContext } from '../../../store';
-import { chatsAPI, usersAPI } from '../../../API';
+import { chatsAPI, gameAPI, usersAPI } from '../../../API';
 import { useNavigate } from 'react-router-dom';
 import ProfileImage from '../ProfileImage';
 
 const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId, userId }) => {
   const { setModal } = useContext(AllContext).modalData;
-  const [target, setTarget] = useState<IUserData | null>(null);
+  const [target, setTarget] = useState<(IUserData & { isMuted: boolean; role: string }) | null>(
+    null,
+  );
   const { user } = useContext(AllContext).userData;
-  const [isManager, setIsManager] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
-        const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
+        const data = await chatsAPI.getUserProfileInChatRoom(roomId, user.userId, userId, user.jwt);
         if (data) {
           if (data.avatar) setTarget(data);
           else setTarget({ ...data, avatar: defaultProfile });
@@ -58,18 +65,9 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
     console.log('block');
   };
 
-  const onClickBan = async () => {
-    if (target && user) {
-      const res = await chatsAPI.banUserInChatRoom(roomId, user.userId, target.userId, user.jwt);
-      console.log('ban');
-      if (res) {
-        setModal(null);
-      }
-    }
-  };
   const onToggleMute = async () => {
     if (target && user) {
-      const res = await chatsAPI.setUpMuteUser(roomId, target.userId, user.jwt);
+      const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
       console.log('Toggle Mute', res);
       if (res) {
         setModal(null);
@@ -79,12 +77,21 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   const onToggleRole = async () => {
     if (user && target) {
       const res = await chatsAPI.changeRoleInChatRoom(roomId, user.userId, target.userId, user.jwt);
-      console.log('toogle role', res);
-      setIsManager(prev => !prev);
+      if (res) {
+        setTarget({ ...target, role: res.role });
+      }
     }
   };
   const onApplyGame = async () => {
     console.log('send msg');
+    if (target && user) {
+      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
+      if (res) {
+        setModal(FIGHT_RES_MODAL, target.userId);
+      } else {
+        setModal(CANCEL_MATCH_MODAL);
+      }
+    }
   };
   const onSendDm = async () => {
     if (user && target) {
@@ -94,6 +101,11 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
         setModal(null);
         navigate(`/chatroom/${res.roomId}`);
       }
+    }
+  };
+  const handleKickOrBan = async () => {
+    if (target) {
+      setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
     }
   };
 
@@ -162,11 +174,23 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
                   height={40}
                   onClick={onClickBlock}
                 />
-                <Button color="white2" text="밴" width={200} height={40} onClick={onClickBan} />
-                <Button color="white2" text="뮤트" width={200} height={40} onClick={onToggleMute} />
+                <Button
+                  color="white2"
+                  text="강퇴 & 입장금지"
+                  width={200}
+                  height={40}
+                  onClick={handleKickOrBan}
+                />
+                <Button
+                  color="white2"
+                  text="음소거"
+                  width={200}
+                  height={40}
+                  onClick={onToggleMute}
+                />
                 <Button
                   color="gradient"
-                  text={isManager ? '관리자 권한 주기' : '관리자 권한 해제'}
+                  text={target.role === 'manager' ? '관리자 권한 해제' : '관리자 권한 주기'}
                   width={420}
                   height={40}
                   onClick={onToggleRole}

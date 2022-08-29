@@ -6,6 +6,7 @@ import {
   IChatDMRoom,
   IMessage,
   IChatRoomInfo,
+  IUserData,
 } from '../utils/interface';
 const chatsPath = (path: string) => {
   return `/chats${path}`;
@@ -185,7 +186,7 @@ const chatsAPI = {
     callingUserId: number,
     targetUserId: number,
     jwt: string,
-  ): Promise<string> => {
+  ): Promise<{ role: string } | null> => {
     try {
       const url = chatsPath(
         `/${roomId}/roleToggle?callingUserId=${callingUserId}&targetUserId=${targetUserId}`,
@@ -197,7 +198,7 @@ const chatsAPI = {
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
-      return '';
+      return null;
     }
   },
   // PUT chats/{roomid}/ban/{userId} - banUserInChatRoom
@@ -219,14 +220,36 @@ const chatsAPI = {
       return false;
     }
   },
-  // PUT chats/{roomid}/mute_toggle - setUpMuteUser
+  // PUT chats/:roomId/kick/:userId
+  kickUserInChatRoom: async (
+    roomId: number,
+    userId: number,
+    targetUserId: number,
+    jwt: string,
+  ): Promise<boolean> => {
+    try {
+      const url = chatsPath(`/${roomId}/kick/${userId}?targetUserId=${targetUserId}`);
+      await instance.put(url, null, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return true;
+    } catch (e) {
+      if (e instanceof Error) console.error(e.message);
+      else console.error(e);
+      return false;
+    }
+  },
+  // PUT chats/{roomId}/users/{callingUserId}/muteToggle - setUpMuteUser
   setUpMuteUser: async (
     roomId: number,
+    callingUserId: number,
     targetUserId: number,
     jwt: string,
   ): Promise<{ isMuted: boolean }> => {
     try {
-      const url = chatsPath(`/${roomId}/muteToggle?targetUserId=${targetUserId}`);
+      const url = chatsPath(
+        `/${roomId}/users/${callingUserId}/muteToggle?targetUserId=${targetUserId}`,
+      );
       const res = await instance.put(url, null, { headers: { Authorization: `Bearer ${jwt}` } });
       return res.data; // INFO: isMuted : boolean
     } catch (e) {
@@ -253,12 +276,13 @@ const chatsAPI = {
     }
   },
   // GET chats/{roomId}/participants/{myId} - getUserProfileInChatRoom
+  // TODO: return interface refactoring
   getUserProfileInChatRoom: async (
     roomId: number,
     myId: number,
     targetId: number,
     jwt: string,
-  ): Promise<number> => {
+  ): Promise<(IUserData & { isMuted: boolean; role: string }) | null> => {
     try {
       const url = chatsPath(`/${roomId}/participants/${myId}?targetId=${targetId}`);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
@@ -266,7 +290,7 @@ const chatsAPI = {
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
-      return -1;
+      return null;
     }
   },
 };

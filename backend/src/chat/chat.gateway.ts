@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { User } from 'src/users/entities/users.entity';
+import { UserStatusContainer } from 'src/userStatus/userStatus.service';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import { ChatContentDto } from './dto/chatContents.dto';
@@ -47,6 +48,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatService: ChatService,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
+    private readonly userStats: UserStatusContainer,
   ) {}
 
   @WebSocketServer() wss: Server;
@@ -84,6 +86,8 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.connectedSocketMap.set(roomId, socketUser);
     }
 
+    this.userStats.setSocket(+userId, client, 'chatRoom');
+
     this.emitChatHistoryToParticipatingChatRooms(+userId);
   }
 
@@ -93,6 +97,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userSocket.forEach((socketId, userId) => {
         if (socketId === client.id) {
           userSocket.delete(userId);
+          this.userStats.setSocket(+userId, null, 'chatRoom');
         }
       });
     });
@@ -164,6 +169,26 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const participantingChatRoomIds = this.getParticipatingChatRoomIds(
       userIdOfupdatedNickname,
     );
+
+    participantingChatRoomIds.forEach((roomId) => {
+      this.connectedSocketMap
+        .get(roomId.toString())
+        .forEach(async (socketId, userIdInRoom) => {
+          const chatContentDtos = await this.chatService.getChatContentsForEmit(
+            +roomId,
+            +userIdInRoom,
+          );
+          if (chatContentDtos === '참여중인 채팅방이 아닙니다.')
+            this.wss.to(socketId).emit('disconnectSocket', chatContentDtos);
+          else this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
+        });
+    });
+  }
+
+  async emitChatHistoryToSocketThatSpecificUserIsParticipating(
+    userId: number,
+  ): Promise<void> {
+    const participantingChatRoomIds = this.getParticipatingChatRoomIds(userId);
 
     participantingChatRoomIds.forEach((roomId) => {
       this.connectedSocketMap
