@@ -388,7 +388,8 @@ export class GameEnv {
     if (game.isLadder === true) {
       game.destroy();
     } else {
-      game.initPlayData();
+      game.destroy();
+      // game.initPlayData();
     }
     // clearInterval(this.streaming);
   }

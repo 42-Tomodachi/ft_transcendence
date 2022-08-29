@@ -149,18 +149,26 @@ export class GameService {
       throw new BadRequestException('게임을 찾을 수 없습니다.');
     }
 
-    switch (userId) {
-      case game.firstPlayer.userId:
-        game.destroy();
-        // 소켓: 로비 리스트 갱신
-        break;
-      case game.secondPlayer.userId:
-        game.secondPlayer.leaveGame(game);
-      default:
-        const gameUsers = await this.getPlayersInfo(gameId);
-        game.broadcastToRoom('updateGameUserList', gameUsers);
-      // 소켓: 관전자 설정
+    const player = this.gameEnv.getPlayerByUserId(userId);
+    if (!player) {
+      throw new BadRequestException('플레이어를 찾을 수 없습니다.');
     }
+
+    player.leaveGame(game);
+
+    // // old code
+    // switch (userId) {
+    //   case game.firstPlayer.userId:
+    //     game.destroy();
+    //     // 소켓: 로비 리스트 갱신
+    //     break;
+    //   case game.secondPlayer.userId:
+    //     game.secondPlayer.leaveGame(game);
+    //   default:
+    //     const gameUsers = await this.getPlayersInfo(gameId);
+    //     game.broadcastToRoom('updateGameUserList', gameUsers);
+    //   // 소켓: 관전자 설정
+    // }
   }
 
   async challengeDuel(
