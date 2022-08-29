@@ -41,6 +41,9 @@ const OauthPage: React.FC = () => {
             setUserStatus(LOGIN);
           }
           navigate('/');
+        } else if (window.localStorage.getItem('jwt')) {
+          window.localStorage.removeItem('jwt');
+          navigate('/');
         }
       }
     };

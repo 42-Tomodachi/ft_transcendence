@@ -3,9 +3,15 @@ import styled from '@emotion/styled';
 import Button from '../Button';
 import Modal from '.';
 import defaultProfile from '../../../assets/default-image.png';
-import { CHECK_SCORE, IUserData } from '../../../utils/interface';
+import {
+  BAN_OR_KICK_MODAL,
+  CANCEL_MATCH_MODAL,
+  CHECK_SCORE,
+  FIGHT_RES_MODAL,
+  IUserData,
+} from '../../../utils/interface';
 import { AllContext } from '../../../store';
-import { chatsAPI, usersAPI } from '../../../API';
+import { chatsAPI, gameAPI, usersAPI } from '../../../API';
 import { useNavigate } from 'react-router-dom';
 import ProfileImage from '../ProfileImage';
 
@@ -59,15 +65,6 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
     console.log('block');
   };
 
-  const onClickBan = async () => {
-    if (target && user) {
-      const res = await chatsAPI.banUserInChatRoom(roomId, user.userId, target.userId, user.jwt);
-      console.log('ban');
-      if (res) {
-        setModal(null);
-      }
-    }
-  };
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
@@ -87,6 +84,14 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   };
   const onApplyGame = async () => {
     console.log('send msg');
+    if (target && user) {
+      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
+      if (res) {
+        setModal(FIGHT_RES_MODAL, target.userId);
+      } else {
+        setModal(CANCEL_MATCH_MODAL);
+      }
+    }
   };
   const onSendDm = async () => {
     if (user && target) {
@@ -96,6 +101,11 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
         setModal(null);
         navigate(`/chatroom/${res.roomId}`);
       }
+    }
+  };
+  const handleKickOrBan = async () => {
+    if (target) {
+      setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
     }
   };
 
@@ -164,8 +174,20 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
                   height={40}
                   onClick={onClickBlock}
                 />
-                <Button color="white2" text="밴" width={200} height={40} onClick={onClickBan} />
-                <Button color="white2" text="뮤트" width={200} height={40} onClick={onToggleMute} />
+                <Button
+                  color="white2"
+                  text="강퇴 & 입장금지"
+                  width={200}
+                  height={40}
+                  onClick={handleKickOrBan}
+                />
+                <Button
+                  color="white2"
+                  text="음소거"
+                  width={200}
+                  height={40}
+                  onClick={onToggleMute}
+                />
                 <Button
                   color="gradient"
                   text={target.role === 'manager' ? '관리자 권한 해제' : '관리자 권한 주기'}

@@ -22,37 +22,31 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
   const { user } = useContext(AllContext).userData;
 
   useEffect(() => {
-    if (user && user.jwt) {
-      getAllChatList(user.jwt);
-      socket = io(`${process.env.REACT_APP_BACK_API}/ws-chatLobby`, {
-        transports: ['websocket'],
-        query: {
-          userId: user.userId,
-        },
-      });
-      if (socket) {
-        if (roomType === ALL) {
-          socket.on('updateChatRoomList', (data: IChatRooms[]) => {
-            console.log('update chatroom', data);
-            setChatList(data); // 전체 채팅방
-          });
-        } else if (roomType === JOINED) {
-          socket.on('updateParticipnatingChatRoomList', (data: IChatRooms[]) => {
-            console.log('update joined', data);
-            setChatList(data); // 참여중인 채팅방 목록 전채
-          });
-        }
-      }
-      return () => {
-        if (socket) {
-          console.log('chat lobby disconnect');
-          socket.off('updateChatRoomList');
-          socket.off('updateParticipnatingChatRoomList');
-          socket.disconnect();
-        }
-      };
-    }
+    if (user && user.jwt) getAllChatList(user.jwt);
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      if (roomType === ALL) {
+        socket.on('updateChatRoomList', (data: IChatRooms[]) => {
+          console.log('update chatroom', data);
+          setChatList(data); // 전체 채팅방
+        });
+      } else if (roomType === JOINED) {
+        socket.on('updateParticipnatingChatRoomList', (data: IChatRooms[]) => {
+          console.log('update joined', data);
+          setChatList(data); // 참여중인 채팅방 목록 전채
+        });
+      }
+    }
+    return () => {
+      if (socket) {
+        socket.off('updateChatRoomList');
+        socket.off('updateParticipnatingChatRoomList');
+        // socket.disconnect();
+      }
+    };
+  }, [socket, roomType]);
 
   const onGetJoinedChatRooms = async () => {
     if (user && user.jwt) {

@@ -220,6 +220,25 @@ const chatsAPI = {
       return false;
     }
   },
+  // PUT chats/:roomId/kick/:userId
+  kickUserInChatRoom: async (
+    roomId: number,
+    userId: number,
+    targetUserId: number,
+    jwt: string,
+  ): Promise<boolean> => {
+    try {
+      const url = chatsPath(`/${roomId}/kick/${userId}?targetUserId=${targetUserId}`);
+      await instance.put(url, null, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      return true;
+    } catch (e) {
+      if (e instanceof Error) console.error(e.message);
+      else console.error(e);
+      return false;
+    }
+  },
   // PUT chats/{roomId}/users/{callingUserId}/muteToggle - setUpMuteUser
   setUpMuteUser: async (
     roomId: number,
