@@ -17,10 +17,10 @@ import FightReqModal from './FightReqModal';
 import OffSecondAuth from './OffSecondAuth';
 import EditMyProfile from './EditMyProfile';
 import CheckScore from './CheckScore';
-import Modal from '.';
 import { useLocation } from 'react-router-dom';
 import BanOrKickModal from './BanOrKickModal';
-import styled from '@emotion/styled';
+import BanChatRoomModal from './BanChatRoomModal';
+import CancelMatchModal from './CancelMatchModal';
 
 const ModalSet: React.FC = () => {
   const { modal, setModal } = useContext(AllContext).modalData;
@@ -50,30 +50,13 @@ const ModalSet: React.FC = () => {
           SHOW_MANAGER_PROFILE: <ShowManagerProfile roomId={modal.roomId} userId={modal.userId} />, // 채팅방 관리자 프로필
           EDIT_MY_PROFILE: <EditMyProfile />, // 채팅방 관리자 프로필
           CHECK_LOGOUT: <LogoutModal />, // 로그아웃 확인
-          BAN_THIS_CHATROOM: (
-            <Modal width={400} height={200}>
-              <ModalWrap>
-                <h3>강퇴당한 채팅방입니다.</h3>
-              </ModalWrap>
-            </Modal>
-          ),
+          BAN_NOTI_CAHTROOM: <BanChatRoomModal isNoti={true} />, // 강퇴 경고 공지
+          BAN_THIS_CHATROOM: <BanChatRoomModal isNoti={false} />, // 강퇴당한 방 들어가려할 때
           BAN_OR_KICK_MODAL: <BanOrKickModal roomId={modal.roomId} userId={modal.userId} />,
-          CANCEL_MATCH_MODAL: (
-            <Modal width={400} height={200}>
-              <ModalWrap>
-                <h3>매칭이 취소되었습니다.</h3>
-              </ModalWrap>
-            </Modal>
-          ),
+          CANCEL_MATCH_MODAL: <CancelMatchModal />,
         }[modal.modal]}
     </>
   );
 };
 
-const ModalWrap = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-`;
 export default ModalSet;
