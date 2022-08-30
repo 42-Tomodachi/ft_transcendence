@@ -1,4 +1,3 @@
-import { plainToClass } from 'class-transformer';
 import { Socket } from 'socket.io';
 import { GameAttribute } from './game.class.GameAttribute';
 
@@ -58,7 +57,7 @@ export class Player {
     socket.to(game.roomId.toString()).emit('playerDisconnected', this.userId);
     this.socketsToGameMap.delete(socket);
     if (socket === this.socketPlayingGame) this.socketPlayingGame = null;
-    else this.gamesWatching.delete(game);
+    else this.gamesWatching.set(game, null);
   }
 
   joinGame(game: GameAttribute): boolean {

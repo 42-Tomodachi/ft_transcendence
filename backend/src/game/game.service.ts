@@ -13,25 +13,6 @@ import {
 } from './dto/game.dto';
 import { GameEnv } from './class/game.class.GameEnv';
 
-// class RtLogger {
-//   lastLogged: number = Date.now();
-
-//   public log(interval: number, msg: string) {
-//     const currentTime = Date.now();
-//     if (this.lastLogged - currentTime < interval) {
-//       return;
-//     }
-//     console.log(msg);
-//     this.lastLogged = currentTime;
-//   }
-
-//   public resetTimer() {
-//     this.lastLogged = Date.now();
-//   }
-// }
-
-// const rtLogger = new RtLogger();
-
 @Injectable()
 export class GameService {
   constructor(
@@ -78,9 +59,6 @@ export class GameService {
 
   async getPlayersInfo(gameId: number): Promise<PlayerInfoDto[]> {
     const players: PlayerInfoDto[] = [];
-    // const index = this.gameEnv.getRoomIndexOfGame(gameId);
-    // if (index == null)
-    //   throw new BadRequestException('방 정보를 찾을 수 없습니다.');
 
     const gameRoom = this.gameEnv.getGameRoom(gameId);
     if (!gameRoom) throw new BadRequestException('방 정보를 찾을 수 없습니다.');
@@ -160,20 +138,6 @@ export class GameService {
       this.gameEnv.terminateGame(game, winner);
     }
     player.leaveGame(game);
-
-    // // old code
-    // switch (userId) {
-    //   case game.firstPlayer.userId:
-    //     game.destroy();
-    //     // 소켓: 로비 리스트 갱신
-    //     break;
-    //   case game.secondPlayer.userId:
-    //     game.secondPlayer.leaveGame(game);
-    //   default:
-    //     const gameUsers = await this.getPlayersInfo(gameId);
-    //     game.broadcastToRoom('updateGameUserList', gameUsers);
-    //   // 소켓: 관전자 설정
-    // }
   }
 
   async challengeDuel(

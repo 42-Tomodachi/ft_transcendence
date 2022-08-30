@@ -412,32 +412,6 @@ export class GameEnv {
     return game.roomId;
   }
 
-  // enrollGameToTable(game: GameAttribute): void {
-  //   if (this.gameRoomTable.length == game.roomId) {
-  //     this.gameRoomTable.push(game);
-  //   } else {
-  //     this.gameRoomTable[game.roomId] = game;
-  //   }
-  // }
-
-  // setOwnerToCreatedRoom(player: Player, game: GameAttribute): boolean {
-  //   if (!player) return false;
-  //   if (player.gamePlaying.roomId !== game.roomId) return false;
-
-  //   if (game.ownerId !== player.userId) return false;
-
-  //   game.firstPlayer = player;
-  //   player.inRoom = true;
-  //   return true;
-  // }
-
-  // checkGameRoomPassword(
-  //   gameRoom: GameAttribute,
-  //   gamePassword: string,
-  // ): boolean {
-  //   return gameRoom.password == gamePassword;
-  // }
-
   setSocketJoin(client: Socket, game: GameAttribute): void {
     if (!game) {
       console.log('setSocketJoin: game is undefined.');
@@ -462,40 +436,6 @@ export class GameEnv {
     randomLobby.to('gameLobby').emit(ev, ...args);
     randomLobby.emit(ev, ...args);
   }
-  // gameRoomClear(game: GameAttribute): void {
-  //   game.firstPlayer.setGamePlaying(null);
-  //   game.secondPlayer?.setGamePlaying(null);
-  //   game.watchers.forEach((player) => {
-  //     player.eraseWatchingGame(game);
-  //   });
-  //   const index = this.gameRoomTable.indexOf(game);
-  //   delete this.gameRoomTable[index];
-  //   this.gameRoomTable.splice(index, 1);
-  // }
-
-  // leaveGameRoom(
-  //   game: GameAttribute,
-  //   player: Player,
-  // ): 'clear' | 'okay' | 'failed' {
-  //   if (!game) {
-  //     console.log('leaveGameRoom: no game');
-  //     return 'failed';
-  //   }
-  //   if (game.roomId !== player.gamePlaying.roomId) {
-  //     return 'failed';
-  //   }
-
-  //   if (game.firstPlayer == player) {
-  //     this.gameRoomClear(game);
-  //     return 'clear';
-  //   } else if (game.secondPlayer == player) {
-  //     game.secondPlayer = null;
-  //   } else {
-  //     game.watchers.delete(player);
-  //   }
-  //   player.inRoom = false;
-  //   return 'okay';
-  // }
 
   postGameProcedure(game: GameAttribute): void {
     if (game.isLadder === true) {
@@ -624,32 +564,6 @@ export class GameEnv {
     if (player2asUser) game.startCountdown();
   }
 
-  // async startGameCountdown(game: GameAttribute): Promise<void> {
-  //   let counting = 5;
-  //   game.broadcastToRoom('gameStartCount', `${counting}`);
-
-  //   const timer: NodeJS.Timer = setInterval(() => {
-  //     game.broadcastToRoom('gameStartCount', `${counting}`);
-  //     counting--;
-  //     if (counting < 0) {
-  //       clearInterval(timer);
-  //       this.startGame(game); // careful: async
-  //     }
-  //   }, 1000);
-  // }
-
-  // async startGame(game: GameAttribute): Promise<void> {
-  //   if (!game || !game.secondPlayer) return;
-  //   game.gameStart();
-
-  //   const userP1 = await this.getUserByPlayer(game.firstPlayer);
-  //   const userP2 = await this.getUserByPlayer(game.secondPlayer);
-  //   userP1.userStatus = 'play';
-  //   userP2.userStatus = 'play';
-  //   await userP1.save();
-  //   await userP2.save();
-  // }
-
   async processRecievedRtData(client: Socket, data: GameInfo): Promise<void> {
     const player: Player = this.getPlayerBySocket(client);
     const game = player.gamePlaying;
@@ -679,13 +593,6 @@ export class GameEnv {
     game.broadcastToRoom('gameFinished');
     await this.writeMatchResult(game);
     this.postGameProcedure(game);
-
-    // const userP1 = await this.getUserByPlayer(game.firstPlayer);
-    // const userP2 = await this.getUserByPlayer(game.secondPlayer);
-    // userP1.userStatus = 'on';
-    // userP2.userStatus = 'on';
-    // await userP1.save();
-    // await userP2.save();
   }
 
   async terminateGame(game: GameAttribute, winner: Player): Promise<void> {
