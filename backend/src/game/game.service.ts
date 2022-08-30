@@ -186,15 +186,7 @@ export class GameService {
     if (userId === targetId)
       throw new BadRequestException('잘못된 요청입니다.');
 
-    if (false) {
-      // 채팅소켓에서 연결할 수 없는 경우?
-      return { available: false };
-    }
-    if (this.gameEnv.isDuelAvailable(targetId) === false) {
-      return { available: false };
-    }
-
-    return { available: true };
+    return { available: this.gameEnv.isDuelAvailable(targetId) };
   }
 
   async saveGameRecord(gameRecordSaveDto: GameResultDto): Promise<void> {
