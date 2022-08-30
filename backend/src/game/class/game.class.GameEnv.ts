@@ -130,6 +130,58 @@ export class GameEnv {
     }
   }
 
+  handleConnectionOnDuel(client: Socket, player: Player): void {
+    const opponentId: number = +client.handshake.query['targetId'];
+    const isChallenger = client.handshake.query['isSender'];
+    const opponent = this.getPlayerByUserId(opponentId);
+    if (!opponent) {
+      console.log('handleConnectionOnDuel: no opponent');
+      return;
+    }
+
+    if (isChallenger == 'true') {
+      player.socketQueue = client;
+
+      const notifying: Socket[] = this.userStats.getSockets(opponentId);
+      for (const sock of notifying) {
+        sock.emit('challengeDuelFrom', player.userId);
+      }
+      client.on('acceptChallenge', () => {
+        this.makeDuelMatch(player, opponent, 'normal');
+        for (const sock of notifying) {
+          sock.emit('challengeAccepted', player.userId);
+        }
+      });
+      return;
+    }
+
+    client.on('acceptChallenge', () => {
+      opponent.socketQueue.emit('acceptChallenge');
+      client.off('acceptChallenge', null);
+    });
+  }
+
+  handleDisconnectionOnDuel(client: Socket, player: Player): void {
+    const opponentId: number = +client.handshake.query['targetId'];
+    const opponent = this.getPlayerByUserId(opponentId);
+    const isChallenger = client.handshake.query['isSender'];
+    if (!opponent) {
+      console.log('handleDisconnectionOnDuel: no opponent');
+      return;
+    }
+
+    const notifying: Socket[] = this.userStats.getSockets(opponentId);
+    if (isChallenger == 'true') {
+      for (const sock of notifying) {
+        sock.emit('challengeSeqDone', player.userId);
+        player.socketQueue = null;
+      }
+      return;
+    }
+
+    opponent.socketQueue.emit('challengeRejected', player.userId);
+  }
+
   handleConnectionOnLadderQueue(client: Socket, player: Player): void {
     player.socketQueue = client;
     this.enlistLadderQueue(player);
@@ -198,6 +250,9 @@ export class GameEnv {
       case 'gameLobby':
         this.handleConnectionOnLobby(client, player);
         break;
+      case 'duel':
+        this.handleConnectionOnDuel(client, player);
+        break;
       case 'ladderQueue':
         this.handleConnectionOnLadderQueue(client, player);
         break;
@@ -248,6 +303,9 @@ export class GameEnv {
           null,
           'gameLobby',
         );
+        break;
+      case 'duel':
+        this.handleDisconnectionOnDuel(client, player);
         break;
       case 'ladderQueue':
         player.socketQueue = null;
@@ -325,12 +383,13 @@ export class GameEnv {
   isDuelAvailable(userId: number): boolean {
     const player = this.getPlayerByUserId(userId);
 
-    if (player.socketQueue) {
-      console.log('isDuelAvailable: target is on queue');
+    const userStatus = this.userStats.getStatus(userId);
+    if (userStatus !== 'on') {
+      console.log('isDuelAvailable: user unavailable');
       return false;
     }
-    if (player.socketPlayingGame) {
-      console.log('isDuelAvailable: target is in game');
+    if (player.socketQueue) {
+      console.log('isDuelAvailable: target is on queue');
       return false;
     }
     return true;
@@ -467,34 +526,58 @@ export class GameEnv {
     this.ladderQueue.splice(index, 1);
   }
 
-  makeLadderMatch(): GameAttribute {
-    if (this.ladderQueue.length < 2) {
-      return undefined;
-    }
+  createCustomGame(p1: Player, p2: Player, gameMode: string): GameAttribute {
+    if (!p1 || !p2) return undefined;
+
     const game = this.getFreeGameRoom();
     if (!game) {
-      console.log('makeLadderMatch: Cannot get Empty Room');
+      console.log('makeCustomMatch: Cannot get Empty Room');
+      return undefined;
+    }
+    const createGameRoomDto = new CreateGameRoomDto();
+    createGameRoomDto.roomTitle = `Match of ${p1.userId}, ${p2.userId}`;
+    createGameRoomDto.password = null;
+    createGameRoomDto.gameMode = gameMode as 'normal' | 'speed' | 'obstacle';
+    createGameRoomDto.ownerId = p1.userId;
+
+    game.create(createGameRoomDto, p1);
+    game.secondPlayer = p2;
+    game.playerCount = 2;
+
+    p1.gamePlaying = game;
+    p2.gamePlaying = game;
+    return game;
+  }
+
+  makeDuelMatch(
+    player1: Player,
+    player2: Player,
+    gameMode: string,
+  ): GameAttribute {
+    if (!player1 || !player2) return undefined;
+
+    const game = this.createCustomGame(player1, player2, gameMode);
+
+    console.log(`Duel match made: ${player1.userId}, ${player2.userId}`);
+
+    player1.socketQueue.emit('matchingGame', game.roomId.toString());
+    player2.socketQueue.emit('matchingGame', game.roomId.toString());
+
+    return game;
+  }
+
+  makeLadderMatch(): GameAttribute {
+    if (this.ladderQueue.length < 2) {
       return undefined;
     }
     const player1 = this.ladderQueue.shift();
     const player2 = this.ladderQueue.shift();
 
-    const createGameRoomDto = new CreateGameRoomDto();
-    createGameRoomDto.roomTitle = `LadderGame${game.roomId}`;
-    createGameRoomDto.password = null;
-    createGameRoomDto.gameMode = 'speed';
-    createGameRoomDto.ownerId = player1.userId;
-
-    game.create(createGameRoomDto, player1);
-    game.secondPlayer = player2;
-    game.playerCount = 2;
+    const game = this.createCustomGame(player1, player2, 'normal');
     game.isLadder = true;
-    game.isPublic = false;
 
     console.log(`Ladder match made: ${player1.userId}, ${player2.userId}`);
 
-    player1.gamePlaying = game;
-    player2.gamePlaying = game;
     player1.socketQueue.emit('matchingGame', game.roomId.toString());
     player2.socketQueue.emit('matchingGame', game.roomId.toString());
 
