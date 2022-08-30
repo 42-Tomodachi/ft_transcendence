@@ -22,7 +22,6 @@ import {
   SimpleGameRoomDto,
 } from './dto/game.dto';
 import { GameService } from './game.service';
-import { GameGateway } from './game.gateway';
 
 @ApiTags('games')
 @Controller('games')
@@ -91,12 +90,4 @@ export class GameController {
   ): Promise<ChallengeResponse> {
     return await this.gameService.challengeDuel(user, userId, targetId);
   }
-
-  // @ApiOperation({ summary: 'seungyel✅ 게임 전적 반영' })
-  // @Post('/result')
-  // async saveGameRecord(
-  //   @Body() gameRecordSaveDto: GameResultDto,
-  // ): Promise<void> {
-  //   await this.gameService.saveGameRecord(gameRecordSaveDto);
-  // }
 }
