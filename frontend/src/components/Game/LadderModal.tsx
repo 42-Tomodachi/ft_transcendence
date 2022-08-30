@@ -17,7 +17,7 @@ const LadderModal: React.FC = () => {
 
   useEffect(() => {
     // 소켓연결 하고
-    socket = io(`${process.env.REACT_APP_BACK_API}`, {
+    socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
       transports: ['websocket'],
       multiplex: false,
       query: {
@@ -33,7 +33,6 @@ const LadderModal: React.FC = () => {
 
     // 매치가 완료됐다고 서버한테 연락받으면
     socket.on('matchingGame', (roomId: number) => {
-      test[0] = false;
       setModal(null);
       if (user) {
         setPlayingGameInfo({
@@ -64,8 +63,7 @@ const LadderModal: React.FC = () => {
             color="white"
             text="취소"
             onClick={() => {
-              test[0] = false;
-              socket.emit('cancelLadderQueue');
+              socket.disconnect();
               setModal(null);
             }}
           />
