@@ -5,14 +5,13 @@ import Button from '../Button';
 import { AllContext } from '../../../store';
 import { LOGOUT } from '../../../utils/interface';
 import { useNavigate } from 'react-router-dom';
-import { authAPI, usersAPI } from '../../../API';
-import { useEffect } from 'react';
+import { authAPI } from '../../../API';
 
 const LogoutModal: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { user, setUser } = useContext(AllContext).userData;
-  const { jwt, setJwt } = useContext(AllContext).jwtData;
+  const { setJwt } = useContext(AllContext).jwtData;
   const navigater = useNavigate();
 
   const handleLogout = () => {

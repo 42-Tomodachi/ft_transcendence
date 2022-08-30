@@ -9,7 +9,6 @@ import OauthPage from './pages/OauthPage';
 import NicknamePage from './pages/NicknamePage';
 import SecondAuthPage from './pages/SecondAuthPage';
 import ChatPage from './pages/ChatPage';
-import UserList from './components/UserList/index';
 
 import ProfilePage from './components/UserProfile';
 import { AllContext } from './store';
@@ -24,7 +23,7 @@ import GamePage from './pages/GamePage';
 
 function App() {
   const { setJwt } = useContext(AllContext).jwtData;
-  const { setUserStatus, userStatus } = useContext(AllContext).userStatus;
+  const { setUserStatus } = useContext(AllContext).userStatus;
   const { setUser } = useContext(AllContext).userData;
 
   useEffect(() => {
@@ -63,16 +62,7 @@ function App() {
           <Route path="/game" element={<MainPage menu="GAME" />} />
           <Route path="/chat" element={<MainPage menu="CHAT" />} />
           <Route path="/chatroom/:roomId" element={<ChatPage />} />
-          {/* <Route path="/userlist" element={<UserList />} /> */}
-
-          {/* Tester */}
-          <Route path="/modaltester" element={<ModalTester />} />
-          {/* ====== */}
-
-          {/* Tester */}
           <Route path="/gameroom/:roomId" element={<GamePage />} />
-          {/* ====== */}
-
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <ModalSet />

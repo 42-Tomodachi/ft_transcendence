@@ -106,13 +106,5 @@ const EnterBtnWrap = styled.div`
     border-radius: 5px;
   }
 `;
-const GameStat = styled.span<{ isGameStart: boolean }>`
-  display: inline-block;
-  width: 40px;
-  color: ${({ isGameStart, theme }) => (isGameStart ? theme.colors.main : theme.colors.deepGrey)};
-  text-align: right;
-  margin-left: 20px;
-  user-select: none;
-`;
 
 export default React.memo(ChatRooms);

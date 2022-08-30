@@ -24,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
   const { user } = useContext(AllContext).userData;
   const navigate = useNavigate();
   const { roomId } = useParams();
-  const [roomInfo, setRoomInfo] = useState<IChatRoomInfo | null>();
+  const [, setRoomInfo] = useState<IChatRoomInfo | null>();
   const [isOwner, setIsOwner] = useState<boolean>(false);
 
   const onClickMenu = (menu: MenuType | 'HOME') => {

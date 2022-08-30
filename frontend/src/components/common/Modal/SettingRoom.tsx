@@ -5,7 +5,6 @@ import Modal from '.';
 import { chatsAPI } from '../../../API';
 import { useContext } from 'react';
 import { AllContext } from '../../../store';
-import { IChatRoomInfo } from '../../../utils/interface';
 
 const SettingRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
   const { user } = useContext(AllContext).userData;

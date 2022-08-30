@@ -1,6 +1,5 @@
 import { instance } from './index';
 import {
-  IUserKey,
   IGameRecord,
   IUserWinLoseCount,
   IUserAvatar,

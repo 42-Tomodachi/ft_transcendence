@@ -3,7 +3,7 @@ import Button from '../components/common/Button';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
 import { authAPI } from '../API';
-import { IUserAvatar, IUserData, LOGIN, SET_NICKNAME, UPDATE_USER } from '../utils/interface';
+import { IUserData, LOGIN, SET_NICKNAME, UPDATE_USER } from '../utils/interface';
 import imageCompression from 'browser-image-compression';
 import { usersAPI } from '../API/users';
 import DefaultProfile from '../assets/default-image.png';

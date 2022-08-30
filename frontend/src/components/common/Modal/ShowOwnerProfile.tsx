@@ -231,13 +231,6 @@ const UserInfo = styled.div``;
 
 const PictureBlock = styled.div``;
 
-const ProfilePicture = styled.img`
-  width: 101px;
-  height: 101px;
-  border-radius: 50px;
-  background: #c4c4c4;
-`;
-
 const UserName = styled.span`
   display: block;
   font-size: 20px;

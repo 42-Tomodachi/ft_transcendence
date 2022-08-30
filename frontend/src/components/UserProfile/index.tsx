@@ -1,4 +1,4 @@
-import React, { useEffect, useContext, useState } from 'react';
+import React, { useEffect, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import ProfileImage from '../common/ProfileImage';
