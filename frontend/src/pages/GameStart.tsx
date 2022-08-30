@@ -3,11 +3,15 @@ import styled from '@emotion/styled';
 import Header from '../components/Header';
 import { GAME } from '../utils/interface'; // GameMode
 import { AllContext } from '../store';
+import { Socket } from 'socket.io-client';
 
 // test00 :  console.log(`처음 상태가 뭔디 ${ballState(info)},, ${info.ballVelo_X}`);
 // test01 :  console.log(`여기서 턴이 바꼈을거란말이지 : ${getTurn(info)}, ${info.turn}`);
 // test02 :  console.log('jusnelee: 여기 들어오는순간. 끝났다는것이지.');
 // test03 :  console.log(`매맨 처음 상태가 뭔디: ${ballState(gameInfo)}  ${gameInfo.ballVelo_X}`);
+// user.socket.on('gameDestroyed', () => {
+//   console.log(`게임이 폭파되었나여.`);
+// });
 
 // 코드 가독성을 위해서라도, 고정적인 값들은 상수로 박아놓고 사용중입니다.
 const PLAYERONE = 1; // 플레이어정보.
@@ -419,10 +423,7 @@ const GameStart: React.FC = () => {
   const eventGetFinished = () => {
     if (user)
       user.socket.on('gameFinished', () => {
-        if (user && playingGameInfo.gameLadder === true) {
-          user.socket.emit('roomTerminated', roomid);
-          user.socket.disconnect();
-        }
+        user.socket.disconnect();
         settingResultPage();
       });
   };
@@ -469,6 +470,18 @@ const GameStart: React.FC = () => {
   }
 
   useEffect(() => {
+    /////////////////////////////////////
+    if (user) {
+      user.socket.on('gameTerminated', data => {
+        console.log(`gameTerminated: 게임중에 누군가 튕기거나 나갔을때. 이긴상대를 알려줌.${data}`);
+        console.log(`gameTerminated: 얘가발생했다는건 무조건 결과페이지로 승자담아서 이동.${data}`);
+        playing[0] = false;
+        if (data === 1) playing[1] = playingGameInfo.oneNickname.toUpperCase();
+        else playing[1] = playingGameInfo.twoNickname.toUpperCase();
+        defaultGameinfo();
+        user.socket.disconnect();
+      });
+    }
     return () => {
       defaultGvalue();
       defaultGameinfo();

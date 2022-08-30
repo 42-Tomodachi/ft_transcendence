@@ -7,7 +7,8 @@ import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
 import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
 import GameStart from './GameStart';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; //LoadingPage
+import { SHOW_PROFILE } from '../utils/interface';
 
 interface GameInfoDto {
   // 내가 쓸 변수
@@ -49,6 +50,8 @@ interface GameInfoDto {
  */
 const GamePage: React.FC = () => {
   console.log('re-render?\n');
+
+  const { setModal } = useContext(AllContext).modalData;
   let socket: Socket;
   const navigate = useNavigate();
   const [gameStart, setGameStart] = useState(false);
@@ -88,7 +91,7 @@ const GamePage: React.FC = () => {
       //이제 무조건 소켓을 연결할겁니다. 커넥션타입을 어떻게 분기해줄것인지.. 생각해봅시다.
       //gameMode가 아니고, 모달에서 ladder인걸 기록해놓는 무언가 필요한것입니다아...
       //socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`
-      socket = io(`${process.env.REACT_APP_BACK_API}`, {
+      socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
         transports: ['websocket'],
         multiplex: false,
         query: {
@@ -108,6 +111,16 @@ const GamePage: React.FC = () => {
       // gameMode가 아니라 래더인지 아닌지를 알려주는 변수여야함!!
       if (playingGameInfo.gameLadder === true) {
         playingGameInfo.gameLadder = false;
+        socket.on('playerDisconnected', data => {
+          console.log(`playerDisconnected: 누군가 튕겼을때연락옴. (여긴래더) ${data}`);
+          console.log(`playerDisconnected: 튕겼다는건 나가기버튼이 아니고 새로고침임 ${data}`);
+          console.log(`playerDisconnected: 방장이 새로고침으로 튕기면 폭파되게 해야함 ${data}`);
+          console.log(`playerDisconnected: 나가기 버튼으로 나간건 디스트로이이벤트 연락옴 ${data}`);
+          console.log(`playerDisconnected: 근데 래더지금 이 연락안옴 ${data}`);
+          socket.disconnect();
+          navigate('/game');
+        });
+        /////////////////////////////////////////////////////////////////////
         socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
           // console.log('MMMMMMMAttata');
           setInfo(info => {
@@ -150,7 +163,6 @@ const GamePage: React.FC = () => {
             });
         });
       } else {
-        // 래더가 아닐때의 소켓온
         socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
           if (!p1 && !p2) {
             setInfo(info => {
@@ -218,16 +230,37 @@ const GamePage: React.FC = () => {
           }
         });
       }
+      //////////////////////////////////// 방폭파 이벤트 공통!!! //////////////////////////////////////
+      socket.on('gameDestroyed', () => {
+        console.log(`gameDestroyed: 래더, 일반 모두 동작\n`);
+        console.log(`gameDestroyed: 게임시작전 방장이 나가면 폭파했다고 연락옴\n`);
+        console.log(`gameDestroyed: 새로고침 아닌 나가기버튼일때만 연락옴\n`);
+        socket.disconnect();
+        navigate('/game');
+      });
       socket.on('gameStartCount', (data: number) => {
         console.log('countdown:' + data);
         setCount(data);
         if (data == 0) {
           setGameStart(true);
         }
+        //////////////////////////////////// 플레이어 튕김 이벤트!!! //////////////////////////////////////
+        if (playingGameInfo.gameLadder !== false)
+          socket.on('playerDisconnected', data => {
+            console.log(`playerDisconnected: 일반에서 누군가 튕겼을때연락옴. (여긴일반) ${data}`);
+            console.log(`playerDisconnected: 튕겼다는건 나가기버튼이 아니고 새로고침임 ${data}`);
+            console.log(`playerDisconnected: 방장이 새로고침으로 튕기면 폭파되게 해야함 ${data}`);
+            console.log(
+              `playerDisconnected: 나가기 버튼으로 나간건 디스트로이이벤트 연락옴 ${data}`,
+            );
+            console.log(`playerDisconnected: 근데 래더지금 이 연락안옴 ${data}`);
+            if (playingGameInfo.player !== 'p1' && gameStart === false) {
+              socket.disconnect();
+              navigate('/game');
+            }
+          });
       });
     } else {
-      // setGameStart(true);
-
       console.log('junselee: user정보가 없어지니까 날라가서 여기로 오는데');
       console.log('junselee: 그냥 홈페이지 /game으로 보내버리는 상황');
       if (socket) {
@@ -239,6 +272,8 @@ const GamePage: React.FC = () => {
     return () => {
       console.log('일로오긴해?: ' + roomid); // -1
       if (socket) {
+        socket.off('playerDisconnected');
+        socket.off('gameDestroyed');
         socket.off('gameStartCount');
         socket.off('matchData');
         socket.disconnect();
