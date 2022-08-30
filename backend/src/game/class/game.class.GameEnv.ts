@@ -190,8 +190,8 @@ export class GameEnv {
 
   handleConnectionOnLadderGame(client: Socket, player: Player): void {
     const game = player.gamePlaying;
-    player.socketPlayingGame = client;
 
+    player.setGameSocket(game, client);
     this.setSocketJoin(client, game);
 
     const statChanged = this.userStats.setSocket(
@@ -362,7 +362,7 @@ export class GameEnv {
       //   player.socketPlayingGame = undefined;
       //   return;
       // }
-      if (game.isPlaying === true) {
+      if (game.isPlaying === true && player.socketPlayingGame === client) {
         const winner =
           game.firstPlayer === player ? game.secondPlayer : game.firstPlayer;
         this.terminateGame(game, winner);
@@ -689,18 +689,22 @@ export class GameEnv {
   }
 
   async terminateGame(game: GameAttribute, winner: Player): Promise<void> {
+    let winSide: number;
+
     console.log(
       `game ${game.roomId} is terminated, winner is ${winner.userId}`,
     );
     if (winner === game.firstPlayer) {
       game.rtData.scoreLeft = 11;
       game.rtData.scoreRight = 0;
+      winSide = 1;
     } else {
       game.rtData.scoreLeft = 0;
       game.rtData.scoreRight = 11;
+      winSide = 2;
     }
     game.isPlaying = false;
-    game.broadcastToRoom('gameTerminated', winner.userId);
+    game.broadcastToRoom('gameTerminated', winSide);
     await this.writeMatchResult(game);
     this.postGameProcedure(game);
   }
