@@ -24,14 +24,7 @@ export class GameService {
   // HTTP APIs
 
   getGameRoomList(): GameRoomProfileDto[] {
-    const gameRoomDtoArray: GameRoomProfileDto[] = [];
-    for (const item of this.gameEnv.gameRoomList) {
-      if (!item.active || item.isLadder) {
-        continue;
-      }
-      gameRoomDtoArray.push(item.toGameRoomProfileDto());
-    }
-    return gameRoomDtoArray;
+    return this.gameEnv.getPublicGameList();
   }
 
   createGameRoom(
@@ -138,6 +131,10 @@ export class GameService {
       this.gameEnv.terminateGame(game, winner);
     }
     player.leaveGame(game);
+    this.gameEnv.broadcastToLobby(
+      'updateGameRoomList',
+      this.gameEnv.getPublicGameList(),
+    );
   }
 
   async challengeDuel(

@@ -17,7 +17,8 @@ import * as bcrypt from 'bcryptjs';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { ChatGateway } from 'src/chat/chat.gateway';
 import { ChatService } from 'src/chat/chat.service';
-import { ChatLobbyGateway } from 'src/chat/chatLobby.gateway';
+import { ChatLobbyGateway } from '../chat/chatLobby.gateway';
+import { GameGateway } from 'src/game/game.gateway';
 
 @Injectable()
 export class AuthService {
@@ -32,6 +33,8 @@ export class AuthService {
     private readonly chatGateway: ChatGateway,
     @Inject(forwardRef(() => ChatLobbyGateway))
     private readonly chatLobbyGateway: ChatLobbyGateway,
+    @Inject(forwardRef(() => GameGateway))
+    private readonly gameGateway: GameGateway,
     private readonly jwtService: JwtService,
     private readonly jwtStrategy: JwtStrategy,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
@@ -117,14 +120,22 @@ export class AuthService {
       await this.chatService.getParticipatingChatRooms(user, user.id);
 
     participatingChatRooms.forEach((participatingChatRoom) => {
-      this.chatGateway.emitChatRoomParticipants(
+      const chatRoomUserDtos = this.chatGateway.emitChatRoomParticipants(
         participatingChatRoom.roomId.toString(),
+      );
+      this.gameGateway.broadcastToLobby(
+        'updateChatRoomParticipants',
+        chatRoomUserDtos,
       );
     });
 
     this.chatGateway.emitFriendList(user.id);
-    this.chatLobbyGateway.emitUserList();
-    this.chatLobbyGateway.emitFriendList(user.id);
+    const userList = this.chatLobbyGateway.emitUserList();
+    this.chatLobbyGateway.emitFriendList(
+      user.id,
+      this.gameGateway.broadcastToLobby,
+    );
+    this.gameGateway.broadcastToLobby('updateUserList', userList);
   }
 
   async isSignedUp(code: string): Promise<IsSignedUpDto> {
@@ -144,8 +155,6 @@ export class AuthService {
 
     const jwt = await this.setLogon(user);
 
-    // this.emitUpdatedUserList(user.id, user);
-
     return this.userToIsSignedUpDto(user, jwt);
   }
 
@@ -163,8 +172,6 @@ export class AuthService {
     }
 
     this.jwtStrategy.deletejwtAccessToken(user.id);
-
-    // this.emitUpdatedUserList(user.id, user);
   }
 
   async startSecondAuth(

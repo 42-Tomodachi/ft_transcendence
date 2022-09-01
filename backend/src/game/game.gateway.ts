@@ -1,4 +1,4 @@
-import { ConsoleLogger, UseGuards } from '@nestjs/common';
+import { ConsoleLogger, forwardRef, Inject, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   OnGatewayConnection,
@@ -17,7 +17,10 @@ import { GameInfo } from './class/game.class.interface';
   namespace: 'ws-game',
 })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly gameEnv: GameEnv) {}
+  constructor(
+    @Inject(forwardRef(() => GameEnv))
+    private readonly gameEnv: GameEnv,
+  ) {}
   @WebSocketServer()
   server: Server;
 
@@ -59,5 +62,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('paddleRTData')
   async paddleRTData(client: Socket, data: number): Promise<void> {
     await this.gameEnv.processRecievedPaddleRtData(client, data);
+  }
+
+  broadcastToLobby(ev: string, ...args: any[]): void {
+    this.server.to('gameLobby').emit(ev, ...args);
   }
 }

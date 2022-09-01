@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/users.entity';
 import { GameController } from './game.controller';
@@ -13,11 +13,11 @@ import { UserStatusModule } from 'src/userStatus/userStatus.module';
   imports: [
     TypeOrmModule.forFeature([User]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    AuthModule,
+    forwardRef(() => AuthModule),
     UserStatusModule,
   ],
   controllers: [GameController],
   providers: [GameService, GameGateway, GameEnv],
-  exports: [PassportModule],
+  exports: [PassportModule, GameGateway],
 })
 export class GameModule {}
