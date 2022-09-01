@@ -21,35 +21,33 @@ class UserStatus {
   gamePlayingSockets: Set<Socket>;
   gameWatchingSockets: Set<Socket>;
 
-  setChatLobbySocket(socket: Socket): void {
-    this.chatLobbySockets.add(socket);
+  isGameConnection(socket: Socket): boolean {
+    return (
+      socket.handshake.query['connectionType'] == 'ladderGame' ||
+      socket.handshake.query['connectionType'] == 'normalGame'
+    );
   }
 
-  setChatRoomSocket(socket: Socket): void {
-    this.chatSockets.add(socket);
+  isGamePlaying(socket: Socket): boolean {
+    return socket.rooms.has('playing');
   }
 
-  setGameLobbySocket(socket: Socket): void {
-    this.gameLobbySockets.add(socket);
+  setSocket(socket: Socket): void {
+    if (socket.nsp.name == '/ws-chatLobby') this.chatLobbySockets.add(socket);
+    else if (socket.nsp.name == '/ws-chat') this.chatSockets.add(socket);
+    else if (socket.handshake.query['connectionType'] == 'gameLobby')
+      this.gameLobbySockets.add(socket);
+    else if (this.isGameConnection(socket)) {
+      if (this.isGamePlaying(socket)) this.gamePlayingSockets.add(socket);
+      else this.gameWatchingSockets.add(socket);
+    } else console.log('UserStatus: setSocket: wrong socket');
   }
 
-  setGameRoomSocket(socket: Socket): void {
-    this.gameWatchingSockets.add(socket);
-  }
-
-  removeChatLobbySocket(socket: Socket): void {
+  removeSocket(socket: Socket): void {
     this.chatLobbySockets.delete(socket);
-  }
-
-  removeChatSocket(socket: Socket): void {
     this.chatSockets.delete(socket);
-  }
-
-  removeGameLobbySocket(socket: Socket): void {
     this.gameLobbySockets.delete(socket);
-  }
-
-  removeGameRoomSocket(socket: Socket): void {
+    this.gamePlayingSockets.delete(socket);
     this.gameWatchingSockets.delete(socket);
   }
 
@@ -78,11 +76,13 @@ class UserStatus {
     else if (
       this.chatLobbySockets.size !== 0 ||
       this.chatSockets.size !== 0 ||
-      this.gameLobbySockets.size !== 0
+      this.gameLobbySockets.size !== 0 ||
+      this.gameWatchingSockets.size !== 0
     )
       this.status = 'on';
     else this.status = 'off';
 
+    console.log(this);
     return this.status !== lastStatus;
   }
 
@@ -129,18 +129,7 @@ export class UserStatusContainer {
     socket: Socket,
     callIfStatusChanged?: () => void,
   ): Promise<boolean> {
-    if (socket.nsp.name == '/ws-chatLobby')
-      this.get(userId).setChatLobbySocket(socket);
-    else if (socket.nsp.name == '/ws-chat')
-      this.get(userId).setChatRoomSocket(socket);
-    else if (socket.handshake.query['connectionType'] == 'gameLobby')
-      this.get(userId).setGameLobbySocket(socket);
-    else if (
-      socket.handshake.query['connectionType'] == 'ladderGame' ||
-      socket.handshake.query['connectionType'] == 'normalGame'
-    )
-      this.get(userId).setGameRoomSocket(socket);
-    else console.log('userStatus: setSocket: wrong socket');
+    this.get(userId).setSocket(socket);
 
     const isStatusChanged = this.get(userId).changeStatus();
     if (isStatusChanged) {
@@ -150,26 +139,18 @@ export class UserStatusContainer {
     return isStatusChanged;
   }
 
-  removeSocket(
+  async removeSocket(
     userId: number,
     socket: Socket,
     callIfStatusChanged: () => void,
-  ): boolean {
-    if (socket.nsp.name == 'ws-chatLobby')
-      this.get(userId).removeChatLobbySocket(socket);
-    else if (socket.nsp.name == 'ws-chat')
-      this.get(userId).removeChatSocket(socket);
-    else if (socket.handshake.query['connectionType'] == 'gameLobby')
-      this.get(userId).removeGameLobbySocket(socket);
-    else if (
-      socket.handshake.query['connectionType'] == 'ladderGame' ||
-      socket.handshake.query['connectionType'] == 'normalGame'
-    )
-      this.get(userId).removeGameRoomSocket(socket);
-    else console.log('userStatus: setSocket: wrong socket');
+  ): Promise<boolean> {
+    this.get(userId).removeSocket(socket);
 
     const isStatusChanged = this.get(userId).changeStatus();
-    if (isStatusChanged) callIfStatusChanged;
+    if (isStatusChanged) {
+      await this.authService.emitUpdatedUserList(userId);
+      callIfStatusChanged;
+    }
     return isStatusChanged;
   }
 }
