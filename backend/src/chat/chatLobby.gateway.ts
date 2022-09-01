@@ -45,9 +45,7 @@ export class ChatLobbyGateway
       this.connectedSocketMap.set(userId, set);
     }
 
-    this.userStats.setSocket(+userId, client, () => {
-      // TODO: 상태변화 전송
-    });
+    this.userStats.setSocket(+userId, client);
     // 최초 목록들은 api 요청으로 처리하는걸로 협의
     // 특정 소켓에 채팅방 목록 emit
     // this.emitChatRoomList(client.id);
@@ -60,9 +58,7 @@ export class ChatLobbyGateway
 
     this.connectedSocketMap.forEach((set, userId) => {
       set.delete(client.id);
-      this.userStats.setSocket(+userId, client, () => {
-        // TODO: 상태변화 전송
-      });
+      this.userStats.removeSocket(+userId, client);
     });
   }
 

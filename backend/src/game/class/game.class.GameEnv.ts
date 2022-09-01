@@ -120,18 +120,14 @@ export class GameEnv {
 
     player.socketLobbySet.add(client);
 
-    this.userStats.setSocket(player.userId, client, () => {
-      // TODO: 상태변화 전송
-    });
+    this.userStats.setSocket(player.userId, client);
   }
 
   handleDisconnectionOnLobby(client: Socket, player: Player): void {
     player.socketLobbySet.delete(client);
     this.gameLobbyTable.delete(client);
 
-    this.userStats.removeSocket(player.userId, client, () => {
-      // TODO: 상태변화 전송
-    });
+    this.userStats.removeSocket(player.userId, client);
   }
 
   handleConnectionOnDuel(client: Socket, player: Player): void {
@@ -195,10 +191,6 @@ export class GameEnv {
   handleDisconnectionOnLadderQueue(client: Socket, player: Player): void {
     player.socketQueue = null;
     this.cancelLadderWaiting(client);
-
-    this.userStats.removeSocket(player.userId, client, () => {
-      // TODO: 상태변화 전송
-    });
   }
 
   handleConnectionOnLadderGame(client: Socket, player: Player): void {
@@ -207,17 +199,13 @@ export class GameEnv {
     player.setGameSocket(game, client);
     this.setSocketJoin(client, game);
 
-    this.userStats.setSocket(player.userId, client, () => {
-      // TODO: 상태변화 전송
-    });
+    this.userStats.setSocket(player.userId, client);
   }
 
   handleDisconnectionOnLadderGame(client: Socket, player: Player): void {
     this.clearPlayerSocket(client);
 
-    this.userStats.removeSocket(player.userId, client, () => {
-      // TODO: 상태변화 전송
-    });
+    this.userStats.removeSocket(player.userId, client);
   }
 
   handleConnectionOnNormalGame(
@@ -243,17 +231,13 @@ export class GameEnv {
     player.setGameSocket(game, client);
     this.setSocketJoin(client, game);
 
-    this.userStats.setSocket(player.userId, client, () => {
-      // TODO: 상태변화 전송
-    });
+    this.userStats.setSocket(player.userId, client);
   }
 
   handleDisconnectionOnNormalGame(client: Socket, player: Player): void {
     this.clearPlayerSocket(client);
 
-    this.userStats.removeSocket(player.userId, client, () => {
-      // TODO: 상태변화 전송
-    });
+    this.userStats.removeSocket(player.userId, client);
   }
 
   onFirstSocketHandshake(
@@ -368,9 +352,6 @@ export class GameEnv {
     }
 
     this.eraseFromSocketMap(client);
-
-    // 해당 유저 퇴장 알림
-    // 유저 상태 접속중으로 변경
   }
 
   //
@@ -402,7 +383,7 @@ export class GameEnv {
     game.create(createGameRoomDto, player);
     player.gamePlaying = game;
 
-    // (소켓) 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
+    // TODO: 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
     // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
 
     return game.roomId;
@@ -419,7 +400,7 @@ export class GameEnv {
   joinPlayerToGame(player: Player, game: GameAttribute): number {
     player.joinGame(game);
 
-    // socket emit
+    // TODO: socket emit
     return game.playerCount;
   }
 
@@ -589,6 +570,8 @@ export class GameEnv {
     game.broadcastToRoom('gameFinished');
     await this.writeMatchResult(game);
     this.postGameProcedure(game);
+
+    // TODO
   }
 
   async terminateGame(game: GameAttribute, winner: Player): Promise<void> {
@@ -610,6 +593,8 @@ export class GameEnv {
     game.broadcastToRoom('gameTerminated', winSide);
     await this.writeMatchResult(game);
     this.postGameProcedure(game);
+
+    // TODO
   }
 
   async writeMatchResult(game: GameAttribute): Promise<void> {
