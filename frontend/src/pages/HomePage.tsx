@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import UserList from '../components/UserList';
 import UserProfile from '../components/UserProfile';
 import Game from '../components/Game';
-import { HOME, MenuType, UPDATE_RECORD } from '../utils/interface';
+import { FIGHT_REQ_MODAL, HOME, MenuType, UPDATE_RECORD } from '../utils/interface';
 import Chat from '../components/Chat';
 import { AllContext } from '../store';
 import { usersAPI } from '../API';
@@ -18,6 +18,7 @@ let socket: Socket;
 
 const HomePage: React.FC<HomePageProps> = ({ menu }) => {
   const { setUser, user } = useContext(AllContext).userData;
+  const { setModal } = useContext(AllContext).modalData;
 
   useEffect(() => {
     if (user) {
@@ -40,20 +41,26 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
     } else if (menu === 'GAME') {
       console.log('hello Game world!');
       // TODO: Game로비 연결부
-      // socket = io(`${process.env.REACT_APP_BACK_API}`, {
-      //   transports: ['websocket'],
-      //   multiplex: false,
-      //   withCredentials: true,
-      //   query: {
-      //     userId: user && user.userId,
-      //     connectionType: 'gameLobby',
-      //   },
-      // });
-      // socket.on('message', () => {
-      //   console.log(` 로비 connected socket : ${socket.id}`);
-      //   console.log(socket.connected); // true
-      //   if (user) user.socket = socket;
-      // });
+      socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
+        transports: ['websocket'],
+        multiplex: false,
+        withCredentials: true,
+        query: {
+          userId: user && user.userId,
+          connectionType: 'gameLobby',
+        },
+      });
+      socket.on('message', () => {
+        console.log(` 로비 connected socket : ${socket.id}`);
+        console.log(socket.connected); // true
+        if (user) user.socket = socket;
+      });
+    }
+    if (socket) {
+      socket.on('challengeDuelFrom', (userId: number) => {
+        console.log('userId', userId, '대전신청이 옴 로비');
+        setModal(FIGHT_REQ_MODAL, userId);
+      });
     }
   }, [menu]);
 
@@ -71,7 +78,9 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
         <HomeContainer>
           <Header type={HOME} />
           <HomeContents>
-            <MainArea>{menu && menu === 'CHAT' ? <Chat socket={socket} /> : <Game />}</MainArea>
+            <MainArea>
+              {menu && menu === 'CHAT' ? <Chat socket={socket} /> : <Game socket={socket} />}
+            </MainArea>
             <HomeMenus>
               <UserList menuType={'ALL'} socket={socket} />
               <UserProfile />

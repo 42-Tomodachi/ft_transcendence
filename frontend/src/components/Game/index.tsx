@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import GameList from '../RoomList';
 import { AllContext } from '../../store';
 import { LOADING_LADDER_GAME, IGameRooms, MAKE_GAME_ROOM, GAME } from '../../utils/interface';
 import { gameAPI } from '../../API';
+import { Socket } from 'socket.io-client';
 
-const Game: React.FC = () => {
+const Game: React.FC<{ socket: Socket }> = ({ socket }) => {
   const [gameList, setGameList] = useState<IGameRooms[] | []>([]);
   const { user } = useContext(AllContext).userData;
   const { setModal } = useContext(AllContext).modalData;
@@ -15,13 +15,26 @@ const Game: React.FC = () => {
 
   useEffect(() => {
     if (user && user.jwt) {
-      const getAllGameList = async () => {
-        const res = await gameAPI.getGameRooms(user.jwt); //
-        setGameList(res);
-      };
-      getAllGameList();
+      getAllGameList(user.jwt);
     }
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      // TODO: 게임 룸 리스트 이벤트 명 확인하기(알려주기)
+      socket.on('updateGameRoomList', (data: IGameRooms[]) => {
+        console.log('update gameroom', data);
+        setGameList(data); // 전체 게임방
+      });
+    }
+    return () => {
+      if (socket) {
+        socket.off('updateChatRoomList');
+        // socket.disconnect();
+      }
+    };
+  }, [socket]);
+
   const creatMatch = async () => {
     console.log('junselee: 래더게임매칭버튼이 눌렸고, 이제 모달을 띄울거다.(Game/)');
     //모달 표시해주고
@@ -29,6 +42,11 @@ const Game: React.FC = () => {
     //await new Promise(resolve => setTimeout(resolve, 3000));
 
     // 이후에 모달이 사라지고 네비게이터로 작성된 페이지로 이동..
+  };
+
+  const getAllGameList = async (jwt: string) => {
+    const res = await gameAPI.getGameRooms(jwt); //
+    setGameList(res);
   };
   return (
     <>

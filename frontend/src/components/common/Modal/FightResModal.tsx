@@ -39,11 +39,7 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
       socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
         transports: ['websocket'],
         multiplex: false,
-        query: { userId: user.userId },
-      });
-      socket.emit('canMatch', {
-        userId: user.userId,
-        targetId: targetId,
+        query: { userId: user.userId, targetId: targetId, isSender: true },
       });
       socket.on('cancelMatch', () => {
         console.log('cancel Match');

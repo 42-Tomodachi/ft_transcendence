@@ -51,7 +51,7 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
       socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
         transports: ['websocket'],
         multiplex: false,
-        query: { userId: user.userId },
+        query: { userId: matchUserId, targetId: user.userId, isSender: false },
       });
       socket.on('startMatch', (roomId: number) => {
         navigate(`/gameroom/${roomId}`);

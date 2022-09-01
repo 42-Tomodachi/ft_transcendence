@@ -5,7 +5,7 @@ import UserList from '../components/UserList';
 import UserProfile from '../components/UserProfile';
 import MessageList from '../components/Chat/MessageList';
 import MessageInput from '../components/Chat/MessageInput';
-import { CHAT, IMessage } from '../utils/interface';
+import { BAN_NOTI_CAHTROOM, CHAT, FIGHT_REQ_MODAL, IMessage } from '../utils/interface';
 import { useParams } from 'react-router-dom';
 import { AllContext } from '../store';
 import { chatsAPI } from '../API';
@@ -35,6 +35,7 @@ let socket: Socket;
 const ChatPage: React.FC = () => {
   const [messages, setMessages] = useState<IMessage[] | []>([]);
   const { user } = useContext(AllContext).userData;
+  const { setModal } = useContext(AllContext).modalData;
   const { roomId } = useParams();
   const [roomName, setRoomName] = useState<string>('');
   const [isDm, setRoomtype] = useState<boolean>(false);
@@ -67,16 +68,15 @@ const ChatPage: React.FC = () => {
         socket.on('recieveMessage', (data: IMessage) => {
           setMessages(pre => [...pre, data]);
         });
-        socket.on('disconnectSocket', data => {
-          // TODO: owner아이디랑
-          // TODO: 경고 모달 띄우기
-          // if (data) {
-          //   disconnectSocketNoti('error', 'top', data);
-          // } else disconnectSocketNoti('error', 'top', '강퇴당한 방입니다'); // TODO: 방 폭파한 방장한테도 disconnect가 가는건 문제인듯
-          navigate('/');
+        socket.on('disconnectSocket', () => {
+          setModal(BAN_NOTI_CAHTROOM);
         });
-        socket.on('updateChatRoomTitle', data => {
+        socket.on('updateChatRoomTitle', (data: string) => {
           setRoomName(data);
+        });
+        socket.on('challengeDuelFrom', (userId: number) => {
+          console.log('userId', userId, '대전신청이 옴');
+          setModal(FIGHT_REQ_MODAL, userId);
         });
       }
     }
@@ -85,6 +85,7 @@ const ChatPage: React.FC = () => {
         socket.off('reloadChatHistory');
         socket.off('recieveMessage');
         socket.off('updateChatRoomTitle');
+        socket.off('challengeDuelFrom');
         socket.disconnect();
       }
     };
@@ -117,7 +118,7 @@ const ChatPage: React.FC = () => {
             <ChatTitle>
               <BackawayWrap
                 onClick={() => {
-                  navigate('/chat');
+                  navigate(-1);
                 }}
               >
                 <Backaway src={backaway} alt="backaway" />
