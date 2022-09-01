@@ -142,7 +142,7 @@ export class UserStatusContainer {
   async removeSocket(
     userId: number,
     socket: Socket,
-    callIfStatusChanged: () => void,
+    callIfStatusChanged?: () => void,
   ): Promise<boolean> {
     this.get(userId).removeSocket(socket);
 
