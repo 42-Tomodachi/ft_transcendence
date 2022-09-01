@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { CreateGameRoomDto } from '../dto/game.dto';
+import { CreateGameRoomDto, GameRoomProfileDto } from '../dto/game.dto';
 import { Player } from './game.class.Player';
 import { GameAttribute } from './game.class.GameAttribute';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,6 +15,7 @@ export class GameEnv {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @Inject(forwardRef(() => UserStatusContainer))
     private userStats: UserStatusContainer,
   ) {
     for (let index = 0; index < 100; index++) {
@@ -77,6 +78,14 @@ export class GameEnv {
 
   getGameRoom(gameId: number): GameAttribute {
     return this.gameRoomList.at(gameId - 1);
+  }
+
+  getPublicGameList(): GameRoomProfileDto[] {
+    return this.gameRoomList
+      .filter((game) => game.active && !game.isLadder)
+      .map((game) => {
+        return game.toGameRoomProfileDto();
+      });
   }
 
   //
@@ -352,6 +361,7 @@ export class GameEnv {
     }
 
     this.eraseFromSocketMap(client);
+    this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
   }
 
   //
@@ -383,8 +393,7 @@ export class GameEnv {
     game.create(createGameRoomDto, player);
     player.gamePlaying = game;
 
-    // TODO: 모든 클라이언트에 새로 만들어진 게임방이 있음을 전달
-    // this.emitEvent('addGameList', gameRoomAtt.toGameRoomProfileDto());
+    this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
 
     return game.roomId;
   }
@@ -400,7 +409,8 @@ export class GameEnv {
   joinPlayerToGame(player: Player, game: GameAttribute): number {
     player.joinGame(game);
 
-    // TODO: socket emit
+    this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
+
     return game.playerCount;
   }
 
@@ -421,6 +431,7 @@ export class GameEnv {
       game.destroy();
       // game.initPlayData();
     }
+    this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
     // clearInterval(this.streaming);
   }
 
@@ -479,6 +490,8 @@ export class GameEnv {
 
     player1.socketQueue.emit('matchingGame', game.roomId.toString());
     player2.socketQueue.emit('matchingGame', game.roomId.toString());
+
+    this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
 
     return game;
   }
@@ -570,8 +583,6 @@ export class GameEnv {
     game.broadcastToRoom('gameFinished');
     await this.writeMatchResult(game);
     this.postGameProcedure(game);
-
-    // TODO
   }
 
   async terminateGame(game: GameAttribute, winner: Player): Promise<void> {
@@ -593,8 +604,6 @@ export class GameEnv {
     game.broadcastToRoom('gameTerminated', winSide);
     await this.writeMatchResult(game);
     this.postGameProcedure(game);
-
-    // TODO
   }
 
   async writeMatchResult(game: GameAttribute): Promise<void> {

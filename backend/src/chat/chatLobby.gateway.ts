@@ -5,9 +5,12 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
+import { first } from 'rxjs';
 import { Server, Socket } from 'socket.io';
+import { SimpleUserDto } from 'src/users/dto/users.dto';
 import { UsersService } from 'src/users/users.service';
 import { UserStatusContainer } from 'src/userStatus/userStatus.service';
+import { FindRelationsNotFoundError } from 'typeorm';
 import { ChatService } from './chat.service';
 import { ChatRoomUserDto } from './dto/chatParticipant.dto';
 
@@ -166,7 +169,7 @@ export class ChatLobbyGateway
 
   // 전체 유저 목록 emit
   // 회원가입, 로그인, 로그아웃, 닉네임 변경 todo: 게입 방 입퇴장(유저 상태 play)
-  async emitUserList(socketId?: string): Promise<void> {
+  async emitUserList(socketId?: string): Promise<SimpleUserDto[]> {
     const userList = await this.userService.getUsers();
 
     if (socketId) {
@@ -174,11 +177,15 @@ export class ChatLobbyGateway
     } else {
       this.wss.emit('updateUserList', userList);
     }
+    return userList;
   }
 
   // 친구 목록 emit
   // 로그인, 로그아웃, 닉네임 변경 todo: 게입 방 입퇴장(유저 상태 play)
-  async emitFriendList(myId: number) {
+  async emitFriendList(
+    myId: number,
+    broadcaster?: (ev: string, ...args: any[]) => void,
+  ): Promise<void> {
     // 1. 나를 친구추가한 유저 id 가져오기
     const followerIds = await this.userService.getFollowerIds(myId);
 
@@ -193,6 +200,7 @@ export class ChatLobbyGateway
             followerId,
           );
           this.wss.to(socketId).emit('updateFriendList', friendList);
+          if (broadcaster) broadcaster('updateFriendList', friendList);
         });
       }
     });

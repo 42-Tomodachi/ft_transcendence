@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ChatModule } from 'src/chat/chat.module';
 import { EmailModule } from 'src/emails/email.module';
+import { GameModule } from 'src/game/game.module';
 import { User } from 'src/users/entities/users.entity';
 import { UsersModule } from 'src/users/users.module';
 import { AuthController } from './auth.controller';
@@ -23,6 +24,7 @@ import { JwtStrategy } from './jwt.strategy';
     forwardRef(() => UsersModule),
     EmailModule,
     forwardRef(() => ChatModule),
+    forwardRef(() => GameModule),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

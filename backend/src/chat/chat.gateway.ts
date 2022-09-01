@@ -15,6 +15,7 @@ import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import { ChatContentDto } from './dto/chatContents.dto';
 import { AuthService } from 'src/auth/auth.service';
+import { ChatRoomUserDto } from './dto/chatParticipant.dto';
 
 /**
  * recieveMessage
@@ -49,7 +50,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatService: ChatService,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
-    private readonly authService: AuthService,
     private readonly userStats: UserStatusContainer,
   ) {}
 
@@ -226,11 +226,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // 유저 상태변화 시 참여중인 채팅방에 유저 목록 emit
-  async emitChatRoomParticipants(roomId: string): Promise<void> {
+  async emitChatRoomParticipants(roomId: string): Promise<ChatRoomUserDto[]> {
     const chatRoomUserDtos = await this.chatService.getRoomParticipants(
       +roomId,
     );
     this.wss.to(roomId).emit('updateChatRoomParticipants', chatRoomUserDtos);
+    return chatRoomUserDtos;
   }
 
   // 유저 상태 변화 시 나를 친구추가 한 유저의 친구 목록 emit
