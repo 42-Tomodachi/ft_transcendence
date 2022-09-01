@@ -2,7 +2,7 @@ import { Socket } from 'socket.io';
 import { GameAttribute } from './game.class.GameAttribute';
 
 export class Player {
-  socketLobby: Socket;
+  socketLobbySet: Set<Socket>;
   socketQueue: Socket;
   socketPlayingGame: Socket;
   socketsToGameMap: Map<Socket, GameAttribute>;
@@ -13,7 +13,7 @@ export class Player {
   isLeaving: boolean;
 
   constructor(userId: number, game: GameAttribute) {
-    this.socketLobby = null;
+    this.socketLobbySet = new Set();
     this.socketQueue = null;
     this.socketPlayingGame = null;
     this.socketsToGameMap = new Map<Socket, GameAttribute>();
@@ -25,7 +25,7 @@ export class Player {
   }
 
   clear(): void {
-    this.socketLobby = null;
+    this.socketLobbySet.clear();
     this.socketQueue = null;
     this.socketPlayingGame = null;
     delete this.socketsToGameMap;

@@ -1,57 +1,71 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
+import { AuthService } from 'src/auth/auth.service';
+import { UsersService } from 'src/users/users.service';
 
 class UserStatus {
   constructor(userId: number) {
     this.userId = userId;
     this.status = 'off';
-    this.sockets = new Map();
-    this.gameSockets = new Set();
+    this.chatLobbySockets = new Set();
+    this.chatSockets = new Set();
+    this.gameLobbySockets = new Set();
+    this.gamePlayingSockets = new Set();
+    this.gameWatchingSockets = new Set();
   }
   userId: number;
   status: 'on' | 'off' | 'play';
-  sockets: Map<string, Socket>;
-  gameSockets: Set<Socket>;
+  chatLobbySockets: Set<Socket>;
+  chatSockets: Set<Socket>;
+  gameLobbySockets: Set<Socket>;
+  gamePlayingSockets: Set<Socket>;
+  gameWatchingSockets: Set<Socket>;
 
   setChatLobbySocket(socket: Socket): void {
-    if (!socket) {
-      this.sockets.delete('chatLobby');
-      return;
-    }
-    this.sockets.set('chatLobby', socket);
-  }
-
-  setGameLobbySocket(socket: Socket): void {
-    if (!socket) {
-      this.sockets.delete('gameLobby');
-      return;
-    }
-    this.sockets.set('gameLobby', socket);
+    this.chatLobbySockets.add(socket);
   }
 
   setChatRoomSocket(socket: Socket): void {
-    if (!socket) {
-      this.sockets.delete('chatRoom');
-      return;
-    }
-    this.sockets.set('chatRoom', socket);
+    this.chatSockets.add(socket);
+  }
+
+  setGameLobbySocket(socket: Socket): void {
+    this.gameLobbySockets.add(socket);
   }
 
   setGameRoomSocket(socket: Socket): void {
-    this.gameSockets.add(socket);
+    this.gameWatchingSockets.add(socket);
+  }
+
+  removeChatLobbySocket(socket: Socket): void {
+    this.chatLobbySockets.delete(socket);
+  }
+
+  removeChatSocket(socket: Socket): void {
+    this.chatSockets.delete(socket);
+  }
+
+  removeGameLobbySocket(socket: Socket): void {
+    this.gameLobbySockets.delete(socket);
   }
 
   removeGameRoomSocket(socket: Socket): void {
-    this.gameSockets.delete(socket);
+    this.gameWatchingSockets.delete(socket);
   }
 
   getSockets(): Socket[] {
     const found: Socket[] = [];
 
-    for (const socket of this.sockets.values()) {
+    for (const socket of this.chatLobbySockets.values()) {
       found.push(socket);
     }
-    for (const socket of this.gameSockets.values()) {
+    for (const socket of this.chatSockets.values()) {
+      found.push(socket);
+    }
+    for (const socket of this.gameLobbySockets.values()) {
+      found.push(socket);
+    }
+    for (const socket of this.gameWatchingSockets.values()) {
       found.push(socket);
     }
     return found;
@@ -60,23 +74,24 @@ class UserStatus {
   changeStatus(): boolean {
     const lastStatus = this.status;
 
-    if (this.gameSockets.size !== 0) this.status = 'play';
-    else if (this.sockets.size !== 0) this.status = 'on';
+    if (this.gamePlayingSockets.size !== 0) this.status = 'play';
+    else if (
+      this.chatLobbySockets.size !== 0 ||
+      this.chatSockets.size !== 0 ||
+      this.gameLobbySockets.size !== 0
+    )
+      this.status = 'on';
     else this.status = 'off';
 
     return this.status !== lastStatus;
   }
 
   broadcastToLobbies(ev: string, ...args: any[]): void {
-    const cLobby = this.sockets.get('chatLobby');
-    const gLobby = this.sockets.get('gameLobby');
-
-    if (cLobby) {
-      gLobby.broadcast.emit(ev, ...args);
-      gLobby.emit(ev, ...args);
-      return;
+    for (const cLobby of this.chatLobbySockets) {
+      cLobby.broadcast.emit(ev, ...args);
+      cLobby.emit(ev, ...args);
     }
-    if (gLobby) {
+    for (const gLobby of this.gameLobbySockets) {
       gLobby.to('gameLobby').emit(ev, ...args);
       gLobby.emit(ev, ...args);
     }
@@ -85,7 +100,10 @@ class UserStatus {
 
 @Injectable()
 export class UserStatusContainer {
-  constructor() {
+  constructor(
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
+  ) {
     for (let index = 0; index < 1000; index++) {
       this.userContainer[index] = new UserStatus(index);
     }
@@ -106,27 +124,52 @@ export class UserStatusContainer {
   }
 
   // return: 유저상태 변경 여부
-  setSocket(
+  async setSocket(
     userId: number,
     socket: Socket,
-    type: 'chatLobby' | 'chatRoom' | 'gameLobby' | 'gameRoom',
-    rm?: boolean,
-  ): boolean {
-    switch (type) {
-      case 'chatLobby':
-        this.get(userId).setChatLobbySocket(socket);
-        break;
-      case 'chatRoom':
-        this.get(userId).setChatRoomSocket(socket);
-        break;
-      case 'gameLobby':
-        this.get(userId).setGameLobbySocket(socket);
-        break;
-      case 'gameRoom':
-        if (rm === true) this.get(userId).removeGameRoomSocket(socket);
-        else this.get(userId).setGameRoomSocket(socket);
-        break;
+    callIfStatusChanged?: () => void,
+  ): Promise<boolean> {
+    if (socket.nsp.name == '/ws-chatLobby')
+      this.get(userId).setChatLobbySocket(socket);
+    else if (socket.nsp.name == '/ws-chat')
+      this.get(userId).setChatRoomSocket(socket);
+    else if (socket.handshake.query['connectionType'] == 'gameLobby')
+      this.get(userId).setGameLobbySocket(socket);
+    else if (
+      socket.handshake.query['connectionType'] == 'ladderGame' ||
+      socket.handshake.query['connectionType'] == 'normalGame'
+    )
+      this.get(userId).setGameRoomSocket(socket);
+    else console.log('userStatus: setSocket: wrong socket');
+
+    const isStatusChanged = this.get(userId).changeStatus();
+    if (isStatusChanged) {
+      await this.authService.emitUpdatedUserList(userId);
+      callIfStatusChanged;
     }
-    return this.get(userId).changeStatus();
+    return isStatusChanged;
+  }
+
+  removeSocket(
+    userId: number,
+    socket: Socket,
+    callIfStatusChanged: () => void,
+  ): boolean {
+    if (socket.nsp.name == 'ws-chatLobby')
+      this.get(userId).removeChatLobbySocket(socket);
+    else if (socket.nsp.name == 'ws-chat')
+      this.get(userId).removeChatSocket(socket);
+    else if (socket.handshake.query['connectionType'] == 'gameLobby')
+      this.get(userId).removeGameLobbySocket(socket);
+    else if (
+      socket.handshake.query['connectionType'] == 'ladderGame' ||
+      socket.handshake.query['connectionType'] == 'normalGame'
+    )
+      this.get(userId).removeGameRoomSocket(socket);
+    else console.log('userStatus: setSocket: wrong socket');
+
+    const isStatusChanged = this.get(userId).changeStatus();
+    if (isStatusChanged) callIfStatusChanged;
+    return isStatusChanged;
   }
 }

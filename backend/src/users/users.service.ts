@@ -136,10 +136,12 @@ export class UsersService {
     userId: number,
     fileName: string,
   ): Promise<string> {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    user.avatar = `${process.env.SERVER_ADDRESS}/image/${fileName}`;
-    await user.save();
+    const serverAddr = process.env.BACKSERVER_ADDR;
+    const serverPort = process.env.BACKSERVER_PORT;
 
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    user.avatar = `http://${serverAddr}:${serverPort}/image/${fileName}`;
+    await user.save();
     this.chatGateway.updateUserInfoToJoinedChatRooms(user, userId);
     // this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
     return user.avatar;

@@ -14,6 +14,7 @@ import { UserStatusContainer } from 'src/userStatus/userStatus.service';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import { ChatContentDto } from './dto/chatContents.dto';
+import { AuthService } from 'src/auth/auth.service';
 
 /**
  * recieveMessage
@@ -48,6 +49,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly chatService: ChatService,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
+    private readonly authService: AuthService,
     private readonly userStats: UserStatusContainer,
   ) {}
 
@@ -86,10 +88,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.connectedSocketMap.set(roomId, socketUser);
     }
 
-    const statChanged = this.userStats.setSocket(+userId, client, 'chatRoom');
-    if (statChanged) {
-      // TODO: 상태변화 전송
-    }
+    this.userStats.setSocket(+userId, client);
     this.emitChatHistoryToParticipatingChatRooms(+userId);
   }
 
@@ -99,14 +98,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userSocket.forEach((socketId, userId) => {
         if (socketId === client.id) {
           userSocket.delete(userId);
-          const statChanged = this.userStats.setSocket(
-            +userId,
-            null,
-            'chatRoom',
-          );
-          if (statChanged) {
-            // TODO: 상태변화 전송
-          }
+          this.userStats.setSocket(+userId, client);
         }
       });
     });

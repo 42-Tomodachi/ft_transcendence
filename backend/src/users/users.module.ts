@@ -11,6 +11,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ChatModule } from 'src/chat/chat.module';
 import { UserStatusModule } from 'src/userStatus/userStatus.module';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   exports: [UsersService],
@@ -25,6 +26,7 @@ import { UserStatusModule } from 'src/userStatus/userStatus.module';
       },
     }),
     forwardRef(() => ChatModule),
+    forwardRef(() => AuthModule),
     UserStatusModule,
   ],
   controllers: [UsersController],
