@@ -21,17 +21,20 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
   const navigate = useNavigate();
 
   const acceptFight = () => {
-    console.log('수락했습니다.');
     if (socket && user) {
       // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
-      socket.emit('confirmMatch', { targetId: user.userId, userId: matchUserId });
+      console.log('수락했습니다.');
+      socket.emit('acceptChallenge');
+      // socket.emit('confirmMatch', { targetId: user.userId, userId: matchUserId });
     }
   };
 
   const cancelFight = () => {
     if (socket && user) {
       // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
-      socket.emit('cancelMatch', { targetId: user.userId, userId: matchUserId });
+      // socket.emit('cancelMatch', { targetId: user.userId, userId: matchUserId });
+      // 백엔드에서 socket disconnect로 match cancel 인식
+      socket.disconnect();
     }
     setModal(CANCEL_MATCH_MODAL);
   };
@@ -51,9 +54,14 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
       socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
         transports: ['websocket'],
         multiplex: false,
-        query: { userId: matchUserId, targetId: user.userId, isSender: false },
+        query: {
+          userId: user.userId,
+          targetId: matchUserId,
+          isSender: false,
+          connectionType: 'duel',
+        },
       });
-      socket.on('startMatch', (roomId: number) => {
+      socket.on('challengeAccepted', (roomId: number) => {
         navigate(`/gameroom/${roomId}`);
       });
     }

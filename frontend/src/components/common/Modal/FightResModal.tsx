@@ -39,14 +39,16 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
       socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
         transports: ['websocket'],
         multiplex: false,
-        query: { userId: user.userId, targetId: targetId, isSender: true },
+        query: { userId: user.userId, targetId: targetId, isSender: true, connectionType: 'duel' },
       });
-      socket.on('cancelMatch', () => {
-        console.log('cancel Match');
-        // TODO: 매칭이 취소됨을 알려야함
+      socket.on('challengeSeqDone', (data: number) => {
+        console.log('cancel Match', data);
         setModal(CANCEL_MATCH_MODAL);
       });
-      socket.on('startMatch', (roomId: number) => {
+      socket.on('acceptChallenge', () => {
+        socket.emit('acceptChallenge');
+      });
+      socket.on('challengeAccepted', (roomId: number) => {
         navigate(`/gameroom/${roomId}`);
       });
     }
