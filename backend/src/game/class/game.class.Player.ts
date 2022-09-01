@@ -44,6 +44,7 @@ export class Player {
 
     if (game === this.gamePlaying) {
       this.socketPlayingGame = socket;
+      socket.join('playing');
     } else {
       this.gamesWatching.set(game, socket);
     }
