@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
-import { UpdateUserDto, UserProfileDto } from 'src/users/dto/users.dto';
 import { User } from 'src/users/entities/users.entity';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../emails/email.service';
@@ -14,7 +13,6 @@ import { IsDuplicateDto, IsSignedUpDto } from './dto/auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { session } from 'passport';
 import * as bcrypt from 'bcryptjs';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { ChatGateway } from 'src/chat/chat.gateway';
@@ -25,11 +23,14 @@ import { ChatLobbyGateway } from 'src/chat/chatLobby.gateway';
 export class AuthService {
   constructor(
     public readonly configService: ConfigService,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
     private readonly emailService: EmailService,
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
+    @Inject(forwardRef(() => ChatGateway))
     private readonly chatGateway: ChatGateway,
+    @Inject(forwardRef(() => ChatLobbyGateway))
     private readonly chatLobbyGateway: ChatLobbyGateway,
     private readonly jwtService: JwtService,
     private readonly jwtStrategy: JwtStrategy,
@@ -50,13 +51,13 @@ export class AuthService {
       accessToken: hashToken,
     });
     this.jwtStrategy.setJwtAccessToken(user.id, hashToken);
-    // user.userStatus = 'on';
-    // await user.save();
 
     return jwt;
   }
 
   async getAccessToken(code: string): Promise<string> {
+    const serverAddr = this.configService.get<string>('BACKSERVER_ADDR');
+    const serverPort = this.configService.get<string>('FRONTSERVER_PORT');
     const axiosResult = await axios({
       method: 'post',
       url: `https://api.intra.42.fr/oauth/token`,
@@ -64,17 +65,14 @@ export class AuthService {
         grant_type: 'authorization_code',
         client_id:
           process.env.EC2_CLIENT_ID ||
-          this.configService.get<string>('CLIENT_ID'),
+          this.configService.get<string>('42API_UID'),
         client_secret:
           process.env.EC2_CLIENT_SECRET ||
-          this.configService.get<string>('CLIENT_SECRET'),
-        redirect_uri:
-          process.env.EC2_REDIRECT_URI ||
-          this.configService.get<string>('REDIRECT_URI'),
+          this.configService.get<string>('42API_SECRET'),
+        redirect_uri: `http://${serverAddr}:${serverPort}/callback`,
         code,
       },
     });
-
     return axiosResult.data.access_token;
   }
 
@@ -110,6 +108,25 @@ export class AuthService {
     return isSignedUpDto;
   }
 
+  async emitUpdatedUserList(userId: number, user?: User): Promise<void> {
+    if (!user) user = await this.usersService.getUserById(userId);
+
+    console.log('emitUpdatedUserList');
+    console.log('emitUpdatedUserList');
+    const participatingChatRooms =
+      await this.chatService.getParticipatingChatRooms(user, user.id);
+
+    participatingChatRooms.forEach((participatingChatRoom) => {
+      this.chatGateway.emitChatRoomParticipants(
+        participatingChatRoom.roomId.toString(),
+      );
+    });
+
+    this.chatGateway.emitFriendList(user.id);
+    this.chatLobbyGateway.emitUserList();
+    this.chatLobbyGateway.emitFriendList(user.id);
+  }
+
   async isSignedUp(code: string): Promise<IsSignedUpDto> {
     const accessToken = await this.getAccessToken(code);
     const userEmail = await this.getUserEmail(accessToken);
@@ -127,18 +144,7 @@ export class AuthService {
 
     const jwt = await this.setLogon(user);
 
-    const participatingChatRooms =
-      await this.chatService.getParticipatingChatRooms(user, user.id);
-
-    participatingChatRooms.forEach((participatingChatRoom) => {
-      this.chatGateway.emitChatRoomParticipants(
-        participatingChatRoom.roomId.toString(),
-      );
-    });
-
-    this.chatGateway.emitFriendList(user.id);
-    this.chatLobbyGateway.emitUserList();
-    this.chatLobbyGateway.emitFriendList(user.id);
+    // this.emitUpdatedUserList(user.id, user);
 
     return this.userToIsSignedUpDto(user, jwt);
   }
@@ -156,22 +162,9 @@ export class AuthService {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
 
-    // user.userStatus = 'off';
-    // await user.save();
     this.jwtStrategy.deletejwtAccessToken(user.id);
 
-    const participatingChatRooms =
-      await this.chatService.getParticipatingChatRooms(user, userId);
-
-    participatingChatRooms.forEach((participatingChatRoom) => {
-      this.chatGateway.emitChatRoomParticipants(
-        participatingChatRoom.roomId.toString(),
-      );
-    });
-
-    this.chatGateway.emitFriendList(user.id);
-    this.chatLobbyGateway.emitUserList();
-    this.chatLobbyGateway.emitFriendList(user.id);
+    // this.emitUpdatedUserList(user.id, user);
   }
 
   async startSecondAuth(

@@ -51,6 +51,7 @@ export class ChatService {
     @InjectRepository(BlockedUser)
     private readonly blockedUserRepo: Repository<BlockedUser>,
     private readonly schedulerRegistry: SchedulerRegistry,
+    @Inject(forwardRef(() => UserStatusContainer))
     private readonly userStats: UserStatusContainer,
   ) {}
 

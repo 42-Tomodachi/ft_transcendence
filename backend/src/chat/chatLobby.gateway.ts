@@ -20,6 +20,7 @@ export class ChatLobbyGateway
     private readonly chatService: ChatService,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
+    @Inject(forwardRef(() => UserStatusContainer))
     private readonly userStats: UserStatusContainer,
   ) {}
 
@@ -44,10 +45,9 @@ export class ChatLobbyGateway
       this.connectedSocketMap.set(userId, set);
     }
 
-    const statChanged = this.userStats.setSocket(+userId, client, 'chatLobby');
-    if (statChanged) {
+    this.userStats.setSocket(+userId, client, () => {
       // TODO: 상태변화 전송
-    }
+    });
     // 최초 목록들은 api 요청으로 처리하는걸로 협의
     // 특정 소켓에 채팅방 목록 emit
     // this.emitChatRoomList(client.id);
@@ -60,10 +60,9 @@ export class ChatLobbyGateway
 
     this.connectedSocketMap.forEach((set, userId) => {
       set.delete(client.id);
-      const statChanged = this.userStats.setSocket(+userId, null, 'chatLobby');
-      if (statChanged) {
+      this.userStats.setSocket(+userId, client, () => {
         // TODO: 상태변화 전송
-      }
+      });
     });
   }
 

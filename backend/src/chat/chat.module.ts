@@ -25,7 +25,7 @@ import { ChatRoom } from './entities/chatRoom.entity';
     ]),
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
-    UserStatusModule,
+    forwardRef(() => UserStatusModule),
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway, ChatLobbyGateway],

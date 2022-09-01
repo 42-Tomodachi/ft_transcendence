@@ -118,16 +118,20 @@ export class GameEnv {
     this.gameLobbyTable.add(client);
     client.join('gameLobby');
 
-    player.socketLobby = client;
+    player.socketLobbySet.add(client);
 
-    const statChanged = this.userStats.setSocket(
-      player.userId,
-      client,
-      'gameLobby',
-    );
-    if (statChanged) {
+    this.userStats.setSocket(player.userId, client, () => {
       // TODO: 상태변화 전송
-    }
+    });
+  }
+
+  handleDisconnectionOnLobby(client: Socket, player: Player): void {
+    player.socketLobbySet.delete(client);
+    this.gameLobbyTable.delete(client);
+
+    this.userStats.removeSocket(player.userId, client, () => {
+      // TODO: 상태변화 전송
+    });
   }
 
   handleConnectionOnDuel(client: Socket, player: Player): void {
@@ -188,20 +192,32 @@ export class GameEnv {
     // remove socket when no further connection
   }
 
+  handleDisconnectionOnLadderQueue(client: Socket, player: Player): void {
+    player.socketQueue = null;
+    this.cancelLadderWaiting(client);
+
+    this.userStats.removeSocket(player.userId, client, () => {
+      // TODO: 상태변화 전송
+    });
+  }
+
   handleConnectionOnLadderGame(client: Socket, player: Player): void {
     const game = player.gamePlaying;
 
     player.setGameSocket(game, client);
     this.setSocketJoin(client, game);
 
-    const statChanged = this.userStats.setSocket(
-      player.userId,
-      client,
-      'gameRoom',
-    );
-    if (statChanged) {
+    this.userStats.setSocket(player.userId, client, () => {
       // TODO: 상태변화 전송
-    }
+    });
+  }
+
+  handleDisconnectionOnLadderGame(client: Socket, player: Player): void {
+    this.clearPlayerSocket(client);
+
+    this.userStats.removeSocket(player.userId, client, () => {
+      // TODO: 상태변화 전송
+    });
   }
 
   handleConnectionOnNormalGame(
@@ -227,14 +243,17 @@ export class GameEnv {
     player.setGameSocket(game, client);
     this.setSocketJoin(client, game);
 
-    const statChanged = this.userStats.setSocket(
-      player.userId,
-      client,
-      'gameRoom',
-    );
-    if (statChanged) {
+    this.userStats.setSocket(player.userId, client, () => {
       // TODO: 상태변화 전송
-    }
+    });
+  }
+
+  handleDisconnectionOnNormalGame(client: Socket, player: Player): void {
+    this.clearPlayerSocket(client);
+
+    this.userStats.removeSocket(player.userId, client, () => {
+      // TODO: 상태변화 전송
+    });
   }
 
   onFirstSocketHandshake(
@@ -287,7 +306,6 @@ export class GameEnv {
     userId: number,
     gameId: number,
   ): void {
-    let statChanged: boolean;
     const player = this.getPlayerBySocket(client);
     if (!player) {
       console.log('onSocketDisconnect: Cannot get Player with socket');
@@ -296,46 +314,24 @@ export class GameEnv {
 
     switch (connectionType) {
       case 'gameLobby':
-        player.socketLobby = null;
-        this.gameLobbyTable.delete(client);
-        statChanged = this.userStats.setSocket(
-          player.userId,
-          null,
-          'gameLobby',
-        );
+        this.handleDisconnectionOnLobby(client, player);
         break;
       case 'duel':
         this.handleDisconnectionOnDuel(client, player);
         break;
       case 'ladderQueue':
-        player.socketQueue = null;
-        this.cancelLadderWaiting(client);
+        this.handleDisconnectionOnLadderQueue(client, player);
         break;
       case 'ladderGame':
-        this.clearPlayerSocket(client);
-        statChanged = this.userStats.setSocket(
-          player.userId,
-          client,
-          'gameRoom',
-          true,
-        );
+        this.handleDisconnectionOnLadderGame(client, player);
         break;
       case 'normalGame':
-        this.clearPlayerSocket(client);
-        statChanged = this.userStats.setSocket(
-          player.userId,
-          client,
-          'gameRoom',
-          true,
-        );
+        this.handleDisconnectionOnNormalGame(client, player);
         break;
       default:
         const message = `ConnectionHandler: ${connectionType} is not a correct type of connection.`;
         console.log(message);
         client.send(message);
-    }
-    if (statChanged) {
-      // TODO: 상태변화 전송
     }
     console.log(
       `Client disconnected: ${client.id.slice(

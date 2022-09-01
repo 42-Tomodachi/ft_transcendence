@@ -30,14 +30,14 @@ import { User } from 'src/users/entities/users.entity';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: '[test for backend] 42 oauth page 로 redirection' })
-  @Get('oauthPage')
-  async getOatuhPage() {
-    return (
-      process.env.EC2_42OAUTH_PAGE ||
-      this.authService.configService.get<string>('42OAUTH_PAGE')
-    );
-  }
+  // @ApiOperation({ summary: '[test for backend] 42 oauth page 로 redirection' })
+  // @Get('oauthPage')
+  // async getOatuhPage() {
+  //   return (
+  //     process.env.EC2_42OAUTH_PAGE ||
+  //     this.authService.configService.get<string>('42OAUTH_PAGE')
+  //   );
+  // }
 
   @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
   @Get('issueJwt/:id')
