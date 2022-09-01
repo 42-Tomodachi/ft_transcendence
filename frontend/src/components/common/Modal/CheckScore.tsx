@@ -15,7 +15,7 @@ const CheckScore: React.FC<{ userId: number }> = ({ userId }) => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
         const data = await usersAPI.getUserGameRecords(userId, user.jwt);
-        setRecord(data);
+        setRecord(data.reverse());
       }
     };
     getUserInfo();

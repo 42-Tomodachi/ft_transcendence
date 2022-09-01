@@ -2,21 +2,13 @@ import React, { useEffect, useState, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import ChatList from '../RoomList';
-import {
-  CHAT,
-  ChatRoomType,
-  IChatRooms,
-  IGameRooms,
-  MAKE_CHAT_ROOM,
-  ALL,
-  JOINED,
-} from '../../utils/interface';
+import { CHAT, ChatRoomType, IChatRooms, MAKE_CHAT_ROOM, ALL, JOINED } from '../../utils/interface';
 import { AllContext } from '../../store';
 import { chatsAPI } from '../../API';
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 
 const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
-  const [chatList, setChatList] = useState<IChatRooms[] | IGameRooms[]>([]);
+  const [chatList, setChatList] = useState<IChatRooms[]>([]);
   const [roomType, setRoomType] = useState<ChatRoomType>(ALL);
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;

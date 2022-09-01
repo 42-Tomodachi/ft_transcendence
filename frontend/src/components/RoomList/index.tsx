@@ -35,7 +35,7 @@ const EmptyRoomListWrap = styled.div`
   height: 100%;
   font-size: 15px;
 `;
-const EmptyRoomList = styled.div`
+const EmptyRoomList = styled.p`
   margin: auto;
   font-size: 35px;
   color: ${props => props.theme.colors.main};
