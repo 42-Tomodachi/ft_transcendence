@@ -1,4 +1,6 @@
-FROM node:lts
+# FROM node:lts # too big
+FROM node:lts-alpine
+
 LABEL maintainer="https://github.com/42-Tomodachi" 
 
 RUN mkdir -p /app/Tomodachi/FE
