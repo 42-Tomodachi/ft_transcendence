@@ -130,7 +130,7 @@ export class AuthService {
     });
 
     this.chatGateway.emitFriendList(user.id);
-    const userList = this.chatLobbyGateway.emitUserList();
+    const userList = await this.chatLobbyGateway.emitUserList();
     this.chatLobbyGateway.emitFriendList(
       user.id,
       this.gameGateway.broadcastToLobby,
