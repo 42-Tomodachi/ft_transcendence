@@ -55,7 +55,23 @@ export class Player {
     const game = this.socketsToGameMap.get(socket);
     if (!game) return;
 
-    socket.to(game.roomId.toString()).emit('playerDisconnected', this.userId);
+    const playerType = ['1p', '2p', 'watcher'];
+    let typeIdx: number;
+    switch (this) {
+      case game.firstPlayer:
+        typeIdx = 0;
+        break;
+      case game.secondPlayer:
+        typeIdx = 1;
+        break;
+      default:
+        typeIdx = 2;
+        break;
+    }
+    socket.to(game.roomId.toString()).emit('playerDisconnected', {
+      userId: this.userId,
+      group: playerType[typeIdx],
+    });
     this.socketsToGameMap.delete(socket);
     if (socket === this.socketPlayingGame) this.socketPlayingGame = null;
     else this.gamesWatching.set(game, null);

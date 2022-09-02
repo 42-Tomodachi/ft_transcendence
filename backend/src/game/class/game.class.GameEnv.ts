@@ -149,13 +149,14 @@ export class GameEnv {
     }
 
     if (isChallenger == 'true') {
+      // 대전 신청을 보내는 쪽이면
       player.socketQueue = client;
 
       const notifying: Socket[] = this.userStats.getSockets(opponentId);
       for (const sock of notifying) {
         sock.emit('challengeDuelFrom', player.userId);
       }
-      client.on('acceptChallenge', () => {
+      client.once('acceptChallenge', () => {
         this.makeDuelMatch(player, opponent, 'normal');
         for (const sock of notifying) {
           sock.emit('challengeAccepted', player.userId);
@@ -164,9 +165,9 @@ export class GameEnv {
       return;
     }
 
-    client.on('acceptChallenge', () => {
+    // 대전 신청을 받는 쪽이면
+    client.once('acceptChallenge', () => {
       opponent.socketQueue.emit('acceptChallenge');
-      client.off('acceptChallenge', null);
     });
   }
 
@@ -303,7 +304,6 @@ export class GameEnv {
     if (!player) {
       console.log('onSocketDisconnect: Cannot get Player with socket');
     }
-    // this.socketIdToPlayerMap[client.id] = player;
 
     switch (connectionType) {
       case 'gameLobby':
@@ -436,6 +436,7 @@ export class GameEnv {
   }
 
   enlistLadderQueue(player: Player): void {
+    if (this.ladderQueue.includes(player)) return;
     this.ladderQueue.push(player);
     console.log(`enlistLadderQueue: length: ${this.ladderQueue.length}`);
     const newMatch = this.makeLadderMatch();
@@ -551,7 +552,13 @@ export class GameEnv {
       player2asUser?.toGamerInfoDto(),
     );
 
-    if (player2asUser) game.startCountdown();
+    if (!player2asUser) return;
+
+    const gameStart = await game.startCountdown();
+    if (gameStart) {
+      game.gameStart();
+      this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
+    }
   }
 
   async processRecievedRtData(client: Socket, data: GameInfo): Promise<void> {
@@ -619,6 +626,7 @@ export class GameEnv {
     newRecord.playerTwoId = game.secondPlayer.userId;
     newRecord.playerTwoScore = game.rtData.scoreRight;
     newRecord.winnerId = winnerId;
+    newRecord.isLadder = isLadder;
 
     const firstPlayer = await this.getUserByPlayer(p1);
     const secondPlayer = await this.getUserByPlayer(p2);
