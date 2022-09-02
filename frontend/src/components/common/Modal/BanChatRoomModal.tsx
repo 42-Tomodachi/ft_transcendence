@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '.';
 import { AllContext } from '../../../store';
 
-const BanChatRoomModal: React.FC<{ isNoti: boolean }> = ({ isNoti }) => {
+const BanChatRoomModal: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const navigate = useNavigate();
 
@@ -22,11 +22,7 @@ const BanChatRoomModal: React.FC<{ isNoti: boolean }> = ({ isNoti }) => {
   return (
     <Modal width={400} height={200}>
       <ModalWrap>
-        {isNoti ? (
-          <ModalMsg> 강퇴당했습니다.</ModalMsg>
-        ) : (
-          <ModalMsg> 강퇴당한 채팅방입니다.</ModalMsg>
-        )}
+        <ModalMsg> 강퇴당한 채팅방입니다.</ModalMsg>
       </ModalWrap>
     </Modal>
   );

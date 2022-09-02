@@ -50,8 +50,7 @@ const ModalSet: React.FC = () => {
           SHOW_MANAGER_PROFILE: <ShowManagerProfile roomId={modal.roomId} userId={modal.userId} />, // 채팅방 관리자 프로필
           EDIT_MY_PROFILE: <EditMyProfile />, // 채팅방 관리자 프로필
           CHECK_LOGOUT: <LogoutModal />, // 로그아웃 확인
-          BAN_NOTI_CAHTROOM: <BanChatRoomModal isNoti={true} />, // 강퇴 경고 공지
-          BAN_THIS_CHATROOM: <BanChatRoomModal isNoti={false} />, // 강퇴당한 방 들어가려할 때
+          BAN_THIS_CHATROOM: <BanChatRoomModal />, // 강퇴당한 방 들어가려할 때
           BAN_OR_KICK_MODAL: <BanOrKickModal roomId={modal.roomId} userId={modal.userId} />,
           CANCEL_MATCH_MODAL: <CancelMatchModal />,
         }[modal.modal]}

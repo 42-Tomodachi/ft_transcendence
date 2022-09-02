@@ -5,7 +5,7 @@ import UserList from '../components/UserList';
 import UserProfile from '../components/UserProfile';
 import MessageList from '../components/Chat/MessageList';
 import MessageInput from '../components/Chat/MessageInput';
-import { BAN_NOTI_CAHTROOM, CHAT, FIGHT_REQ_MODAL, IMessage } from '../utils/interface';
+import { CHAT, FIGHT_REQ_MODAL, IMessage } from '../utils/interface';
 import { useParams } from 'react-router-dom';
 import { AllContext } from '../store';
 import { chatsAPI } from '../API';
@@ -69,7 +69,8 @@ const ChatPage: React.FC = () => {
           setMessages(pre => [...pre, data]);
         });
         socket.on('disconnectSocket', () => {
-          setModal(BAN_NOTI_CAHTROOM);
+          // 강퇴, 방폭파, 방 나가기 다 해당 socket event로 받아서 이동이 되기에 notification 지움
+          navigate('/');
         });
         socket.on('updateChatRoomTitle', (data: string) => {
           setRoomName(data);
