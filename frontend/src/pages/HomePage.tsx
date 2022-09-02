@@ -39,8 +39,6 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
         },
       });
     } else if (menu === 'GAME') {
-      console.log('hello Game world!');
-      // TODO: Game로비 연결부
       socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
         transports: ['websocket'],
         multiplex: false,
@@ -49,11 +47,6 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
           userId: user && user.userId,
           connectionType: 'gameLobby',
         },
-      });
-      socket.on('message', () => {
-        console.log(` 로비 connected socket : ${socket.id}`);
-        console.log(socket.connected); // true
-        if (user) user.socket = socket;
       });
     }
     if (socket) {
@@ -66,11 +59,11 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
 
   useEffect(() => {
     return () => {
-      if (socket) {
+      if (socket && socket.connected) {
         socket.disconnect();
       }
     };
-  }, []);
+  }, [menu]);
 
   return (
     <>
