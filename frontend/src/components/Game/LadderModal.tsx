@@ -26,11 +26,6 @@ const LadderModal: React.FC = () => {
       },
     });
 
-    socket.on('message', data => {
-      console.log(`junselee: 모달들어와서 소켓연결했다.(Game/) ${data}`);
-      console.log(`junselee: 연결된 소켓 아이디는.. : ${socket.id}`);
-    });
-
     // 매치가 완료됐다고 서버한테 연락받으면
     socket.on('matchingGame', (roomId: number) => {
       setModal(null);
@@ -46,7 +41,6 @@ const LadderModal: React.FC = () => {
       navigate(`/gameroom/${roomId}`); //GamePage.tsx
     });
     return () => {
-      console.log(`junselee: 모달이 종료되니, 이벤트랑 소켓 지우겠다.(Game/)`);
       socket.off('matchingGame');
       socket.off('message');
       socket.disconnect();
