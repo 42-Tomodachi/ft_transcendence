@@ -347,7 +347,7 @@ const GameStart: React.FC = () => {
   };
 
   const calValue = async () => {
-    setGameInfo(info => {
+    return setGameInfo(info => {
       return {
         ...info,
         ballP_X: ballAction(info, 'X'),
