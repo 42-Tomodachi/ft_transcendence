@@ -1,3 +1,4 @@
+import { timer } from 'rxjs';
 import {
   CreateGameRoomDto,
   GameResultDto,
@@ -187,26 +188,41 @@ export class GameAttribute {
     this.timers.delete('gameStartCount');
   }
 
-  startCountdown(): void {
+  async startCountdown(): Promise<boolean> {
     if (this.timers.has('gameStartCount')) return;
 
-    let counting = 5;
-    this.broadcastToRoom('gameStartCount', `${counting}`);
+    return new Promise((resolve) => {
+      const calltime = new Date().getTime();
 
-    const timer: NodeJS.Timer = setInterval(() => {
+      let counting = 5;
       this.broadcastToRoom('gameStartCount', `${counting}`);
-      counting--;
-      if (counting < 0) {
-        this.stopStartCount();
-        this.gameStart();
-      }
-    }, 1000);
-    this.timers.set('gameStartCount', timer);
+
+      const counter: NodeJS.Timer = setInterval(() => {
+        this.broadcastToRoom('gameStartCount', `${counting}`);
+        counting--;
+        if (counting < 0) {
+          this.stopStartCount();
+          resolve(true);
+        }
+      }, 1000);
+      this.timers.set('gameStartCount', counter);
+
+      const listener: NodeJS.Timer = setInterval(() => {
+        const elapsed = new Date().getTime() - calltime;
+        console.log(`${elapsed}.... ${this.isPlaying}`);
+        if (counter.hasRef() === false) {
+          clearInterval(listener);
+          resolve(false);
+        }
+        if (elapsed > 5000) {
+          clearInterval(listener);
+        }
+      }, 100);
+    });
   }
 
   gameStart(): void {
     this.isPlaying = true;
-    // change player's status
     this.sendRtData();
   }
 
