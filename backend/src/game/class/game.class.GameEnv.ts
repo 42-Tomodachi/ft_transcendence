@@ -142,23 +142,27 @@ export class GameEnv {
   handleConnectionOnDuel(client: Socket, player: Player): void {
     const opponentId: number = +client.handshake.query['targetId'];
     const isChallenger = client.handshake.query['isSender'];
-    const opponent = this.getPlayerByUserId(opponentId);
-    if (!opponent) {
+    if (opponentId == NaN) {
       console.log('handleConnectionOnDuel: no opponent');
       return;
     }
+    player.socketQueue = client;
 
     if (isChallenger == 'true') {
       // 대전 신청을 보내는 쪽이면
-      player.socketQueue = client;
 
       const notifying: Socket[] = this.userStats.getSockets(opponentId);
       for (const sock of notifying) {
         sock.emit('challengeDuelFrom', player.userId);
       }
       client.once('acceptChallenge', () => {
-        this.makeDuelMatch(player, opponent, 'normal');
+        this.makeDuelMatch(
+          player,
+          this.getPlayerByUserId(opponentId),
+          'normal',
+        );
         for (const sock of notifying) {
+          // 이 이벤트를 받으면 대전 관련 창을 끄세여
           sock.emit('challengeAccepted', player.userId);
         }
       });
@@ -167,7 +171,7 @@ export class GameEnv {
 
     // 대전 신청을 받는 쪽이면
     client.once('acceptChallenge', () => {
-      opponent.socketQueue.emit('acceptChallenge');
+      this.getPlayerByUserId(opponentId).socketQueue.emit('acceptChallenge');
     });
   }
 
@@ -189,7 +193,7 @@ export class GameEnv {
       return;
     }
 
-    opponent.socketQueue.emit('challengeRejected', player.userId);
+    opponent.socketQueue?.emit('challengeRejected', player.userId);
   }
 
   handleConnectionOnLadderQueue(client: Socket, player: Player): void {
