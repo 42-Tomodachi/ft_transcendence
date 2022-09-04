@@ -521,38 +521,24 @@ const GameStart: React.FC = () => {
       }
     };
   }, [eventCalculate]);
-  if (playing[0] === true) {
-    return (
-      <Background>
-        <GameRoomContainer>
-          <Header type={GAME} />
-          <GameRoomBody>
-            <GameArea>
-              <canvas ref={canvasRef} id="canvas" width="1000" height="700" />;
-            </GameArea>
-          </GameRoomBody>
-        </GameRoomContainer>
-      </Background>
-    );
-  } else {
-    return (
-      <Background>
-        <GameRoomContainer>
-          <Header type={GAME} />
-          <GameRoomBody>
-            <ResultArea>
-              <Message>{`🏆${playing[1]}🏆`}</Message>
-              <Message>.......</Message>
-              <Message>WINNER!</Message>
-              <Message>WINNER!</Message>
-              <Message>CHICKEN</Message>
-              <Message>DINNER!</Message>
-            </ResultArea>
-          </GameRoomBody>
-        </GameRoomContainer>
-      </Background>
-    );
-  }
+  return (
+    <GameRoomBody>
+      {playing[0] === true ? (
+        <GameArea>
+          <canvas ref={canvasRef} id="canvas" width="1000" height="700" />;
+        </GameArea>
+      ) : (
+        <ResultArea>
+          <Message>{`🏆${playing[1]}🏆`}</Message>
+          <Message>.......</Message>
+          <Message>WINNER!</Message>
+          <Message>WINNER!</Message>
+          <Message>CHICKEN</Message>
+          <Message>DINNER!</Message>
+        </ResultArea>
+      )}
+    </GameRoomBody>
+  );
 };
 
 const Message = styled.p`

@@ -260,53 +260,56 @@ const GamePage: React.FC = () => {
       socketDisonnect(socket);
     };
   }, [user]);
-  if (gameStart === false)
-    if (!user) return <LoadingPage />;
-    else
-      return (
-        <Background>
-          <GameRoomContainer>
-            <Header type={GAME} />
-            <GameRoomBody>
-              <GameArea>
-                <InfoArea>
-                  <UserInfo>
-                    <PictureBlock>
-                      <ProfileImage
-                        src={info.avatarOne ? info.avatarOne : defaultProfile}
-                        size={150}
-                      />
-                    </PictureBlock>
-                    <span>{`${info.nicknameOne}`}</span>
-                    <span>{`Lv. ${info.ladderLevelOne}`}</span>
-                    <Bar>
-                      <Win id="win">{info.winCountOne}</Win>
-                      <Lose id="los">{info.loseCountOne}</Lose>
-                    </Bar>
-                  </UserInfo>
-                  <Count>{count ? count : 'vs'}</Count>
-                  <UserInfo>
-                    <PictureBlock>
-                      <ProfileImage
-                        src={info.avatarTwo ? info.avatarTwo : defaultProfile}
-                        size={150}
-                      />
-                    </PictureBlock>
-                    <span>{`${info.nicknameTwo}`}</span>
-                    <span>{`Lv. ${info.ladderLevelTwo}`}</span>
-                    <Bar>
-                      <Win id="win2">{info.winCountTwo}</Win>
-                      <Lose id="los">{info.loseCountTwo}</Lose>
-                    </Bar>
-                  </UserInfo>
-                </InfoArea>
-                <Message>게임이 곧 시작됩니다</Message>
-              </GameArea>
-            </GameRoomBody>
-          </GameRoomContainer>
-        </Background>
-      );
-  else return <GameStart />; // RTData에서 넘겨받거나, 여기서 방정보 받은거중에, 모드만, 넘겨주거나 둘중하나임.
+  return !user ? (
+    <LoadingPage />
+  ) : (
+    <Background>
+      <GameRoomContainer>
+        <Header type={GAME} />
+        <GameRoomBody>
+          {gameStart === false ? (
+            <GameArea>
+              <InfoArea>
+                <UserInfo>
+                  <PictureBlock>
+                    <ProfileImage
+                      src={info.avatarOne ? info.avatarOne : defaultProfile}
+                      size={150}
+                    />
+                  </PictureBlock>
+                  <span>{`${info.nicknameOne}`}</span>
+                  <span>{`Lv. ${info.ladderLevelOne}`}</span>
+                  <Bar>
+                    <Win id="win">{info.winCountOne}</Win>
+                    <Lose id="los">{info.loseCountOne}</Lose>
+                  </Bar>
+                </UserInfo>
+                <Count>{count ? count : 'vs'}</Count>
+                <UserInfo>
+                  <PictureBlock>
+                    <ProfileImage
+                      src={info.avatarTwo ? info.avatarTwo : defaultProfile}
+                      size={150}
+                    />
+                  </PictureBlock>
+                  <span>{`${info.nicknameTwo}`}</span>
+                  <span>{`Lv. ${info.ladderLevelTwo}`}</span>
+                  <Bar>
+                    <Win id="win2">{info.winCountTwo}</Win>
+                    <Lose id="los">{info.loseCountTwo}</Lose>
+                  </Bar>
+                </UserInfo>
+              </InfoArea>
+              <Message>게임이 곧 시작됩니다</Message>
+            </GameArea>
+          ) : (
+            <GameStart />
+          )}
+        </GameRoomBody>
+      </GameRoomContainer>
+    </Background>
+  );
+  // else return <GameStart />; // RTData에서 넘겨받거나, 여기서 방정보 받은거중에, 모드만, 넘겨주거나 둘중하나임.
 };
 
 const PictureBlock = styled.div``;
