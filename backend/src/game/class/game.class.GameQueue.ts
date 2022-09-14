@@ -86,7 +86,10 @@ export class GameQueue {
       twoLevel - two.gapAllow < 0 ? 0 : twoLevel - two.gapAllow;
     const twoMaxLevel = twoLevel + two.gapAllow;
 
-    return oneMinLevel <= twoMaxLevel || oneMaxLevel >= twoMinLevel;
+    return (
+      (oneMinLevel <= twoMaxLevel && oneMinLevel >= twoMinLevel) ||
+      (oneMaxLevel >= twoMinLevel && oneMaxLevel <= twoMaxLevel)
+    );
   }
 
   findMatchableOfOne(one: QueueInfo): QueueInfo {
