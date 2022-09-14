@@ -1,4 +1,3 @@
-import { timer } from 'rxjs';
 import {
   CreateGameRoomDto,
   GameResultDto,
@@ -186,7 +185,9 @@ export class GameAttribute {
   }
 
   stopStartCount(): void {
-    clearInterval(this.timers.get('gameStartCount'));
+    const timer = this.timers.get('gameStartCount');
+    timer.unref();
+    clearInterval(timer);
     this.timers.delete('gameStartCount');
   }
 
@@ -211,7 +212,6 @@ export class GameAttribute {
 
       const listener: NodeJS.Timer = setInterval(() => {
         const elapsed = new Date().getTime() - calltime;
-        console.log(`${elapsed}.... ${this.isPlaying}`);
         if (counter.hasRef() === false) {
           clearInterval(listener);
           resolve(false);

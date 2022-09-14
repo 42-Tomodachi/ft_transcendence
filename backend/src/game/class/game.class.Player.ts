@@ -1,4 +1,7 @@
+import { InjectRepository } from '@nestjs/typeorm';
 import { Socket } from 'socket.io';
+import { User } from 'src/users/entities/users.entity';
+import { Repository } from 'typeorm';
 import { GameAttribute } from './game.class.GameAttribute';
 
 export class Player {
@@ -7,17 +10,24 @@ export class Player {
   socketPlayingGame: Socket;
   socketsToGameMap: Map<Socket, GameAttribute>;
   userId: number;
+  user: User;
   gamePlaying: GameAttribute;
   gamesWatching: Map<GameAttribute, Socket>;
   inLadderQ: boolean;
   isLeaving: boolean;
 
-  constructor(userId: number, game: GameAttribute) {
+  constructor(
+    user: User,
+    game: GameAttribute,
+    @InjectRepository(User)
+    private readonly userRepo?: Repository<User>,
+  ) {
     this.socketLobbySet = new Set();
     this.socketQueue = null;
     this.socketPlayingGame = null;
     this.socketsToGameMap = new Map<Socket, GameAttribute>();
-    this.userId = userId;
+    this.userId = user.id;
+    this.user = user;
     this.gamePlaying = game;
     this.gamesWatching = new Map<GameAttribute, Socket>();
     this.inLadderQ = false;

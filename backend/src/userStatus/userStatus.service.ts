@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
-import { UsersService } from 'src/users/users.service';
 
 class UserStatus {
   constructor(userId: number) {

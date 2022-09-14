@@ -44,10 +44,10 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.gameEnv.onSocketDisconnect(client, connectionType, userId, gameId);
   }
 
-  @SubscribeMessage('cancelLadderQueue')
-  async cancleLadderQueue(client: Socket): Promise<void> {
-    this.gameEnv.cancelLadderWaiting(client);
-  }
+  // @SubscribeMessage('cancelLadderQueue')
+  // async cancleLadderQueue(client: Socket): Promise<void> {
+  //   this.gameEnv.cancelLadderWaiting(client);
+  // }
 
   @SubscribeMessage('onMatchingScreen')
   async onMatchingScreen(client: Socket, gameId: number): Promise<void> {
