@@ -38,11 +38,11 @@ export class GameController {
 
   @ApiOperation({ summary: 'seungyel✅ 게임방 만들기' })
   @Post('/:userId')
-  createGameRoom(
+  async createGameRoom(
     @GetJwtUser() user: User,
     @Param('userId') userId: number,
     @Body() createGameRoomDto: CreateGameRoomDto,
-  ): SimpleGameRoomDto {
+  ): Promise<SimpleGameRoomDto> {
     const gameRoom = this.gameService.createGameRoom(user, createGameRoomDto);
     return gameRoom;
   }

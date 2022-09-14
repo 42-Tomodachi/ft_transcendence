@@ -1,7 +1,6 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
-import { UsersService } from 'src/users/users.service';
 
 class UserStatus {
   constructor(userId: number) {
@@ -152,5 +151,23 @@ export class UserStatusContainer {
       callIfStatusChanged;
     }
     return isStatusChanged;
+  }
+
+  async removeSocketAssert(
+    socket: Socket,
+    callIfStatusChanged?: () => void,
+  ): Promise<boolean> {
+    let found: boolean;
+    for (const user of this.userContainer) {
+      user.removeSocket(socket);
+
+      const found = user.changeStatus();
+      if (found) {
+        await this.authService.emitUpdatedUserList(user.userId);
+        callIfStatusChanged;
+        break;
+      }
+    }
+    return found;
   }
 }

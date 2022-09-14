@@ -27,14 +27,14 @@ export class GameService {
     return this.gameEnv.getPublicGameList();
   }
 
-  createGameRoom(
+  async createGameRoom(
     user: User,
     createGameRoomDto: CreateGameRoomDto,
-  ): SimpleGameRoomDto {
+  ): Promise<SimpleGameRoomDto> {
     if (user.id !== createGameRoomDto.ownerId) {
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     }
-    const player = this.gameEnv.getPlayerByUserId(user.id);
+    const player = await this.gameEnv.getPlayerByUserId(user.id);
     if (player.gamePlaying) {
       throw new BadRequestException(`이미 게임을 생성한 유저입니다.`);
     }
@@ -83,7 +83,7 @@ export class GameService {
   ): Promise<SimpleGameRoomDto> {
     if (user.id != userId)
       throw new BadRequestException('잘못된 유저의 접근입니다.');
-    const player = this.gameEnv.getPlayerByUserId(userId);
+    const player = await this.gameEnv.getPlayerByUserId(userId);
     if (!player) throw new BadRequestException('플레이어 정보가 없습니다.');
     const game = this.gameEnv.getGameRoom(gameId);
     if (game == null) throw new BadRequestException('게임을 찾을 수 없습니다.');
@@ -120,7 +120,7 @@ export class GameService {
       throw new BadRequestException('게임을 찾을 수 없습니다.');
     }
 
-    const player = this.gameEnv.getPlayerByUserId(userId);
+    const player = await this.gameEnv.getPlayerByUserId(userId);
     if (!player) {
       throw new BadRequestException('플레이어를 찾을 수 없습니다.');
     }
@@ -147,7 +147,7 @@ export class GameService {
     if (userId === targetId)
       throw new BadRequestException('잘못된 요청입니다.');
 
-    return { available: this.gameEnv.isDuelAvailable(targetId) };
+    return { available: await this.gameEnv.isDuelAvailable(targetId) };
   }
 
   async saveGameRecord(gameRecordSaveDto: GameResultDto): Promise<void> {

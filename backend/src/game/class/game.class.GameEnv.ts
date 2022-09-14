@@ -9,9 +9,19 @@ import { User } from 'src/users/entities/users.entity';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { GameInfo } from './game.class.interface';
 import { UserStatusContainer } from 'src/userStatus/userStatus.service';
+import { GameQueue } from './game.class.GameQueue';
+import { EventEmitter } from 'stream';
 
 @Injectable()
 export class GameEnv {
+  eventObject: EventEmitter = new EventEmitter();
+  socketIdToPlayerMap = new Map<string, Player>();
+  playerList: Player[] = [];
+  gameLobbyTable: Set<Socket> = new Set();
+  gameRoomList: GameAttribute[] = new Array(100);
+  ladderQueue: GameQueue = new GameQueue('ladderQueue', this.eventObject);
+  // ladderQueue: Map<Player, QueueStatus> = new Map();
+
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
@@ -21,13 +31,10 @@ export class GameEnv {
     for (let index = 0; index < 100; index++) {
       this.gameRoomList[index] = new GameAttribute(index + 1);
     }
+    this.eventObject.on('makeLadderMatch', (p1, p2, mode) => {
+      this.makeLadderMatch(p1, p2, mode);
+    });
   }
-
-  socketIdToPlayerMap = new Map<string, Player>();
-  playerList: Player[] = [];
-  gameLobbyTable: Set<Socket> = new Set();
-  gameRoomList: GameAttribute[] = new Array(100);
-  ladderQueue: Player[] = [];
 
   //
   // socketMap related methods
@@ -50,11 +57,14 @@ export class GameEnv {
     return socket;
   }
 
-  assertGetPlayerBySocket(client: Socket, userId: number): Player {
+  async assertGetPlayerBySocket(
+    client: Socket,
+    userId: number,
+  ): Promise<Player> {
     let player = this.getPlayerBySocket(client);
     if (!player) {
       console.log(`unregistered userId ${userId}`);
-      player = this.newPlayer(userId, null);
+      player = await this.newPlayer(userId, null);
       this.socketIdToPlayerMap.set(client.id, player);
     }
     return player;
@@ -100,7 +110,7 @@ export class GameEnv {
     return this.userRepo.findOneBy({ id: player.userId });
   }
 
-  getPlayerByUserId(userId: number): Player {
+  async getPlayerByUserId(userId: number): Promise<Player> {
     const player = this.playerList.find((player) => {
       return player.userId === userId;
     });
@@ -108,13 +118,14 @@ export class GameEnv {
     else return player;
   }
 
-  newPlayer(userId: number, game: GameAttribute): Player {
+  async newPlayer(userId: number, game: GameAttribute): Promise<Player> {
     for (const player of this.playerList) {
       if (player.userId === userId) {
         return player;
       }
     }
-    const newPlayer = new Player(userId, game);
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const newPlayer = new Player(user, game);
     this.playerList.push(newPlayer);
     return newPlayer;
   }
@@ -139,7 +150,7 @@ export class GameEnv {
     this.userStats.removeSocket(player.userId, client);
   }
 
-  handleConnectionOnDuel(client: Socket, player: Player): void {
+  async handleConnectionOnDuel(client: Socket, player: Player): Promise<void> {
     const opponentId: number = +client.handshake.query['targetId'];
     const isChallenger = client.handshake.query['isSender'];
     if (opponentId == NaN) {
@@ -155,12 +166,9 @@ export class GameEnv {
       for (const sock of notifying) {
         sock.emit('challengeDuelFrom', player.userId);
       }
-      client.once('acceptChallenge', () => {
-        this.makeDuelMatch(
-          player,
-          this.getPlayerByUserId(opponentId),
-          'normal',
-        );
+      client.once('acceptChallenge', async () => {
+        const opponent = await this.getPlayerByUserId(opponentId);
+        this.makeDuelMatch(player, opponent, 'normal');
         for (const sock of notifying) {
           // 이 이벤트를 받으면 대전 관련 창을 끄세여
           sock.emit('challengeAccepted', player.userId);
@@ -170,14 +178,18 @@ export class GameEnv {
     }
 
     // 대전 신청을 받는 쪽이면
-    client.once('acceptChallenge', () => {
-      this.getPlayerByUserId(opponentId).socketQueue.emit('acceptChallenge');
+    client.once('acceptChallenge', async () => {
+      const opponent = await this.getPlayerByUserId(opponentId);
+      opponent.socketQueue.emit('acceptChallenge');
     });
   }
 
-  handleDisconnectionOnDuel(client: Socket, player: Player): void {
+  async handleDisconnectionOnDuel(
+    client: Socket,
+    player: Player,
+  ): Promise<void> {
     const opponentId: number = +client.handshake.query['targetId'];
-    const opponent = this.getPlayerByUserId(opponentId);
+    const opponent = await this.getPlayerByUserId(opponentId);
     const isChallenger = client.handshake.query['isSender'];
     if (!opponent) {
       console.log('handleDisconnectionOnDuel: no opponent');
@@ -196,15 +208,34 @@ export class GameEnv {
     opponent.socketQueue?.emit('challengeRejected', player.userId);
   }
 
-  handleConnectionOnLadderQueue(client: Socket, player: Player): void {
+  async handleConnectionOnLadderQueue(
+    client: Socket,
+    player: Player,
+  ): Promise<void> {
     player.socketQueue = client;
-    this.enlistLadderQueue(player);
+    const queueLength = this.ladderQueue.enlist(player);
+    console.log(`enlistLadderQueue: length: ${queueLength}`);
+
+    // const matchedPlayers = await this.ladderQueue.pickMatchup();
+    // if (matchedPlayers.length !== 2) {
+    //   client.send('ladder matching failuer');
+    //   return;
+    // }
+
+    // const newMatch = await this.makeLadderMatch(
+    //   matchedPlayers?.at(0),
+    //   matchedPlayers?.at(1),
+    //   'normal',
+    // );
     // remove socket when no further connection
   }
 
   handleDisconnectionOnLadderQueue(client: Socket, player: Player): void {
+    // const player = this.getPlayerBySocket(client);
     player.socketQueue = null;
-    this.cancelLadderWaiting(client);
+    this.eraseFromSocketMap(client);
+    this.ladderQueue.remove(player);
+    // timers?
   }
 
   handleConnectionOnLadderGame(client: Socket, player: Player): void {
@@ -254,13 +285,13 @@ export class GameEnv {
     this.userStats.removeSocket(player.userId, client);
   }
 
-  onFirstSocketHandshake(
+  async onFirstSocketHandshake(
     client: Socket,
     userId: number,
     gameId: number,
     connectionType: string,
-  ): void {
-    const player = this.assertGetPlayerBySocket(client, userId);
+  ): Promise<void> {
+    const player = await this.assertGetPlayerBySocket(client, userId);
     this.socketIdToPlayerMap[client.id] = player;
 
     switch (connectionType) {
@@ -371,8 +402,8 @@ export class GameEnv {
   //
   // game managing methods
 
-  isDuelAvailable(userId: number): boolean {
-    const player = this.getPlayerByUserId(userId);
+  async isDuelAvailable(userId: number): Promise<boolean> {
+    const player = await this.getPlayerByUserId(userId);
 
     const userStatus = this.userStats.getStatus(userId);
     if (userStatus !== 'on') {
@@ -439,26 +470,6 @@ export class GameEnv {
     // clearInterval(this.streaming);
   }
 
-  enlistLadderQueue(player: Player): void {
-    if (this.ladderQueue.includes(player)) return;
-    this.ladderQueue.push(player);
-    console.log(`enlistLadderQueue: length: ${this.ladderQueue.length}`);
-    const newMatch = this.makeLadderMatch();
-
-    if (newMatch) {
-      console.log(`newLadderGame: ${newMatch}, ${player}`);
-      player.socketQueue = null;
-    } else {
-      player.socketQueue.send('래더 대기열 부족');
-    }
-  }
-
-  cancelLadderWaiting(client: Socket): void {
-    this.eraseFromSocketMap(client);
-    const index = this.ladderQueue.indexOf(this.getPlayerBySocket(client));
-    this.ladderQueue.splice(index, 1);
-  }
-
   createCustomGame(p1: Player, p2: Player, gameMode: string): GameAttribute {
     if (!p1 || !p2) return undefined;
 
@@ -501,14 +512,19 @@ export class GameEnv {
     return game;
   }
 
-  makeLadderMatch(): GameAttribute {
-    if (this.ladderQueue.length < 2) {
+  async makeLadderMatch(
+    player1: Player,
+    player2: Player,
+    gameMode: string,
+  ): Promise<GameAttribute> {
+    if (!player1 || !player2) {
+      console.log(
+        `makeLadderMatch: wrong param delivered. ${player1} ${player2}`,
+      );
       return undefined;
     }
-    const player1 = this.ladderQueue.shift();
-    const player2 = this.ladderQueue.shift();
 
-    const game = this.createCustomGame(player1, player2, 'normal');
+    const game = this.createCustomGame(player1, player2, gameMode);
     game.isLadder = true;
 
     console.log(`Ladder match made: ${player1.userId}, ${player2.userId}`);
@@ -656,6 +672,8 @@ export class GameEnv {
         firstPlayer.loseCount++;
       }
     }
+    p1.user = firstPlayer;
+    p2.user = secondPlayer;
     await firstPlayer.save();
     await secondPlayer.save();
 
