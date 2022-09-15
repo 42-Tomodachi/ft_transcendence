@@ -61,7 +61,10 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
           connectionType: 'duel',
         },
       });
-      socket.on('challengeAccepted', (roomId: number) => {
+      socket.on('challengeAccepted', (userId: number) => {
+        console.log('challengeAccepted', userId);
+      });
+      socket.on('matchingGame', (roomId: number) => {
         navigate(`/gameroom/${roomId}`);
       });
     }

@@ -48,7 +48,11 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
       socket.on('acceptChallenge', () => {
         socket.emit('acceptChallenge');
       });
-      socket.on('challengeAccepted', (roomId: number) => {
+      socket.on('challengeAccepted', (userId: number) => {
+        // navigate(`/gameroom/${roomId}`);
+        console.log('challengeAccepted', userId);
+      });
+      socket.on('matchingGame', (roomId: number) => {
         navigate(`/gameroom/${roomId}`);
       });
     }
