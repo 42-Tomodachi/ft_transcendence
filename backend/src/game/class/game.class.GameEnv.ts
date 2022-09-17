@@ -171,7 +171,7 @@ export class GameEnv {
         this.makeDuelMatch(player, opponent, 'normal');
         for (const sock of notifying) {
           // 이 이벤트를 받으면 대전 관련 창을 끄세여
-          sock.emit('challengeAccepted', player.gamePlaying.roomId);
+          sock.emit('challengeAccepted', player.userId);
         }
       });
       return;
@@ -202,9 +202,10 @@ export class GameEnv {
         sock.emit('challengeSeqDone', player.userId);
         player.socketQueue = null;
       }
+      return;
     }
 
-    opponent.socketQueue?.emit('challengeSeqDone', player.userId);
+    opponent.socketQueue?.emit('challengeRejected', player.userId);
   }
 
   async handleConnectionOnLadderQueue(
@@ -503,8 +504,8 @@ export class GameEnv {
 
     console.log(`Duel match made: ${player1.userId}, ${player2.userId}`);
 
-    player1.socketQueue.emit('challengeAccepted', game.roomId.toString());
-    player2.socketQueue.emit('challengeAccepted', game.roomId.toString());
+    player1.socketQueue.emit('matchingGame', game.roomId.toString());
+    player2.socketQueue.emit('matchingGame', game.roomId.toString());
 
     this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
 
