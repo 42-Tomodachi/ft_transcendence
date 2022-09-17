@@ -30,6 +30,7 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
   };
 
   const cancelFight = () => {
+    // TODO: setModal로 바뀌니 disconnect로 안바꿔도 될것 같다
     if (socket && user) {
       // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
       // socket.emit('cancelMatch', { targetId: user.userId, userId: matchUserId });
@@ -61,11 +62,20 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
           connectionType: 'duel',
         },
       });
-      socket.on('challengeAccepted', (userId: number) => {
-        console.log('challengeAccepted', userId);
+      // TODO: acceptChallenge 사용되는 상황 파악
+      socket.on('acceptChallenge', (userId: number) => {
+        console.log('acceptChallenge', userId);
       });
       socket.on('matchingGame', (roomId: number) => {
         navigate(`/gameroom/${roomId}`);
+      });
+      socket.on('challengeSeqDone', (data: number) => {
+        console.log('challengeSeqDone reqmodal', data);
+        setModal(CANCEL_MATCH_MODAL);
+      });
+      socket.on('challengeRejected', (data: number) => {
+        console.log('ch req modal');
+        setModal(CANCEL_MATCH_MODAL);
       });
     }
     return () => {
