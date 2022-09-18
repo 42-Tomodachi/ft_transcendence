@@ -462,7 +462,7 @@ export class GameEnv {
       return undefined;
     }
     const createGameRoomDto = new CreateGameRoomDto();
-    createGameRoomDto.roomTitle = `Match of ${p1.userId}, ${p2.userId}`;
+    createGameRoomDto.roomTitle = `${p1.userId}: ${p1.user.nickname}, ${p2.userId}: ${p2.user.nickname}`;
     createGameRoomDto.password = null;
     createGameRoomDto.gameMode = gameMode as 'normal' | 'speed' | 'obstacle';
     createGameRoomDto.ownerId = p1.userId;
@@ -484,6 +484,7 @@ export class GameEnv {
     if (!player1 || !player2) return undefined;
 
     const game = this.createCustomGame(player1, player2, gameMode);
+    game.roomTitle = `[ Duel ] ${player1.user.nickname} vs ${player2.user.nickname}`;
 
     console.log(`Duel match made: ${player1.userId}, ${player2.userId}`);
 
