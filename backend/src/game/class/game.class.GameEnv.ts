@@ -20,7 +20,6 @@ export class GameEnv {
   gameLobbyTable: Set<Socket> = new Set();
   gameRoomList: GameAttribute[] = new Array(100);
   ladderQueue: GameQueue = new GameQueue('ladderQueue', this.eventObject);
-  // ladderQueue: Map<Player, QueueStatus> = new Map();
 
   constructor(
     @InjectRepository(User)
@@ -202,7 +201,6 @@ export class GameEnv {
         sock.emit('challengeSeqDone', player.userId);
         player.socketQueue = null;
       }
-      return;
     }
 
     opponent.socketQueue?.emit('challengeRejected', player.userId);
@@ -215,27 +213,12 @@ export class GameEnv {
     player.socketQueue = client;
     const queueLength = this.ladderQueue.enlist(player);
     console.log(`enlistLadderQueue: length: ${queueLength}`);
-
-    // const matchedPlayers = await this.ladderQueue.pickMatchup();
-    // if (matchedPlayers.length !== 2) {
-    //   client.send('ladder matching failuer');
-    //   return;
-    // }
-
-    // const newMatch = await this.makeLadderMatch(
-    //   matchedPlayers?.at(0),
-    //   matchedPlayers?.at(1),
-    //   'normal',
-    // );
-    // remove socket when no further connection
   }
 
   handleDisconnectionOnLadderQueue(client: Socket, player: Player): void {
-    // const player = this.getPlayerBySocket(client);
     player.socketQueue = null;
     this.eraseFromSocketMap(client);
     this.ladderQueue.remove(player);
-    // timers?
   }
 
   handleConnectionOnLadderGame(client: Socket, player: Player): void {
