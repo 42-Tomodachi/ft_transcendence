@@ -1,17 +1,8 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
-import Header from '../components/Header';
-import { GAME } from '../utils/interface'; // GameMode
 import { AllContext } from '../store';
-import { Socket } from 'socket.io-client';
-
-// test00 :  console.log(`처음 상태가 뭔디 ${ballState(info)},, ${info.ballVelo_X}`);
-// test01 :  console.log(`여기서 턴이 바꼈을거란말이지 : ${getTurn(info)}, ${info.turn}`);
-// test02 :  console.log('jusnelee: 여기 들어오는순간. 끝났다는것이지.');
-// test03 :  console.log(`매맨 처음 상태가 뭔디: ${ballState(gameInfo)}  ${gameInfo.ballVelo_X}`);
-// user.socket.on('gameDestroyed', () => {
-//   console.log(`게임이 폭파되었나여.`);
-// });
+import { io, Socket } from 'socket.io-client';
+let socket: Socket;
 
 // 코드 가독성을 위해서라도, 고정적인 값들은 상수로 박아놓고 사용중입니다.
 const PLAYERONE = 1; // 플레이어정보.
@@ -62,7 +53,6 @@ const GameStart: React.FC = () => {
     rightScore: 0,
     checkPoint: false,
   });
-
   // 패들 그리기.
   const paddle = function paddle(ctx: CanvasRenderingContext2D): void {
     ctx.font = '32px Roboto';
@@ -203,23 +193,23 @@ const GameStart: React.FC = () => {
     const normalizedRelativeIntersectionY = relativeIntersectY / 10;
     switch (type) {
       case 'leftgoal':
-        return value === 'ballP_X' ? 1.5 : 0;
+        return value === 'ballP_X' ? 1 : 0;
       case 'rightgoal':
-        return value === 'ballP_X' ? -1.5 : 0;
+        return value === 'ballP_X' ? -1 : 0;
       case 'upHit':
         if (value === 'ballP_X') {
-          if (info.ballVelo_X > 0) return 1.5;
-          else return -1.5;
-        } else return 1.5;
+          if (info.ballVelo_X > 0) return 1;
+          else return -1;
+        } else return 1;
       case 'downHit':
         if (value === 'ballP_X') {
-          if (info.ballVelo_X > 0) return 1.5;
-          else return -1.5;
-        } else return -1.5;
+          if (info.ballVelo_X > 0) return 1;
+          else return -1;
+        } else return -1;
       case 'leftHit':
-        return value === 'ballP_X' ? 1.5 : -normalizedRelativeIntersectionY;
+        return value === 'ballP_X' ? 1 : -normalizedRelativeIntersectionY;
       case 'rightHit':
-        return value === 'ballP_X' ? -1.5 : -normalizedRelativeIntersectionY;
+        return value === 'ballP_X' ? -1 : -normalizedRelativeIntersectionY;
       case 'obstacleHit':
         return obstacleVal(info, value);
       default:
@@ -423,7 +413,7 @@ const GameStart: React.FC = () => {
   const eventGetFinished = () => {
     if (user)
       user.socket.on('gameFinished', () => {
-        user.socket.disconnect();
+        user.socket.off();
         settingResultPage();
       });
   };
@@ -449,9 +439,6 @@ const GameStart: React.FC = () => {
         }
       });
     } else console.log('ERROR: user undefined');
-    return () => {
-      defaultGameinfo();
-    };
   };
 
   let paddleYpos: number;
@@ -470,7 +457,6 @@ const GameStart: React.FC = () => {
   }
 
   useEffect(() => {
-    /////////////////////////////////////
     if (user) {
       user.socket.on('gameTerminated', data => {
         console.log(`gameTerminated: 게임중에 누군가 튕기거나 나갔을때. 이긴상대를 알려줌.${data}`);
@@ -479,7 +465,7 @@ const GameStart: React.FC = () => {
         if (data === 1) playing[1] = playingGameInfo.oneNickname.toUpperCase();
         else playing[1] = playingGameInfo.twoNickname.toUpperCase();
         defaultGameinfo();
-        user.socket.disconnect();
+        user.socket.off();
       });
     }
     return () => {
@@ -488,8 +474,7 @@ const GameStart: React.FC = () => {
       if (user)
         if (user.socket) {
           console.log('socket disconnect:' + user.socket.id);
-          user.socket.off('rtData');
-          user.socket.disconnect();
+          user.socket.off();
         }
     };
   }, [user && user.socket]);
@@ -516,11 +501,19 @@ const GameStart: React.FC = () => {
     }
     return () => {
       if (user) {
-        user.socket.off('rtData');
-        user.socket.disconnect();
+        user.socket.off();
       }
     };
   }, [eventCalculate]);
+
+  useEffect(() => {
+    return () => {
+      if (user && user.socket && user.socket.connected) {
+        console.log('로비로갈때 비로소 끊어버리는거지');
+        user.socket.disconnect();
+      }
+    };
+  }, [user && user.socket]);
   return (
     <GameRoomBody>
       {playing[0] === true ? (
@@ -547,6 +540,7 @@ const Message = styled.p`
   font-style: normal;
   font-family: 'Rubik One';
   color: #ffffff;
+  /* color: ${({ theme }) => theme.colors.main}; */
   font-weight: 900;
   font-size: 60px;
   line-height: 74px;
@@ -554,17 +548,6 @@ const Message = styled.p`
   background-color: none;
 `;
 
-const Background = styled.div`
-  width: 100%;
-  height: 100vh;
-  background-color: ${({ theme }) => theme.colors.main};
-  overflow-y: auto;
-`;
-const GameRoomContainer = styled.div`
-  width: 1000px;
-  margin: 0 auto;
-  padding-bottom: 20px;
-`;
 const GameRoomBody = styled.div`
   display: flex;
   min-height: 700px;
@@ -591,6 +574,7 @@ const ResultArea = styled.div`
 
   width: 1000px;
   height: 700px;
+  /* background-color: #f9f2ed; */
   background-color: black;
   border-radius: 20px;
 `;

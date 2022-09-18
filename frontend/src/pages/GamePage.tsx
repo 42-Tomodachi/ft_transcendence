@@ -1,17 +1,17 @@
 import React, { useContext, useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME } from '../utils/interface'; //UPDATE_USER, PLAY
+import { GAME, UPDATE_USER } from '../utils/interface'; //UPDATE_USER, PLAY
 import { AllContext } from '../store';
 import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
-import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
+import { io, Socket } from 'socket.io-client';
 import GameStart from './GameStart';
-import { useNavigate } from 'react-router-dom'; //LoadingPage
+import { useNavigate } from 'react-router-dom';
 import LoadingPage from './LoadingPage';
 
+// 내가 쓸 변수 && 받아올 데이터 담긴변수 정의
 interface GameInfoDto {
-  // 내가 쓸 변수
   nicknameOne: string;
   avatarOne: string;
   winCountOne: number;
@@ -22,7 +22,6 @@ interface GameInfoDto {
   winCountTwo: number;
   loseCountTwo: number;
   ladderLevelTwo: number;
-  // 받아올 데이터 담긴변수,
   nickname: string;
   avatar: string;
   winCount: number;
@@ -32,17 +31,14 @@ interface GameInfoDto {
   ladderLevel: number;
 }
 
-/*
- * 모달 페이지로 큐에 게임매칭을 수행하게 되면, 이 페이지로 이동합니다.
- * 매칭이 이루어졌다면, 서버에서 매칭유저에 대한 정보를 보내주기로 합의되어있다.
- */
 const GamePage: React.FC = () => {
   let socket: Socket;
   const navigate = useNavigate();
   const [gameStart, setGameStart] = useState(false);
-  const { user } = useContext(AllContext).userData; // setUser
+  const { user, setUser } = useContext(AllContext).userData; // setUser
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
-  const [count, setCount] = useState<number>(); //오피셜은 10초
+  const [watchState, setWatchState] = useState(playingGameInfo.gameState);
+  const [count, setCount] = useState<number>();
   const [info, setInfo] = useState<GameInfoDto>({
     nicknameOne: '',
     avatarOne: '',
@@ -104,6 +100,7 @@ const GamePage: React.FC = () => {
     socket.on('message', () => {
       console.log(` 일반 connected socket : ${socket.id}`);
       console.log(socket.connected);
+      // setUser(UPDATE_USER, { ...user, socket: socket });
       if (user) user.socket = socket;
     });
   };
@@ -116,6 +113,10 @@ const GamePage: React.FC = () => {
       socket.off('matchData');
       socket.disconnect();
     }
+  };
+
+  const scoreBarStyle = (bar: any, win: any, lose: any) => {
+    if (bar) bar.style.width = `${(win / (win + lose)) * 100}%`;
   };
 
   useEffect(() => {
@@ -160,14 +161,8 @@ const GamePage: React.FC = () => {
                 ladderLevelTwo: p2.ladderLevel,
               };
             });
-            if (win)
-              win.style.width = `${
-                (p1.ladderWinCount / (p1.ladderWinCount + p1.ladderLoseCount)) * 100
-              }%`;
-            if (win2)
-              win2.style.width = `${
-                (p2.ladderWinCount / (p2.ladderWinCount + p2.ladderLoseCount)) * 100
-              }%`;
+            scoreBarStyle(win, p1.ladderWinCount, p1.ladderLoseCount);
+            scoreBarStyle(win2, p2.ladderWinCount, p2.ladderLoseCount);
             settingMatchData(p1, p2);
           }
         });
@@ -210,9 +205,8 @@ const GamePage: React.FC = () => {
               loseCountTwo: p2 ? p2.loseCount : info.loseCountTwo,
               ladderLevelTwo: p2 ? p2.ladderLevel : info.ladderLevelTwo,
             });
-            if (win) win.style.width = `${(p1.winCount / (p1.winCount + p1.loseCount)) * 100}%`;
-            if (win2 && p2)
-              win2.style.width = `${(p2.winCount / (p2.winCount + p2.loseCount)) * 100}%`;
+            if (p1) scoreBarStyle(win, p1.winCount, p1.loseCount);
+            if (p2) scoreBarStyle(win2, p2.winCount, p2.loseCount);
             settingMatchData(p1, p2);
           }
         });
@@ -236,6 +230,8 @@ const GamePage: React.FC = () => {
         setCount(data);
         if (data == 0) {
           setGameStart(true);
+          // if (playingGameInfo.player !== 'p1' && playingGameInfo.player !== 'p2')
+          setWatchState(false);
         }
 
         /*
@@ -260,14 +256,14 @@ const GamePage: React.FC = () => {
       socketDisonnect(socket);
     };
   }, [user]);
-  return !user ? (
+  return !user || (watchState && playingGameInfo.player === 'g1') ? (
     <LoadingPage />
   ) : (
     <Background>
       <GameRoomContainer>
         <Header type={GAME} />
-        <GameRoomBody>
-          {gameStart === false ? (
+        {gameStart === false ? (
+          <GameRoomBody>
             <GameArea>
               <InfoArea>
                 <UserInfo>
@@ -302,14 +298,13 @@ const GamePage: React.FC = () => {
               </InfoArea>
               <Message>게임이 곧 시작됩니다</Message>
             </GameArea>
-          ) : (
-            <GameStart />
-          )}
-        </GameRoomBody>
+          </GameRoomBody>
+        ) : (
+          <GameStart />
+        )}
       </GameRoomContainer>
     </Background>
   );
-  // else return <GameStart />; // RTData에서 넘겨받거나, 여기서 방정보 받은거중에, 모드만, 넘겨주거나 둘중하나임.
 };
 
 const PictureBlock = styled.div``;
@@ -369,7 +364,6 @@ const Count = styled.p`
   display: flex;
   text-align: center;
   justify-content: center;
-  //font-weight: 400;
   font-size: 150px;
   width: 150px;
   line-height: 150px;
@@ -380,7 +374,6 @@ const UserInfo = styled.div`
   display: flex;
   flex-direction: column;
   font-size: 30px;
-  /* text-align: center; */
   align-items: center;
   justify-content: space-around;
   width: 260px;
@@ -409,15 +402,12 @@ const GameRoomBody = styled.div`
 const GameArea = styled.div`
   display: flex;
   flex-direction: column;
-  /* align-items: center; */
-  //justify-content: space-around;
 
   width: 1000px;
   height: 700px;
-  //background-color: #f9f2ed;
+  /* background-color: #f9f2ed; */
   background-color: black;
   border-radius: 20px;
-  // padding: 20px;
 `;
 
 export default GamePage;
