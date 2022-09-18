@@ -27,6 +27,7 @@ const GameRooms: React.FC<GameRoomProps> = ({ item }) => {
           ...playingGameInfo,
           gameRoomId: res.gameId,
           gameMode: res.gameMode,
+          gameState: item.isStart,
         }); // 그럼이제 전역으로 모드를 들고다닐수 있게 된거심.
         navigate(`/gameroom/${item.gameId}`);
       }

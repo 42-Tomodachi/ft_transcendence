@@ -49,6 +49,7 @@ export const AllContext = createContext<stateType>({
       gameRoomId: -1,
       gameMode: 'normal',
       gameLadder: false,
+      gameState: false,
     },
     setPlayingGameInfo: () => null,
   },
@@ -102,6 +103,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     gameRoomId: -1,
     gameMode: 'normal',
     gameLadder: false,
+    gameState: false,
   }); /// 여기도 게임모드 테스트 조져 !
 
   const handleJwt = (type: 'SET_JWT' | 'REMOVE_JWT', jwt?: string) => {
@@ -180,6 +182,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
         gameRoomId: type.gameRoomId,
         gameMode: type.gameMode,
         gameLadder: type.gameLadder,
+        gameState: type.gameState,
       }); ///// 여기도 테스트!!!!!
     }
   };

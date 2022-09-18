@@ -93,6 +93,7 @@ export interface IPlayingGameInfo {
   gameRoomId: number; // user.roomid -> ??.gameRoomId
   gameMode: string; // test!!
   gameLadder: boolean; // test!!
+  gameState: boolean; //test!!!!
 }
 
 export interface IUserWinLoseCount extends IWinLoseCount {
