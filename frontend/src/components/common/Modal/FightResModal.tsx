@@ -20,6 +20,9 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
   const [targetInfo, setTargetInfo] = useState<IUserData | null>(null);
   const navigate = useNavigate();
 
+  // junselee 테스트
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
+
   const cancelFight = () => {
     // TODO: setModal로 바뀌니 disconnect로 안바꿔도 될것 같다
     if (socket && user) {
@@ -55,9 +58,20 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
       // TODO: acceptChallenge 사용되는 상황 파악
       socket.on('acceptChallenge', (userId: number) => {
         // navigate(`/gameroom/${roomId}`);
+        // junselee test : 신청측도 서버한테 알려줘야합니다.
+        socket.emit('acceptChallenge');
         console.log('acceptChallenge', userId);
       });
       socket.on('matchingGame', (roomId: number) => {
+        // junselee 테스트
+        if (user) {
+          setPlayingGameInfo({
+            ...playingGameInfo,
+            gameRoomId: roomId,
+            gameMode: 'normal',
+            gameLadder: true,
+          });
+        }
         navigate(`/gameroom/${roomId}`);
       });
       socket.on('challengeRejected', (data: number) => {

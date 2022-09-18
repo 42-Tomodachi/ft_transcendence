@@ -19,6 +19,8 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
   const { user } = useContext(AllContext).userData;
   const [matchUser, setMatchUser] = useState<IUserData | null>(null);
   const navigate = useNavigate();
+  // junselee 테스트
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   const acceptFight = () => {
     if (socket && user) {
@@ -67,6 +69,15 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
         console.log('acceptChallenge', userId);
       });
       socket.on('matchingGame', (roomId: number) => {
+        // junselee 테스트
+        if (user) {
+          setPlayingGameInfo({
+            ...playingGameInfo,
+            gameRoomId: roomId,
+            gameMode: 'normal',
+            gameLadder: true,
+          });
+        }
         navigate(`/gameroom/${roomId}`);
       });
       socket.on('challengeSeqDone', (data: number) => {
