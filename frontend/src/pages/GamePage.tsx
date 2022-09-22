@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import Header from '../components/Header';
-import { GAME, UPDATE_USER } from '../utils/interface'; //UPDATE_USER, PLAY
+import { GAME } from '../utils/interface'; //UPDATE_USER, PLAY
 import { AllContext } from '../store';
 import defaultProfile from '../assets/default-image.png';
 import ProfileImage from '../components/common/ProfileImage';
@@ -29,13 +29,14 @@ interface GameInfoDto {
   ladderWinCount: number;
   ladderLoseCount: number;
   ladderLevel: number;
+  group: string;
 }
 
 const GamePage: React.FC = () => {
   let socket: Socket;
   const navigate = useNavigate();
   const [gameStart, setGameStart] = useState(false);
-  const { user, setUser } = useContext(AllContext).userData; // setUser
+  const { user } = useContext(AllContext).userData; // setUser
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
   const [watchState, setWatchState] = useState(playingGameInfo.gameState);
   const [count, setCount] = useState<number>();
@@ -57,6 +58,7 @@ const GamePage: React.FC = () => {
     ladderWinCount: 0,
     ladderLoseCount: 0,
     ladderLevel: 0,
+    group: '',
   });
 
   const settingMatchData = (p1: GameInfoDto, p2: GameInfoDto) => {
@@ -115,7 +117,7 @@ const GamePage: React.FC = () => {
     }
   };
 
-  const scoreBarStyle = (bar: any, win: any, lose: any) => {
+  const scoreBarStyle = (bar: HTMLElement | null, win: number, lose: number) => {
     if (bar) bar.style.width = `${(win / (win + lose)) * 100}%`;
   };
 
@@ -241,7 +243,7 @@ const GamePage: React.FC = () => {
          * 사용 : 방장의 연결해제 여부를 확인하고 남은 유저들을 정리합니다.
          *       받아오는 데이터가 수정될 예정입니다.
          */
-        socket.on('playerDisconnected', (data: any) => {
+        socket.on('playerDisconnected', (data: GameInfoDto) => {
           if (data.group === '1p') {
             socketDisonnect(socket);
             navigate('/game');
@@ -254,6 +256,7 @@ const GamePage: React.FC = () => {
     }
     return () => {
       socketDisonnect(socket);
+      console.log('kkk');
     };
   }, [user]);
   return !user || (watchState && playingGameInfo.player === 'g1') ? (

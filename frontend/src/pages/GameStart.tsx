@@ -1,8 +1,6 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
-import { io, Socket } from 'socket.io-client';
-let socket: Socket;
 
 // 코드 가독성을 위해서라도, 고정적인 값들은 상수로 박아놓고 사용중입니다.
 const PLAYERONE = 1; // 플레이어정보.
@@ -37,7 +35,6 @@ const GameStart: React.FC = () => {
   const { user } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
   const player = user && playingGameInfo.player;
-  const roomid = user && playingGameInfo.gameRoomId;
 
   // player 1 방향으로 시작되는게 기본이고, 장애물맵 경우, 중앙에 장애물이 위치해서 시작위치가 다름.
   const [gameInfo, setGameInfo] = useState<GameInfo>({
