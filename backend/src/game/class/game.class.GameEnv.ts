@@ -203,11 +203,11 @@ export class GameEnv {
     if (isChallenger == 'true') {
       for (const sock of notifying) {
         sock.emit('challengeSeqDone', player.userId);
-        player.socketQueue = null;
       }
     }
 
     opponent.socketQueue?.emit('challengeRejected', player.userId);
+    player.socketQueue = null;
   }
 
   async handleConnectionOnLadderQueue(
@@ -399,7 +399,7 @@ export class GameEnv {
       result.available = false;
       return result;
     }
-    if (player.socketQueue) {
+    if (player.socketQueue !== null) {
       console.log('isDuelAvailable: target is on queue');
       result.available = false;
       return result;
