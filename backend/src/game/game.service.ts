@@ -9,7 +9,7 @@ import {
   GameRoomProfileDto,
   GameResultDto,
   SimpleGameRoomDto,
-  ChallengeResponse,
+  ChallengeResponseDto,
 } from './dto/game.dto';
 import { GameEnv } from './class/game.class.GameEnv';
 
@@ -141,13 +141,13 @@ export class GameService {
     user: User,
     userId: number,
     targetId: number,
-  ): Promise<ChallengeResponse> {
+  ): Promise<ChallengeResponseDto> {
     if (user.id != userId)
       throw new BadRequestException('잘못된 유저의 접근입니다.');
     if (userId === targetId)
       throw new BadRequestException('잘못된 요청입니다.');
 
-    return { available: await this.gameEnv.isDuelAvailable(targetId) };
+    return await this.gameEnv.isDuelAvailable(targetId);
   }
 
   async saveGameRecord(gameRecordSaveDto: GameResultDto): Promise<void> {

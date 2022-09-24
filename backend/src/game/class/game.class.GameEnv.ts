@@ -1,6 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { CreateGameRoomDto, GameRoomProfileDto } from '../dto/game.dto';
+import {
+  ChallengeResponseDto,
+  CreateGameRoomDto,
+  GameRoomProfileDto,
+} from '../dto/game.dto';
 import { Player } from './game.class.Player';
 import { GameAttribute } from './game.class.GameAttribute';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -199,11 +203,11 @@ export class GameEnv {
     if (isChallenger == 'true') {
       for (const sock of notifying) {
         sock.emit('challengeSeqDone', player.userId);
-        player.socketQueue = null;
       }
     }
 
     opponent.socketQueue?.emit('challengeRejected', player.userId);
+    player.socketQueue = null;
   }
 
   async handleConnectionOnLadderQueue(
@@ -385,19 +389,23 @@ export class GameEnv {
   //
   // game managing methods
 
-  async isDuelAvailable(userId: number): Promise<boolean> {
+  async isDuelAvailable(userId: number): Promise<ChallengeResponseDto> {
     const player = await this.getPlayerByUserId(userId);
+    const result = new ChallengeResponseDto();
 
-    const userStatus = this.userStats.getStatus(userId);
-    if (userStatus !== 'on') {
+    result.status = this.userStats.getStatus(userId);
+    if (result.status !== 'on') {
       console.log('isDuelAvailable: user unavailable');
-      return false;
+      result.available = false;
+      return result;
     }
-    if (player.socketQueue) {
+    if (player.socketQueue !== null) {
       console.log('isDuelAvailable: target is on queue');
-      return false;
+      result.available = false;
+      return result;
     }
-    return true;
+    result.available = true;
+    return result;
   }
 
   setTimerOfRoomCancel(game: GameAttribute): NodeJS.Timer {
@@ -462,7 +470,7 @@ export class GameEnv {
       return undefined;
     }
     const createGameRoomDto = new CreateGameRoomDto();
-    createGameRoomDto.roomTitle = `Match of ${p1.userId}, ${p2.userId}`;
+    createGameRoomDto.roomTitle = `${p1.userId}: ${p1.user.nickname}, ${p2.userId}: ${p2.user.nickname}`;
     createGameRoomDto.password = null;
     createGameRoomDto.gameMode = gameMode as 'normal' | 'speed' | 'obstacle';
     createGameRoomDto.ownerId = p1.userId;
@@ -484,6 +492,7 @@ export class GameEnv {
     if (!player1 || !player2) return undefined;
 
     const game = this.createCustomGame(player1, player2, gameMode);
+    game.roomTitle = `[ Duel ] ${player1.user.nickname} vs ${player2.user.nickname}`;
 
     console.log(`Duel match made: ${player1.userId}, ${player2.userId}`);
 

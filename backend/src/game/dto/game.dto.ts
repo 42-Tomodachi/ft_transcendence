@@ -81,7 +81,10 @@ export class GameResultDto {
   winnerId: number;
 }
 
-export class ChallengeResponse {
+export class ChallengeResponseDto {
   @ApiProperty({ description: '대전 가능 여부' })
   available: boolean;
+
+  @ApiProperty({ description: '상대 로그인 상태' })
+  status: 'on' | 'off' | 'play';
 }

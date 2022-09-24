@@ -15,7 +15,7 @@ import { GetJwtUser } from '../auth/jwt.strategy';
 import { User } from '../users/entities/users.entity';
 import { GamerInfoDto } from '../users/dto/users.dto';
 import {
-  ChallengeResponse,
+  ChallengeResponseDto,
   CreateGameRoomDto,
   GameRoomPasswordDto,
   GameRoomProfileDto,
@@ -87,7 +87,7 @@ export class GameController {
     @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) userId: number,
     @Query('targetId', ParseIntPipe) targetId: number,
-  ): Promise<ChallengeResponse> {
+  ): Promise<ChallengeResponseDto> {
     return await this.gameService.challengeDuel(user, userId, targetId);
   }
 }
