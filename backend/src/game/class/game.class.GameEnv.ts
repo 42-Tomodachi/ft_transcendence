@@ -101,6 +101,13 @@ export class GameEnv {
       });
   }
 
+  getGameOfPlayer(player: Player): GameRoomProfileDto {
+    if (!player.gamePlaying) {
+      return undefined;
+    }
+    return player.gamePlaying.toGameRoomProfileDto();
+  }
+
   //
   // basic getters
 
