@@ -36,6 +36,14 @@ export class GameController {
     return this.gameService.getGameRoomList();
   }
 
+  @ApiOperation({ summary: '특정 유저가 참여중인 게임방 정보 가져오기' })
+  @Get('/:userId')
+  async getGameInfoOfUser(
+    @Param('userId', ParseIntPipe) userId: number,
+  ): Promise<GameRoomProfileDto> {
+    return await this.gameService.getGameInfoOfUser(userId);
+  }
+
   @ApiOperation({ summary: 'seungyel✅ 게임방 만들기' })
   @Post('/:userId')
   async createGameRoom(

@@ -27,6 +27,14 @@ export class GameService {
     return this.gameEnv.getPublicGameList();
   }
 
+  async getGameInfoOfUser(userId: number): Promise<GameRoomProfileDto> {
+    const targetPlayer = await this.gameEnv.getPlayerByUserId(userId);
+    if (!targetPlayer) {
+      throw new BadRequestException('잘못된 유저id입니다.');
+    }
+    return this.gameEnv.getGameOfPlayer(targetPlayer);
+  }
+
   async createGameRoom(
     user: User,
     createGameRoomDto: CreateGameRoomDto,
