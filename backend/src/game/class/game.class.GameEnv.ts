@@ -1,6 +1,10 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { CreateGameRoomDto, GameRoomProfileDto } from '../dto/game.dto';
+import {
+  ChallengeResponseDto,
+  CreateGameRoomDto,
+  GameRoomProfileDto,
+} from '../dto/game.dto';
 import { Player } from './game.class.Player';
 import { GameAttribute } from './game.class.GameAttribute';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -385,19 +389,23 @@ export class GameEnv {
   //
   // game managing methods
 
-  async isDuelAvailable(userId: number): Promise<boolean> {
+  async isDuelAvailable(userId: number): Promise<ChallengeResponseDto> {
     const player = await this.getPlayerByUserId(userId);
+    const result = new ChallengeResponseDto();
 
-    const userStatus = this.userStats.getStatus(userId);
-    if (userStatus !== 'on') {
+    result.status = this.userStats.getStatus(userId);
+    if (result.status !== 'on') {
       console.log('isDuelAvailable: user unavailable');
-      return false;
+      result.available = false;
+      return result;
     }
     if (player.socketQueue) {
       console.log('isDuelAvailable: target is on queue');
-      return false;
+      result.available = false;
+      return result;
     }
-    return true;
+    result.available = true;
+    return result;
   }
 
   setTimerOfRoomCancel(game: GameAttribute): NodeJS.Timer {
