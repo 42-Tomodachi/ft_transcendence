@@ -35,7 +35,7 @@ const GameStart: React.FC = () => {
   const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
   const { user } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
-  const player = user && playingGameInfo.player;
+  const player = playingGameInfo.player;
   const navigate = useNavigate();
   // player 1 방향으로 시작되는게 기본이고, 장애물맵 경우, 중앙에 장애물이 위치해서 시작위치가 다름.
   const [gameInfo, setGameInfo] = useState<GameInfo>({
@@ -325,7 +325,7 @@ const GameStart: React.FC = () => {
   };
 
   // 플레이어의 패들위치를 반환합니다.
-  const getPaddlePos = (player: string | null, info: GameInfo, pos: string) => {
+  const getPaddlePos = (player: string, info: GameInfo, pos: string) => {
     if (pos === 'left') {
       if (player === 'p1') return paddleYpos ? paddleYpos : info.leftPaddlePos;
       else return paddleG[0];
@@ -376,14 +376,20 @@ const GameStart: React.FC = () => {
         user.socket.emit('calculatedRTData', {
           ballP_X: info.ballP_X,
           ballP_Y: info.ballP_Y,
-          leftPaddlePos: getPaddlePos(player, info, 'left'),
-          rightPaddlePos: getPaddlePos(player, info, 'right'),
+          leftPaddlePos: info.leftPaddlePos,
+          rightPaddlePos: info.rightPaddlePos,
           ballVelo_X: getVelocity(info, 'ballP_X'),
           ballVelo_Y: getVelocity(info, 'ballP_Y'),
           turn: getTurn(info),
           checkPoint: getCheckPoint(info),
         });
-      } else if (checkTurn(info) === false) user.socket.emit('paddleRTData', paddleYpos);
+      } else if (checkTurn(info) === false)
+        user.socket.emit(
+          'paddleRTData',
+          player === 'p1'
+            ? getPaddlePos(player, info, 'left')
+            : getPaddlePos(player, info, 'right'),
+        );
     }
   };
 
