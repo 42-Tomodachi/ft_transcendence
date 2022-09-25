@@ -174,6 +174,7 @@ const GamePage: React.FC = () => {
          * 특징 : p2가 게임시작전에 나갈경우, p1과 p2에 모두 null이 담긴 연락이 옵니다.
          * 사용 : 래더의 경우는 무조건 폭파되는 조건으로 활용하고, 일반게임의 경우 플레이어2의 상태를 갱신합니다.
          */
+        console.log(`???: ${socket.connected}`);
         socket.on('matchData', (p1: GameInfoDto, p2: GameInfoDto) => {
           /*
            * 화살표함수와 return을 활용하여, 직전데이터를 받아 갱신합니다.
@@ -251,12 +252,14 @@ const GamePage: React.FC = () => {
         });
       });
     } else {
+      console.log('??');
       socketDisonnect(socket);
       navigate('/game');
     }
     return () => {
       socketDisonnect(socket);
       console.log('kkk');
+      navigate('/game');
     };
   }, [user]);
   return !user || (watchState && playingGameInfo.player === 'g1') ? (

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, RefObject, useState } from 'react';
 import styled from '@emotion/styled';
 import { AllContext } from '../store';
+import { useNavigate } from 'react-router-dom';
 
 // 코드 가독성을 위해서라도, 고정적인 값들은 상수로 박아놓고 사용중입니다.
 const PLAYERONE = 1; // 플레이어정보.
@@ -35,7 +36,7 @@ const GameStart: React.FC = () => {
   const { user } = useContext(AllContext).userData;
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
   const player = user && playingGameInfo.player;
-
+  const navigate = useNavigate();
   // player 1 방향으로 시작되는게 기본이고, 장애물맵 경우, 중앙에 장애물이 위치해서 시작위치가 다름.
   const [gameInfo, setGameInfo] = useState<GameInfo>({
     ballP_X: playingGameInfo.gameMode === 'obstacle' ? 40 : 50,
@@ -190,9 +191,9 @@ const GameStart: React.FC = () => {
     const normalizedRelativeIntersectionY = relativeIntersectY / 10;
     switch (type) {
       case 'leftgoal':
-        return value === 'ballP_X' ? 1 : 0;
-      case 'rightgoal':
         return value === 'ballP_X' ? -1 : 0;
+      case 'rightgoal':
+        return value === 'ballP_X' ? 1 : 0;
       case 'upHit':
         if (value === 'ballP_X') {
           if (info.ballVelo_X > 0) return 1;
@@ -276,6 +277,7 @@ const GameStart: React.FC = () => {
 
   // 어떤 플레이어가 계산할 차례인지를 반환합니다.
   const getTurn = (info: GameInfo) => {
+    // console.log(ballState(info));
     switch (ballState(info)) {
       case 'leftgoal':
         return PLAYERONE;
@@ -312,10 +314,10 @@ const GameStart: React.FC = () => {
   const getCheckPoint = (info: GameInfo) => {
     switch (ballState(info)) {
       case 'leftgoal':
-        if (player === 'p2') return true;
+        if (player === 'p1') return true;
         else return false;
       case 'rightgoal':
-        if (player === 'p1') return true;
+        if (player === 'p2') return true;
         else return false;
       default:
         return false;
@@ -362,13 +364,15 @@ const GameStart: React.FC = () => {
 
   const checkTurn = (info: GameInfo) => {
     if ((player === 'p1' && info.turn === 1) || (player === 'p2' && info.turn === 2)) return true;
-    else return false;
+    else if ((player === 'p1' && info.turn !== 1) || (player === 'p2' && info.turn !== 2))
+      return false;
   };
 
   const eventCalculate = async (info: GameInfo) => {
     if (player !== 'g1' && user && user.socket && user.socket.connected) {
       if (checkTurn(info) === true) {
         await calValue();
+        // console.log(player);
         user.socket.emit('calculatedRTData', {
           ballP_X: info.ballP_X,
           ballP_Y: info.ballP_Y,
@@ -443,7 +447,8 @@ const GameStart: React.FC = () => {
   document.addEventListener('keydown', keyDownHandler, false);
   function keyDownHandler(e: KeyboardEvent) {
     if (player !== 'g1') {
-      if (!paddleYpos) paddleYpos = player === 'p1' ? paddleG[0] : paddleG[1];
+      if (!paddleYpos)
+        paddleYpos = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
       if (e.key === 'ArrowRight') {
         if ((player === 'p2' && paddleYpos > 2) || (player === 'p1' && paddleYpos < 78))
           paddleYpos += player === 'p1' ? PADDLEMOVE : -PADDLEMOVE;
@@ -470,9 +475,9 @@ const GameStart: React.FC = () => {
       defaultGameinfo();
       if (user)
         if (user.socket) {
-          console.log('socket disconnect:' + user.socket.id);
           user.socket.off();
         }
+      navigate('/game');
     };
   }, [user && user.socket]);
 
