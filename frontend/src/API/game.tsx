@@ -1,6 +1,11 @@
 import { GameMode, IGameRoomInfo, IGameRooms } from '../utils/interface';
 import { instance } from './index';
 
+interface ChallengeResponseDto {
+  available: boolean;
+  status: 'on' | 'off' | 'play';
+}
+
 const gamePath = (path: string): string => {
   return `/games${path}`;
 };
@@ -37,8 +42,10 @@ const gameAPI = {
       );
       return res.data;
     } catch (e) {
-      if (e instanceof Error) {console.error(e.message); console.dir(e);}
-      else console.error(e);
+      if (e instanceof Error) {
+        console.error(e.message);
+        console.dir(e);
+      } else console.error(e);
       return null;
     }
   },
@@ -71,8 +78,10 @@ const gameAPI = {
       );
       return res.data;
     } catch (e) {
-      if (e instanceof Error) {console.error(e.message); console.dir(e);}
-      else console.error(e);
+      if (e instanceof Error) {
+        console.error(e.message);
+        console.dir(e);
+      } else console.error(e);
       return null;
     }
   },
@@ -93,10 +102,34 @@ const gameAPI = {
    * @param jwt
    * @returns 대전 신청 가능한 상대면 true, 아니면 false
    */
-  dieDieMatch: async (userId: number, targetId: number, jwt: string): Promise<boolean> => {
+  dieDieMatch: async (
+    userId: number,
+    targetId: number,
+    jwt: string,
+  ): Promise<ChallengeResponseDto> => {
     try {
       const url = gamePath(`/dieDieMatch/${userId}?targetId=${targetId}`);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      console.log(res.data.available);
+      console.log(res.data.status);
+      return res.data;
+    } catch (e) {
+      if (e instanceof Error) console.error(e.message);
+      else console.error(e);
+      return {
+        available: false,
+        status: 'off',
+      };
+    }
+  },
+
+  // 상대유저의 세부상태?
+  opponentState: async (targetId: number, jwt: string): Promise<any> => {
+    try {
+      const url = gamePath(`/${targetId}`);
+      const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
+      console.log('지금만든거임 : ');
+      console.dir(res);
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
