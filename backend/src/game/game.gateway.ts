@@ -65,6 +65,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   broadcastToLobby(ev: string, ...args: any[]): void {
-    this.server.to('gameLobby').emit(ev, ...args);
+    this.server?.to('gameLobby').emit(ev, ...args);
   }
 }
