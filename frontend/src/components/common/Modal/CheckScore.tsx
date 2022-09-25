@@ -70,7 +70,7 @@ const RecordItem = styled.div<{ isWin: boolean }>`
   background-color: ${props => (props.isWin ? '#c5dcff' : '#FFC5C5')};
 
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 93px 23px 163px;
   grid-template-rows: 1fr;
   gap: 10px;
 
@@ -100,7 +100,7 @@ const RecordisWin = styled.span`
   color: #ffffff;
 `;
 const RecordNickName = styled.span`
-  width: 80%;
+  width: 90%;
   text-align: right;
 `;
 
