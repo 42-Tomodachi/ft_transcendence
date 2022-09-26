@@ -15,7 +15,6 @@ const ballG = [50, 50]; // Realtime ball position
 const paddleG = [40, 40]; // Realtime paddle position
 const scoreG = [0, 0]; // Realtime socre
 const playing = [true, '']; // 게임상태확인 및 승자기록
-
 const paadllezz = [40];
 
 // 인터페이스 타입정의
@@ -53,6 +52,7 @@ const GameStart: React.FC = () => {
     rightScore: 0,
     checkPoint: false,
   });
+
   // 패들 그리기.
   const drawObject = function paddle(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath();
@@ -360,7 +360,6 @@ const GameStart: React.FC = () => {
         ballP_Y: ballAction(info, 'Y'),
         leftPaddlePos: getPaddlePos(player, info, 'left'),
         rightPaddlePos: getPaddlePos(player, info, 'right'),
-        player: player === 'p1' ? 1 : 2,
         ballVelo_X: getVelocity(info, 'ballP_X'),
         ballVelo_Y: getVelocity(info, 'ballP_Y'),
         turn: getTurn(info),
@@ -391,9 +390,10 @@ const GameStart: React.FC = () => {
         realPaddle();
         calValue();
         // console.log(player);
+        const goal = goalBallState(info);
         user.socket.emit('calculatedRTData', {
-          ballP_X: goalBallState(info) === true ? info.ballP_X : ballAction(info, 'X'),
-          ballP_Y: goalBallState(info) === true ? info.ballP_Y : ballAction(info, 'Y'),
+          ballP_X: goal === true ? info.ballP_X : ballAction(info, 'X'),
+          ballP_Y: goal === true ? info.ballP_Y : ballAction(info, 'Y'),
           leftPaddlePos: getPaddlePos(player, info, 'left'),
           rightPaddlePos: getPaddlePos(player, info, 'right'),
           ballVelo_X: getVelocity(info, 'ballP_X'),
