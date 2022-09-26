@@ -402,8 +402,8 @@ const GameStart: React.FC = () => {
           ballP_Y: info.ballP_Y,
           leftPaddlePos: info.leftPaddlePos,
           rightPaddlePos: info.rightPaddlePos,
-          ballVelo_X: info.ballVelo_X,
-          ballVelo_Y: info.ballVelo_Y,
+          ballVelo_X: getVelocity(info, 'ballP_X'),
+          ballVelo_Y: getVelocity(info, 'ballP_Y'),
           turn: getTurn(info),
           checkPoint: getCheckPoint(info),
         });
