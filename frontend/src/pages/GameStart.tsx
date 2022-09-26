@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 const PLAYERONE = 1; // 플레이어정보.
 const PLAYERTWO = 2; // 플레이어정보.
 const HERTZ = 65; // 초당 장면 드로우 횟수
-const PADDLEMOVE = 2; // 한번에 움직이는 거리
+const PADDLEMOVE = 1; // 한번에 움직이는 거리
 const LPADDLEHIT = 8; // 왼쪽패들 충돌지점 (X축)
 const RPADDLEHIT = 93; // 오른쪽패들 충돌지점 (X축)
 const turnG = [true, false]; // 계산할차례 전환에 대한 더블체크
@@ -15,6 +15,8 @@ const ballG = [50, 50]; // Realtime ball position
 const paddleG = [40, 40]; // Realtime paddle position
 const scoreG = [0, 0]; // Realtime socre
 const playing = [true, '']; // 게임상태확인 및 승자기록
+
+const paadllezz = [40];
 
 // 인터페이스 타입정의
 interface GameInfo {
@@ -57,10 +59,20 @@ const GameStart: React.FC = () => {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#3AB0FF';
     ctx.fillText(` ${playingGameInfo?.oneNickname} : ${scoreG[0]}`, 250, 50);
-    ctx.fillRect(0.05 * 1000, paddleG[0] * 7, 0.015 * 1000, 0.2 * 700);
+    ctx.fillRect(
+      0.05 * 1000,
+      player === 'p1' ? paadllezz[0] * 7 : paddleG[0] * 7,
+      0.015 * 1000,
+      0.2 * 700,
+    );
     ctx.fillStyle = '#F87474';
     ctx.fillText(`${playingGameInfo?.twoNickname} : ${scoreG[1]}`, 750, 50);
-    ctx.fillRect(0.945 * 1000, paddleG[1] * 7, 0.015 * 1000, 0.2 * 700);
+    ctx.fillRect(
+      0.945 * 1000,
+      player === 'p2' ? paadllezz[0] * 7 : paddleG[1] * 7,
+      0.015 * 1000,
+      0.2 * 700,
+    );
   };
 
   // 공그리기
@@ -327,10 +339,20 @@ const GameStart: React.FC = () => {
   // 플레이어의 패들위치를 반환합니다.
   const getPaddlePos = (player: string, info: GameInfo, pos: string) => {
     if (pos === 'left') {
-      if (player === 'p1') return paddleYpos ? paddleYpos : info.leftPaddlePos;
+      if (player === 'p1') return paadllezz[0];
       else return paddleG[0];
     } else {
-      if (player === 'p2') return paddleYpos ? paddleYpos : info.rightPaddlePos;
+      if (player === 'p2') return paadllezz[0];
+      else return paddleG[1];
+    }
+  };
+
+  const testPaddlePos = (player: string, info: GameInfo, pos: string) => {
+    if (pos === 'left') {
+      if (player === 'p1') return paadllezz[0];
+      else return paddleG[0];
+    } else {
+      if (player === 'p2') return paadllezz[0];
       else return paddleG[1];
     }
   };
@@ -364,13 +386,15 @@ const GameStart: React.FC = () => {
 
   const checkTurn = (info: GameInfo) => {
     if ((player === 'p1' && info.turn === 1) || (player === 'p2' && info.turn === 2)) return true;
-    else if ((player === 'p1' && info.turn !== 1) || (player === 'p2' && info.turn !== 2))
+    else if ((player === 'p1' && info.turn === 2) || (player === 'p2' && info.turn == 1))
       return false;
   };
 
   const eventCalculate = async (info: GameInfo) => {
     if (player !== 'g1' && user && user.socket && user.socket.connected) {
       if (checkTurn(info) === true) {
+        realPaddle();
+        realPaddle(); // 왜 딱 두배차이가 나는거지. 왜.
         await calValue();
         // console.log(player);
         user.socket.emit('calculatedRTData', {
@@ -378,18 +402,21 @@ const GameStart: React.FC = () => {
           ballP_Y: info.ballP_Y,
           leftPaddlePos: info.leftPaddlePos,
           rightPaddlePos: info.rightPaddlePos,
-          ballVelo_X: getVelocity(info, 'ballP_X'),
-          ballVelo_Y: getVelocity(info, 'ballP_Y'),
+          ballVelo_X: info.ballVelo_X,
+          ballVelo_Y: info.ballVelo_Y,
           turn: getTurn(info),
           checkPoint: getCheckPoint(info),
         });
-      } else if (checkTurn(info) === false)
-        user.socket.emit(
-          'paddleRTData',
-          player === 'p1'
-            ? getPaddlePos(player, info, 'left')
-            : getPaddlePos(player, info, 'right'),
-        );
+      } else if (checkTurn(info) === false) {
+        realPaddle();
+        user.socket.emit('paddleRTData', paadllezz[0]);
+        // user.socket.emit(
+        //   'paddleRTData',
+        //   player === 'p1'
+        //     ? testPaddlePos(player, info, 'left')
+        //     : testPaddlePos(player, info, 'right'),
+        // );
+      }
     }
   };
 
@@ -448,19 +475,39 @@ const GameStart: React.FC = () => {
     } else console.log('ERROR: user undefined');
   };
 
-  let paddleYpos: number;
+  const realPaddle = () => {
+    if (rightPressed) {
+      if ((player === 'p2' && paadllezz[0] > 2) || (player === 'p1' && paadllezz[0] < 78)) {
+        const test = player === 'p1' ? PADDLEMOVE : -PADDLEMOVE;
+        paadllezz[0] += test;
+      }
+    } else if (leftPressed)
+      if ((player === 'p1' && paadllezz[0] > 2) || (player === 'p2' && paadllezz[0] < 78)) {
+        const test = player === 'p1' ? -PADDLEMOVE : PADDLEMOVE;
+        paadllezz[0] += test;
+      }
+  };
+
+  let rightPressed: boolean;
+  let leftPressed: boolean;
 
   document.addEventListener('keydown', keyDownHandler, false);
+  document.addEventListener('keyup', keyUpHandler, false);
   function keyDownHandler(e: KeyboardEvent) {
     if (player !== 'g1') {
-      if (!paddleYpos)
-        paddleYpos = player === 'p1' ? gameInfo.leftPaddlePos : gameInfo.rightPaddlePos;
-      if (e.key === 'ArrowRight') {
-        if ((player === 'p2' && paddleYpos > 2) || (player === 'p1' && paddleYpos < 78))
-          paddleYpos += player === 'p1' ? PADDLEMOVE : -PADDLEMOVE;
-      } else if (e.key === 'ArrowLeft')
-        if ((player === 'p1' && paddleYpos > 2) || (player === 'p2' && paddleYpos < 78))
-          paddleYpos += player === 'p1' ? -PADDLEMOVE : PADDLEMOVE;
+      if (e.key == 'ArrowRight') {
+        rightPressed = true;
+      } else if (e.key == 'ArrowLeft') {
+        leftPressed = true;
+      }
+    }
+  }
+
+  function keyUpHandler(e: KeyboardEvent) {
+    if (e.key == 'ArrowRight') {
+      rightPressed = false;
+    } else if (e.key == 'ArrowLeft') {
+      leftPressed = false;
     }
   }
 
