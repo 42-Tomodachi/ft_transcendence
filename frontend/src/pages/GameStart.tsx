@@ -112,6 +112,7 @@ const GameStart: React.FC = () => {
     paddleG[1] = 40;
     turnG[0] = true;
     turnG[1] = false;
+    paadllezz[0] = 40;
   };
 
   const defaultGameinfo = () => {
@@ -400,8 +401,8 @@ const GameStart: React.FC = () => {
         user.socket.emit('calculatedRTData', {
           ballP_X: info.ballP_X,
           ballP_Y: info.ballP_Y,
-          leftPaddlePos: info.leftPaddlePos,
-          rightPaddlePos: info.rightPaddlePos,
+          leftPaddlePos: getPaddlePos(player, info, 'left'),
+          rightPaddlePos: getPaddlePos(player, info, 'right'),
           ballVelo_X: getVelocity(info, 'ballP_X'),
           ballVelo_Y: getVelocity(info, 'ballP_Y'),
           turn: getTurn(info),
@@ -428,8 +429,8 @@ const GameStart: React.FC = () => {
         ballP_Y: data[1],
         ballVelo_X: data[2],
         ballVelo_Y: data[3],
-        leftPaddlePos: paddleG[0],
-        rightPaddlePos: paddleG[1],
+        leftPaddlePos: data[4],
+        rightPaddlePos: data[5],
         turn: data[6],
       };
     });
