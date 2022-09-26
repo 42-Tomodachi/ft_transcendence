@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 // 코드 가독성을 위해서라도, 고정적인 값들은 상수로 박아놓고 사용중입니다.
 const PLAYERONE = 1; // 플레이어정보.
 const PLAYERTWO = 2; // 플레이어정보.
-const HERTZ = 65; // 초당 장면 드로우 횟수
+const HERTZ = 55; // 초당 장면 드로우 횟수
 const PADDLEMOVE = 1; // 한번에 움직이는 거리
 const LPADDLEHIT = 8; // 왼쪽패들 충돌지점 (X축)
 const RPADDLEHIT = 93; // 오른쪽패들 충돌지점 (X축)
@@ -54,7 +54,11 @@ const GameStart: React.FC = () => {
     checkPoint: false,
   });
   // 패들 그리기.
-  const paddle = function paddle(ctx: CanvasRenderingContext2D): void {
+  const drawObject = function paddle(ctx: CanvasRenderingContext2D): void {
+    ctx.beginPath();
+    ctx.arc((ballG[0] / 100) * 1000, (ballG[1] / 100) * 700, 10, 0, 2 * Math.PI);
+    ctx.fillStyle = '#FFB562';
+    ctx.fill();
     ctx.font = '32px Roboto';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#3AB0FF';
@@ -73,18 +77,6 @@ const GameStart: React.FC = () => {
       0.015 * 1000,
       0.2 * 700,
     );
-  };
-
-  // 공그리기
-  const ball = function ball(ctx: CanvasRenderingContext2D): void {
-    ctx.beginPath();
-    ctx.arc((ballG[0] / 100) * 1000, (ballG[1] / 100) * 700, 10, 0, 2 * Math.PI);
-    ctx.fillStyle = '#FFB562';
-    ctx.fill();
-  };
-
-  // 장애물맵일경우 장애물그리기.
-  const obstacle = function obstacle(ctx: CanvasRenderingContext2D): void {
     if (playingGameInfo.gameMode === 'obstacle') {
       ctx.fillStyle = '#FFB562';
       ctx.fillRect(450, 300, 100, 100); // x, y, width, height
@@ -323,6 +315,17 @@ const GameStart: React.FC = () => {
     }
   };
 
+  const goalBallState = (info: GameInfo) => {
+    switch (ballState(info)) {
+      case 'leftgoal':
+        return true;
+      case 'rightgoal':
+        return true;
+      default:
+        return false;
+    }
+  };
+
   // 상대의 실점을 기록합니다(계산하는 유저입장에서)
   const getCheckPoint = (info: GameInfo) => {
     switch (ballState(info)) {
@@ -348,17 +351,8 @@ const GameStart: React.FC = () => {
     }
   };
 
-  const testPaddlePos = (player: string, info: GameInfo, pos: string) => {
-    if (pos === 'left') {
-      if (player === 'p1') return paadllezz[0];
-      else return paddleG[0];
-    } else {
-      if (player === 'p2') return paadllezz[0];
-      else return paddleG[1];
-    }
-  };
-
   const calValue = async () => {
+    realPaddle();
     return setGameInfo(info => {
       return {
         ...info,
@@ -395,12 +389,11 @@ const GameStart: React.FC = () => {
     if (player !== 'g1' && user && user.socket && user.socket.connected) {
       if (checkTurn(info) === true) {
         realPaddle();
-        realPaddle(); // 왜 딱 두배차이가 나는거지. 왜.
-        await calValue();
+        calValue();
         // console.log(player);
         user.socket.emit('calculatedRTData', {
-          ballP_X: info.ballP_X,
-          ballP_Y: info.ballP_Y,
+          ballP_X: goalBallState(info) === true ? info.ballP_X : ballAction(info, 'X'),
+          ballP_Y: goalBallState(info) === true ? info.ballP_Y : ballAction(info, 'Y'),
           leftPaddlePos: getPaddlePos(player, info, 'left'),
           rightPaddlePos: getPaddlePos(player, info, 'right'),
           ballVelo_X: getVelocity(info, 'ballP_X'),
@@ -411,12 +404,6 @@ const GameStart: React.FC = () => {
       } else if (checkTurn(info) === false) {
         realPaddle();
         user.socket.emit('paddleRTData', paadllezz[0]);
-        // user.socket.emit(
-        //   'paddleRTData',
-        //   player === 'p1'
-        //     ? testPaddlePos(player, info, 'left')
-        //     : testPaddlePos(player, info, 'right'),
-        // );
       }
     }
   };
@@ -425,8 +412,8 @@ const GameStart: React.FC = () => {
     setGameInfo(gameInfo => {
       return {
         ...gameInfo,
-        ballP_X: data[0],
-        ballP_Y: data[1],
+        ballP_X: ballG[0],
+        ballP_Y: ballG[1],
         ballVelo_X: data[2],
         ballVelo_Y: data[3],
         leftPaddlePos: data[4],
@@ -457,12 +444,12 @@ const GameStart: React.FC = () => {
     if (user && user.socket) {
       eventGetFinished();
       user.socket.on('rtData', async (data: number[]) => {
-        ballG[0] = data[0];
-        ballG[1] = data[1];
-        if (data[4]) paddleG[0] = data[4]; //마우스가 움직일때만 받아야 최신
-        if (data[5]) paddleG[1] = data[5]; //마우스가 움직일때만 받아야 최신
-        scoreG[0] = data[8]; //left score
-        scoreG[1] = data[9]; //right score
+        if (data[0] !== ballG[0]) ballG[0] = data[0];
+        if (data[1] !== ballG[1]) ballG[1] = data[1];
+        if (data[4]) paddleG[0] = data[4];
+        if (data[5]) paddleG[1] = data[5];
+        if (scoreG[0] !== data[8]) scoreG[0] = data[8]; //left score
+        if (scoreG[1] !== data[9]) scoreG[1] = data[9]; //right score
         if (data[6] === PLAYERONE) turnG[1] = false;
         if (data[6] === PLAYERTWO) turnG[0] = false;
         if (
@@ -545,9 +532,7 @@ const GameStart: React.FC = () => {
             eventCalculate(gameInfo);
             eventRealTimeData();
             clear(ctx);
-            obstacle(ctx);
-            ball(ctx);
-            paddle(ctx);
+            drawObject(ctx);
           }, 1000 / HERTZ);
           return () => {
             clearInterval(test);
