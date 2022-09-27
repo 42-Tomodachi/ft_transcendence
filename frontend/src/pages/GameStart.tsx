@@ -558,18 +558,18 @@ const GameStart: React.FC = () => {
   return (
     <GameRoomBody>
       {playing[0] === true ? (
-        <GameArea>
+        <GameArea color="none">
           <canvas ref={canvasRef} id="canvas" width="1000" height="700" />;
         </GameArea>
       ) : (
-        <ResultArea>
+        <GameArea color="black">
           <Message>{`🏆${playing[1]}🏆`}</Message>
           <Message>.......</Message>
           <Message>WINNER!</Message>
           <Message>WINNER!</Message>
           <Message>CHICKEN</Message>
           <Message>DINNER!</Message>
-        </ResultArea>
+        </GameArea>
       )}
     </GameRoomBody>
   );
@@ -599,25 +599,18 @@ const GameRoomBody = styled.div`
 const GameArea = styled.div`
   display: flex;
   flex-direction: column;
+  /* align-items: center;
+  justify-content: center; */
   width: 1000px;
   height: 700px;
-  background-color: none;
+  background-color: ${props => props.color};
   border-radius: 20px;
   overflow: hidden;
-`;
-
-// GameArea랑 백그라운드 컬러만 다름, 알고있음.
-const ResultArea = styled.div`
-  display: flex;
-  flex-direction: column;
+  ${props =>
+    props.color === 'black' &&
+    `
   align-items: center;
-  justify-content: center;
-
-  width: 1000px;
-  height: 700px;
-  /* background-color: #f9f2ed; */
-  background-color: black;
-  border-radius: 20px;
+  justify-content: center; `};
 `;
 
 export default React.memo(GameStart); //무의미한 리렌더방지
