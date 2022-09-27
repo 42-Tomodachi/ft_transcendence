@@ -599,11 +599,9 @@ const GameRoomBody = styled.div`
 const GameArea = styled.div`
   display: flex;
   flex-direction: column;
-  /* align-items: center;
-  justify-content: center; */
   width: 1000px;
   height: 700px;
-  background-color: ${props => props.color};
+  background-color: ${props => props.color || 'none'};
   border-radius: 20px;
   overflow: hidden;
   ${props =>
