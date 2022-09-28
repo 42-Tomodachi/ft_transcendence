@@ -11,10 +11,13 @@ import {
   UPDATE_USER,
 } from '../../utils/interface';
 import { usersAPI } from '../../API';
+import { useNavigate } from 'react-router-dom';
 
 const ProfilePage: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;
   const { user, setUser } = useContext(AllContext).userData;
+  const navigate = useNavigate();
+
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
@@ -22,6 +25,8 @@ const ProfilePage: React.FC = () => {
         if (data && data.nickname) {
           setUser(UPDATE_USER, { ...data, jwt: user.jwt });
         }
+      } else {
+        navigate('/'); // logout
       }
     };
     getUserInfo();

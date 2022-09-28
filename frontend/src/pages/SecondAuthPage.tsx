@@ -4,6 +4,7 @@ import Button from '../components/common/Button';
 import { AllContext } from '../store';
 import { LOGIN } from '../utils/interface';
 import { authAPI } from '../API';
+import { useNavigate } from 'react-router-dom';
 
 const SecondAuthPage: React.FC = () => {
   const [authCode, setAuthcode] = useState<string>('');
@@ -11,6 +12,7 @@ const SecondAuthPage: React.FC = () => {
   const { setUserStatus } = useContext(AllContext).userStatus;
   const { user } = useContext(AllContext).userData;
   const { jwt } = useContext(AllContext).jwtData;
+  const navigate = useNavigate();
   let timer: NodeJS.Timer;
 
   const sendCode = async () => {
@@ -29,6 +31,8 @@ const SecondAuthPage: React.FC = () => {
   useEffect(() => {
     if (user) {
       sendCode();
+    } else {
+      navigate('/'); // logout
     }
     return () => clearTimeout(timer);
   }, []);

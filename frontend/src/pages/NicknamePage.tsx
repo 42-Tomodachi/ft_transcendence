@@ -7,6 +7,7 @@ import { IUserData, LOGIN, SET_NICKNAME, UPDATE_USER } from '../utils/interface'
 import imageCompression from 'browser-image-compression';
 import { usersAPI } from '../API/users';
 import DefaultProfile from '../assets/default-image.png';
+import { useNavigate } from 'react-router-dom';
 
 const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]{2,8}$/;
 const minNickName = 2;
@@ -23,6 +24,7 @@ const NicknamePage: React.FC = () => {
   const { jwt } = useContext(AllContext).jwtData;
   const [convertImg, setConvertImg] = useState<File | string>('');
   const [userProfile, setUserProfile] = useState<IUserData>(); // TODO: profile에 맞는 interface 제작
+  const navigate = useNavigate();
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputNickValue = e.target.value;
@@ -114,6 +116,8 @@ const NicknamePage: React.FC = () => {
     if (user) {
       getUserProfile(user.jwt);
       setUserStatus(SET_NICKNAME);
+    } else {
+      navigate('/'); // logout
     }
   }, []);
 

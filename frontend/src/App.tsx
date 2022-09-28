@@ -12,13 +12,10 @@ import ChatPage from './pages/ChatPage';
 
 import ProfilePage from './components/UserProfile';
 import { AllContext } from './store';
-import ModalTester from './components/common/Modal/ModalTester';
 import ModalSet from './components/common/Modal/ModalSet';
 
 import { LOGIN, SET_NICKNAME, LOGOUT } from './utils/interface';
 import { usersAPI } from './API';
-
-// 테스트테스트테스트테스트
 import GamePage from './pages/GamePage';
 
 function App() {

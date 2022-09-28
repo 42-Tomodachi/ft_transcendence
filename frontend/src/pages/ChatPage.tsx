@@ -108,6 +108,8 @@ const ChatPage: React.FC = () => {
         }
       };
       getRoomData();
+    } else {
+      navigate('/'); //
     }
   }, [user, roomId]);
   return (
