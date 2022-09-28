@@ -389,7 +389,6 @@ const GameStart: React.FC = () => {
       if (checkTurn(info) === true) {
         realPaddle();
         calValue();
-        // console.log(player);
         const goal = goalBallState(info);
         user.socket.emit('calculatedRTData', {
           ballP_X: goal === true ? info.ballP_X : ballAction(info, 'X'),
@@ -457,7 +456,7 @@ const GameStart: React.FC = () => {
           (data[6] === PLAYERONE && player === 'p1' && turnG[0] === false)
         ) {
           await settingRealTimeData(data);
-          await settingPlayerStatus(turnG); // 딜레이 줄이려면 쓰긴해야겠다.
+          await settingPlayerStatus(turnG);
         }
       });
     } else console.log('ERROR: user undefined');
@@ -499,11 +498,11 @@ const GameStart: React.FC = () => {
     }
   }
 
+  //게임중에 누군가 튕기거나 나갔을때. 이긴상대를 알려줍니다.
+  //발생시 무조건 결과페이지로 승자담아서 이동합니다.
   useEffect(() => {
     if (user) {
       user.socket.on('gameTerminated', data => {
-        console.log(`gameTerminated: 게임중에 누군가 튕기거나 나갔을때. 이긴상대를 알려줌.${data}`);
-        console.log(`gameTerminated: 얘가발생했다는건 무조건 결과페이지로 승자담아서 이동.${data}`);
         playing[0] = false;
         if (data === 1) playing[1] = playingGameInfo.oneNickname.toUpperCase();
         else playing[1] = playingGameInfo.twoNickname.toUpperCase();
@@ -547,10 +546,10 @@ const GameStart: React.FC = () => {
     };
   }, [eventCalculate]);
 
+  // 소켓변화를 감지해서, 정리합니다.
   useEffect(() => {
     return () => {
       if (user && user.socket && user.socket.connected) {
-        console.log('로비로갈때 비로소 끊어버리는거지');
         user.socket.disconnect();
       }
     };
@@ -581,7 +580,6 @@ const Message = styled.p`
   font-style: normal;
   font-family: 'Rubik One';
   color: #ffffff;
-  /* color: ${({ theme }) => theme.colors.main}; */
   font-weight: 900;
   font-size: 60px;
   line-height: 74px;
