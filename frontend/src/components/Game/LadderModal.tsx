@@ -7,7 +7,6 @@ import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
 import { useNavigate } from 'react-router-dom'; //네비
 
 let socket: Socket;
-const test = [true];
 
 const LadderModal: React.FC = () => {
   const { setModal } = useContext(AllContext).modalData;

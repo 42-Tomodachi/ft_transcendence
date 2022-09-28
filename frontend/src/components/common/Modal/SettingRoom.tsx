@@ -37,7 +37,7 @@ const SettingRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
     if (user) {
       const roomInfo = await chatsAPI.getChatRoomStatus(roomId, user.jwt);
       if (roomInfo && roomInfo.ownerId === user.userId) {
-        const res = await chatsAPI.setUpChatRoom(roomId, user.userId, roomName, password, user.jwt);
+        await chatsAPI.setUpChatRoom(roomId, user.userId, roomName, password, user.jwt);
         setModal(null);
       }
     }

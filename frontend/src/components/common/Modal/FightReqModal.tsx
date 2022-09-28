@@ -85,6 +85,7 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
         setModal(CANCEL_MATCH_MODAL);
       });
       socket.on('challengeRejected', (data: number) => {
+        data;
         console.log('ch req modal');
         setModal(CANCEL_MATCH_MODAL);
       });

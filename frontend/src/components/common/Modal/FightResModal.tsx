@@ -75,6 +75,7 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
         navigate(`/gameroom/${roomId}`);
       });
       socket.on('challengeRejected', (data: number) => {
+        data;
         setModal(CANCEL_MATCH_MODAL);
       });
     }

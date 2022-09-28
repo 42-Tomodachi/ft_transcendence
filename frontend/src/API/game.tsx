@@ -124,7 +124,7 @@ const gameAPI = {
   },
 
   // 상대유저의 세부상태?
-  opponentState: async (targetId: number, jwt: string): Promise<any> => {
+  opponentState: async (targetId: number, jwt: string): Promise<IGameRooms | null> => {
     try {
       const url = gamePath(`/${targetId}`);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
@@ -134,7 +134,7 @@ const gameAPI = {
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
-      return false;
+      return null;
     }
   },
 };

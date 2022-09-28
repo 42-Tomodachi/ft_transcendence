@@ -30,7 +30,7 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
 
   //junselee: 상태가 더블체크가 필요한게, 프로필을 누르는시점과, 함께하기버튼을 누르는순간의 상대방상태가 다를수있어서
   const [matchState, setMatchState] = useState<ChallengeResponseDto | null>(null);
-  const [testData, setTestData] = useState<IGameRooms | null>(null);
+  const [opponentData, setOpponentData] = useState<IGameRooms | null>(null);
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -41,7 +41,7 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
           const res = await gameAPI.dieDieMatch(user.userId, userTest, user.jwt);
           setMatchState(res);
           const res2 = await gameAPI.opponentState(userTest, user.jwt);
-          if (res2.playerCount !== undefined) setTestData(res2);
+          if (res2 && res2.playerCount !== undefined) setOpponentData(res2);
         }
         if (data) {
           if (data.avatar) setTarget(data);
@@ -54,8 +54,8 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
 
   //junselee: 알맞은 버튼이름!
   const buttonName = () => {
-    if (testData)
-      switch (testData.playerCount) {
+    if (opponentData)
+      switch (opponentData.playerCount) {
         case 0:
           return '게임 신청';
         case 1:
@@ -74,25 +74,25 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo; // roomid기억하자.
 
   const enterRoom = async () => {
-    if (user && testData) {
-      const res = await gameAPI.enterGameRoom(testData.gameId, user.userId, '', user.jwt);
+    if (user && opponentData) {
+      const res = await gameAPI.enterGameRoom(opponentData.gameId, user.userId, '', user.jwt);
       if (res && res.gameId !== undefined) {
         console.log('게임모드: ' + res.gameMode);
         setPlayingGameInfo({
           ...playingGameInfo,
           gameRoomId: res.gameId,
           gameMode: res.gameMode,
-          gameState: testData.isStart,
+          gameState: opponentData.isStart,
         });
-        navigate(`/gameroom/${testData.gameId}`);
+        navigate(`/gameroom/${opponentData.gameId}`);
       }
     }
   };
 
   const handleEnterRoom = async () => {
-    if (user && testData) {
-      if (!testData.isPublic) {
-        setModal(ENTER_GAME_ROOM, user.userId, testData.gameId);
+    if (user && opponentData) {
+      if (!opponentData.isPublic) {
+        setModal(ENTER_GAME_ROOM, user.userId, opponentData.gameId);
       } else {
         await enterRoom();
       }

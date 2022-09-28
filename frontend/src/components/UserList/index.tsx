@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import styled from '@emotion/styled';
 import Button from '../common/Button';
 import UserItem from './UserItem';
 import { OFF, ActiveMenuType, IGetUser, UserRole } from '../../utils/interface';
 import { AllContext } from '../../store';
 import { chatsAPI, usersAPI } from '../../API';
-import { Interface } from 'readline';
 import { Socket } from 'socket.io-client';
 
 /*
@@ -52,6 +51,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
       return a.nickname > b.nickname ? -1 : 1;
     });
     data.sort((a: IGetUser, b: IGetUser) => {
+      b;
       return a.status !== OFF ? -1 : 1;
     });
     data.find(element => {
