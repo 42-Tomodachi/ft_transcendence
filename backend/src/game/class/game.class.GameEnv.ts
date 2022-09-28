@@ -135,6 +135,10 @@ export class GameEnv {
       }
     }
     const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) {
+      return undefined;
+    }
+
     const newPlayer = new Player(user, game);
     this.playerList.push(newPlayer);
     return newPlayer;
@@ -285,6 +289,8 @@ export class GameEnv {
     gameId: number,
     connectionType: string,
   ): Promise<void> {
+    if (!(await this.userRepo.findOneBy({id: userId})))
+      return ;
     const player = await this.assertGetPlayerBySocket(client, userId);
     this.socketIdToPlayerMap[client.id] = player;
 
@@ -423,6 +429,8 @@ export class GameEnv {
 
   createGameRoom(player: Player, createGameRoomDto: CreateGameRoomDto): number {
     const game = this.getFreeGameRoom();
+    if (!game)
+      return undefined;
     game.create(createGameRoomDto, player);
     player.gamePlaying = game;
 
@@ -536,6 +544,8 @@ export class GameEnv {
 
   async waitForPlayerJoins(client: Socket, gameId: number): Promise<void> {
     const player = this.getPlayerBySocket(client);
+    if (!player)
+      return ;
     const game = this.getGameRoom(gameId);
     const isRightGame = player.gamePlaying === game;
     if (!isRightGame && player.gamesWatching.get(game) !== client) {
@@ -586,7 +596,8 @@ export class GameEnv {
     if (!game) return;
 
     game.updateRtData(data);
-    if (game.isFinished()) {
+    if (game.isPlaying && game.isFinished()) {
+      game.isPlaying = false;
       await this.endGame(game);
     }
     game.sendRtData();
@@ -605,7 +616,6 @@ export class GameEnv {
 
   async endGame(game: GameAttribute): Promise<void> {
     console.log(`game is finished ${game.roomId}`);
-    game.isPlaying = false;
     game.broadcastToRoom('gameFinished');
     await this.writeMatchResult(game);
     this.postGameProcedure(game);

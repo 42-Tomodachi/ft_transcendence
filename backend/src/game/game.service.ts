@@ -48,6 +48,9 @@ export class GameService {
     }
 
     const gameId = this.gameEnv.createGameRoom(player, createGameRoomDto);
+    if (gameId === undefined)
+      throw new BadRequestException(`최대 방 갯수를 초과하였습니다.`);
+
 
     const gameRoomDto = new SimpleGameRoomDto();
     gameRoomDto.gameMode = createGameRoomDto.gameMode;
