@@ -170,8 +170,9 @@ export class ChatLobbyGateway
   // 전체 유저 목록 emit
   // 회원가입, 로그인, 로그아웃, 닉네임 변경 todo: 게입 방 입퇴장(유저 상태 play)
   async emitUserList(socketId?: string): Promise<SimpleUserDto[]> {
-    const userList = await this.userService.getUsers();
+    let userList = await this.userService.getUsers();
 
+    userList = userList.filter((user) => user.nickname);
     if (socketId) {
       this.wss.to(socketId).emit('updateUserList', userList);
     } else {

@@ -113,6 +113,7 @@ export class AuthService {
 
   async emitUpdatedUserList(userId: number, user?: User): Promise<void> {
     if (!user) user = await this.usersService.getUserById(userId);
+    if (!user) return ;
 
     console.log('emitUpdatedUserList');
     console.log('emitUpdatedUserList');
@@ -130,7 +131,8 @@ export class AuthService {
     });
 
     this.chatGateway.emitFriendList(user.id);
-    const userList = await this.chatLobbyGateway.emitUserList();
+    let userList = await this.chatLobbyGateway.emitUserList();
+    userList = userList.filter((user) => user.nickname);
     this.chatLobbyGateway.emitFriendList(
       user.id,
       this.gameGateway.broadcastToLobby,
