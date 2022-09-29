@@ -7,9 +7,9 @@ RUN mkdir -p /app/Tomodachi/FE
 
 WORKDIR /app/Tomodachi/FE
 
-COPY ./ /app/Tomodachi/FE
+# COPY ./ /app/Tomodachi/FE
 
-RUN chmod +x ./ENTRYPOINT.sh
+# RUN chmod +x ./ENTRYPOINT.sh
 
 EXPOSE 3000
 

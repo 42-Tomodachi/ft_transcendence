@@ -1,11 +1,11 @@
-FROM node:18.3.0-bullseye-slim
+FROM node:16-alpine
 
 WORKDIR /app
-COPY ./ /app/
+# COPY ./ /app/
 
-# RUN apt -y update && apt -y upgrade
+RUN apk add --no-cache bash 
 # RUN npm install
-# RUN npm build
+# RUN npm run build
 
 EXPOSE 5500
 

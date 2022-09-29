@@ -10,6 +10,7 @@ services:
       - ./database/.env
     volumes:
       - ./database/init_db.sh:/docker-entrypoint-initdb.d/init_db.sh
+      - ./database/pgdata:/var/lib/postgresql/data
     restart: always
     container_name: postgresql
     hostname: postgresql
@@ -20,6 +21,8 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - back
+    volumes:
+      - ./frontend:/app/Tomodachi/FE
     networks:
       - webapp
     ports:
@@ -32,6 +35,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
     networks:
       - webapp
       - database

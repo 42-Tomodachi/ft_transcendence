@@ -51,7 +51,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('onMatchingScreen')
   async onMatchingScreen(client: Socket, gameId: number): Promise<void> {
-    await this.gameEnv.waitForPlayerJoins(client, gameId);
+    setTimeout(() => {this.gameEnv.waitForPlayerJoins(client, gameId)}, 300);
   }
 
   @SubscribeMessage('calculatedRTData')
@@ -65,6 +65,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   broadcastToLobby(ev: string, ...args: any[]): void {
-    this.server?.to('gameLobby').emit(ev, ...args);
+    if (this && this.server)
+      this.server.to('gameLobby').emit(ev, ...args);
   }
 }
