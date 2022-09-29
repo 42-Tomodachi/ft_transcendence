@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 // 코드 가독성을 위해서라도, 고정적인 값들은 상수로 박아놓고 사용중입니다.
 const PLAYERONE = 1; // 플레이어정보.
 const PLAYERTWO = 2; // 플레이어정보.
-const HERTZ = 55; // 초당 장면 드로우 횟수
+const HERTZ = 60; // 초당 장면 드로우 횟수
 const PADDLEMOVE = 1; // 한번에 움직이는 거리
 const LPADDLEHIT = 8; // 왼쪽패들 충돌지점 (X축)
 const RPADDLEHIT = 93; // 오른쪽패들 충돌지점 (X축)
