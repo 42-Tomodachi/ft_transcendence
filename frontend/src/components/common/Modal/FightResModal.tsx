@@ -50,12 +50,12 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
         multiplex: false,
         query: { userId: user.userId, targetId: targetId, isSender: true, connectionType: 'duel' },
       });
-      socket.on('challengeSeqDone', (data: number) => {
+      socket.on('challengeSeqDone', () => {
         // console.log('challengeSeqDone', data);
         setModal(CANCEL_MATCH_MODAL);
       });
       // TODO: acceptChallenge 사용되는 상황 파악
-      socket.on('acceptChallenge', (userId: number) => {
+      socket.on('acceptChallenge', () => {
         // navigate(`/gameroom/${roomId}`);
         // junselee test : 신청측도 서버한테 알려줘야합니다.
         socket.emit('acceptChallenge');

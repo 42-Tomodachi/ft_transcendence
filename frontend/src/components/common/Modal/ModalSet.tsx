@@ -10,7 +10,6 @@ import EnterChatRoom from './EnterChatRoom';
 import ShowOwnerProfile from './ShowOwnerProfile';
 import ShowManagerProfile from './ShowManagerProfile';
 import OnSecondAuth from './OnSecondAuth';
-import EditNickName from './EditNickName';
 import SettingRoom from './SettingRoom';
 import FightResModal from './FightResModal';
 import FightReqModal from './FightReqModal';
