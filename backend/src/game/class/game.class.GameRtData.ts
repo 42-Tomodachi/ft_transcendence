@@ -9,6 +9,7 @@ export class GameRtData {
   turn: number;
   lostPoint: boolean;
   updateFlag: boolean;
+  player: number; //
   scoreLeft: number;
   scoreRight: number;
   lastSent: number;
@@ -24,6 +25,7 @@ export class GameRtData {
     this.scoreLeft = 0;
     this.scoreRight = 0;
     this.lastSent = Date.now();
+    this.player = 1; //
   }
 
   toRtData(): (number | boolean)[] {
@@ -38,6 +40,7 @@ export class GameRtData {
       this.lostPoint,
       this.scoreLeft,
       this.scoreRight,
+      this.player,
     ];
 
     return data;
@@ -63,6 +66,7 @@ export class GameRtData {
     this.ball_pos = [data.ballP_X, data.ballP_Y];
     this.ball_vec = [data.ballVelo_X, data.ballVelo_Y];
     this.turn = data.turn;
+    this.player = data.player;
     if (this.turn == 1) {
       this.paddle_L_pos = data.leftPaddlePos;
     } else {
