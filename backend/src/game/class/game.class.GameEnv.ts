@@ -610,8 +610,10 @@ export class GameEnv {
     const player: Player = this.getPlayerBySocket(client);
     const game = player.gamePlaying;
 
-    game.updatePaddleRtData(data);
-    game.sendRtData();
+    if (game) {
+      game.updatePaddleRtData(data);
+      game.sendRtData();
+    }
   }
 
   async endGame(game: GameAttribute): Promise<void> {
