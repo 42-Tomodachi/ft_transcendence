@@ -321,6 +321,10 @@ const GameStart: React.FC = () => {
         return true;
       case 'rightgoal':
         return true;
+      case 'leftHit':
+        return true;
+      case 'rightHit':
+        return true;
       default:
         return false;
     }
@@ -399,6 +403,7 @@ const GameStart: React.FC = () => {
           ballVelo_Y: getVelocity(info, 'ballP_Y'),
           turn: getTurn(info),
           checkPoint: getCheckPoint(info),
+          player: player === 'p1' ? 1 : 2,
         });
       } else if (checkTurn(info) === false) {
         realPaddle();
@@ -445,8 +450,13 @@ const GameStart: React.FC = () => {
       user.socket.on('rtData', async (data: number[]) => {
         if (data[0] !== ballG[0]) ballG[0] = data[0];
         if (data[1] !== ballG[1]) ballG[1] = data[1];
-        if (data[4]) paddleG[0] = data[4];
-        if (data[5]) paddleG[1] = data[5];
+        if (
+          (data[6] === PLAYERONE && data[10] === PLAYERONE) ||
+          (data[6] === PLAYERTWO && data[10] === PLAYERTWO)
+        ) {
+          if (data[4]) paddleG[0] = data[4];
+          if (data[5]) paddleG[1] = data[5];
+        }
         if (scoreG[0] !== data[8]) scoreG[0] = data[8]; //left score
         if (scoreG[1] !== data[9]) scoreG[1] = data[9]; //right score
         if (data[6] === PLAYERONE) turnG[1] = false;
@@ -455,8 +465,8 @@ const GameStart: React.FC = () => {
           (data[6] === PLAYERTWO && player === 'p2' && turnG[1] === false) ||
           (data[6] === PLAYERONE && player === 'p1' && turnG[0] === false)
         ) {
-          await settingRealTimeData(data);
           await settingPlayerStatus(turnG);
+          await settingRealTimeData(data);
         }
       });
     } else console.log('ERROR: user undefined');
