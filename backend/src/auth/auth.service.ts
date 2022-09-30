@@ -43,10 +43,10 @@ export class AuthService {
   async issueJwt(id: number): Promise<string> {
     const user = await this.usersService.getUserById(id);
 
-    return this.setLogon(user);
+    return this.generateUserJwt(user);
   }
 
-  async setLogon(user: User): Promise<string> {
+  async generateUserJwt(user: User): Promise<string> {
     const hashToken = await bcrypt.hash(this.gen6digitCode().toString(), 10);
     const jwt = this.jwtService.sign({
       id: user.id,
@@ -113,7 +113,7 @@ export class AuthService {
 
   async emitUpdatedUserList(userId: number, user?: User): Promise<void> {
     if (!user) user = await this.usersService.getUserById(userId);
-    if (!user) return ;
+    if (!user) return;
 
     console.log('emitUpdatedUserList');
     console.log('emitUpdatedUserList');
@@ -144,18 +144,16 @@ export class AuthService {
     const accessToken = await this.getAccessToken(code);
     const userEmail = await this.getUserEmail(accessToken);
 
-    const user = await this.usersService.getUserByEmail(userEmail);
+    let user = await this.usersService.getUserByEmail(userEmail);
+    let jwt: string = null;
 
     if (!user) {
-      const createdUser = await this.usersService.createUser({
+      user = await this.usersService.createUser({
         email: userEmail,
       });
-
-      const jwt = await this.setLogon(createdUser);
-      return this.userToIsSignedUpDto(createdUser, jwt);
     }
 
-    const jwt = await this.setLogon(user);
+    if (user.isSecondAuthOn === false) jwt = await this.generateUserJwt(user);
 
     return this.userToIsSignedUpDto(user, jwt);
   }

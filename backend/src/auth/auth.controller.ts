@@ -9,8 +9,6 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
-  Request,
-  Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { EmailDto, NicknameDto } from '../users/dto/users.dto';
@@ -19,7 +17,7 @@ import {
   IsSignedUpDto,
   CodeStringDto,
   IsDuplicateDto,
-  IsOkDto,
+  SecondAuthResultDto,
 } from './dto/auth.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetJwtUser } from './jwt.strategy';
@@ -29,15 +27,6 @@ import { User } from 'src/users/entities/users.entity';
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  // @ApiOperation({ summary: '[test for backend] 42 oauth page 로 redirection' })
-  // @Get('oauthPage')
-  // async getOatuhPage() {
-  //   return (
-  //     process.env.EC2_42OAUTH_PAGE ||
-  //     this.authService.configService.get<string>('42OAUTH_PAGE')
-  //   );
-  // }
 
   @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
   @Get('issueJwt/:id')
@@ -96,14 +85,14 @@ export class AuthController {
     @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
     @Body() emailDto: EmailDto,
-  ): Promise<IsOkDto> {
+  ): Promise<SecondAuthResultDto> {
     const isOk = await this.authService.startSecondAuth(
       user,
       id,
       emailDto.email,
     );
 
-    return { isOk };
+    return { isOk, jwt: null };
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 번호 검증' })
@@ -114,10 +103,10 @@ export class AuthController {
     @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
     @Query('code') code: string,
-  ): Promise<IsOkDto> {
+  ): Promise<SecondAuthResultDto> {
     const isOk = await this.authService.verifySecondAuth(user, id, code);
 
-    return { isOk };
+    return { isOk, jwt: null };
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 완료' })
@@ -150,9 +139,13 @@ export class AuthController {
   async shootSecAuth(
     @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
-  ): Promise<IsOkDto> {
-    const isOk = await this.authService.shootSecondAuth(user, id);
+  ): Promise<SecondAuthResultDto> {
+    const result = new SecondAuthResultDto();
+    result.isOk = await this.authService.shootSecondAuth(user, id);
+    if (result.isOk === true)
+      result.jwt = await this.authService.generateUserJwt(user);
+    else result.jwt = null;
 
-    return { isOk };
+    return result;
   }
 }
