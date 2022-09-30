@@ -165,7 +165,6 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
   };
 
   const handleUserStatus = (type: UserStatusType) => {
-    // console.log('store', type);
     setUserStatus(type);
   };
 

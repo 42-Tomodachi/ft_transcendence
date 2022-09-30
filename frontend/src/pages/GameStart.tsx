@@ -282,7 +282,6 @@ const GameStart: React.FC = () => {
 
   // 어떤 플레이어가 계산할 차례인지를 반환합니다.
   const getTurn = (info: GameInfo) => {
-    // console.log(ballState(info));
     switch (ballState(info)) {
       case 'leftgoal':
         return PLAYERONE;
@@ -469,7 +468,7 @@ const GameStart: React.FC = () => {
           await settingRealTimeData(data);
         }
       });
-    } else console.log('ERROR: user undefined');
+    } else console.error('ERROR: user undefined');
   };
 
   const realPaddle = () => {

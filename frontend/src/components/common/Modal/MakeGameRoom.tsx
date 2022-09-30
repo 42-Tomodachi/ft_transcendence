@@ -50,18 +50,15 @@ const MakeGameRoom: React.FC = () => {
         gameMode,
         user.jwt,
       );
-      console.log('게임모드: ' + gameMode);
-      //지호킴님 수정요청222
       if (res && res.gameId !== undefined) {
         setPlayingGameInfo({
           ...playingGameInfo,
           gameRoomId: res.gameId,
           gameMode: res.gameMode,
-        }); // 그럼이제 전역으로 모드를 들고다닐수 있게 된거심.
+        });
         setModal(null);
         navigate(`/gameroom/${res.gameId}`);
       }
-      // TODO : 실패시 로직 처리
     }
   };
 
@@ -86,7 +83,6 @@ const MakeGameRoom: React.FC = () => {
           <RoomNPwd>비밀번호</RoomNPwd>
           <InputPwd type="password" name="password" onChange={onChangeInput} value={password} />
         </TextGridBlock>
-        {/* TODO: 스피드업, 장애물 생성, 일반모드 radio로 버튼 추가 */}
         <ErrMsg>{errMsg}</ErrMsg>
         <BtnBlock>
           <Button color="gradient" text="만들기" width={200} height={40} onClick={createGame} />

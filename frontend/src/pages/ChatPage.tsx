@@ -17,7 +17,7 @@ import io, { Socket } from 'socket.io-client';
 // import type { NotificationPlacement } from 'antd/es/notification';
 
 // type NotificationType = 'success' | 'info' | 'warning' | 'error';
-// // TODO: 상황별 노티가 나타나도록 분기 타줄 것
+// // TODO: 상황별 노티가 나타나도록 분기 타줄 것 + CSS 우선순위로 인해 문제가 발생하는 중
 // const disconnectSocketNoti = (
 //   type: NotificationType,
 //   placement: NotificationPlacement,
@@ -76,7 +76,6 @@ const ChatPage: React.FC = () => {
           setRoomName(data);
         });
         socket.on('challengeDuelFrom', (userId: number) => {
-          console.log('userId', userId, '대전신청이 옴');
           setModal(FIGHT_REQ_MODAL, userId);
         });
       }
@@ -100,10 +99,9 @@ const ChatPage: React.FC = () => {
           setRoomName(res.title);
           if (res.isDm) setRoomtype(res.isDm);
         } else {
-          console.log('강퇴');
+          console.log("can't enter chatroom");
           // disconnectSocketNoti('error', 'top', 'X');
           // TODO: 경고 모달 띄우기
-          // TODO: API연결이라서 navigate가 disconnectSocket과 중복됨
           // navigate('/chat');
         }
       };

@@ -23,7 +23,7 @@ interface UserListType {
   menuType: ActiveMenuType;
   roomId?: string;
   isDm?: boolean;
-  socket?: Socket; // TODO: 라이브하게 유저리스트 갱신 시키기 위해 사용
+  socket?: Socket;
 }
 
 const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) => {
@@ -42,7 +42,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
         case 'INCHAT':
           return await chatsAPI.getUsersInChatRoom(+(roomId as string), user.jwt);
       }
-    } else console.log('아무것도 없음');
+    } else console.error('아무것도 없음');
     return [];
   };
 
@@ -88,7 +88,6 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
     }
     return () => {
       if (socket) {
-        // console.log('userList socket off');
         socket.off('updateUserList');
         socket.off('updateFriendList');
         socket.off('updateChatRoomParticipants');

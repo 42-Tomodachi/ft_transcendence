@@ -51,28 +51,14 @@ export interface IGameRooms {
 
 export interface IRoomSetting {
   title: string;
-  isDm?: boolean; // TODO: 수정될 예정
+  isDm?: boolean;
   password: string;
 }
-
-// export interface IParticipants extends IUserKey {
-//   role: string;
-// }
 
 export const ALL = 'ALL' as const;
 export const JOINED = 'JOINED' as const;
 
 export type ChatRoomType = 'ALL' | 'JOINED';
-
-// TODO: delete IRoomList
-// export interface IRoomList {
-//   id: number;
-//   title: string;
-//   isPublic: boolean;
-//   playerCount: number;
-//   isLadder: boolean;
-//   isGameStart?: boolean;
-// }
 export interface IWinLoseCount {
   winCount: number;
   loseCount: number;
@@ -123,7 +109,7 @@ export interface IMessage {
   isBroadcast: boolean;
   userId: number;
   nickname: string;
-  avatar: string; // TODO: 백쪽에서 아직 전달을 안해줌, null인 경우 기본 이미지
+  avatar: string;
   message: string;
   createdTime: string;
 }
@@ -166,7 +152,6 @@ export type MenuType = 'GAME' | 'CHAT';
 export const SHOW_PROFILE = 'SHOW_PROFILE' as const;
 export const ON_SECOND_AUTH = 'ON_SECOND_AUTH' as const;
 export const OFF_SECOND_AUTH = 'OFF_SECOND_AUTH' as const;
-export const EDIT_NICKNAME = 'EDIT_NICKNAME' as const;
 export const MAKE_GAME_ROOM = 'MAKE_GAME_ROOM' as const;
 export const MAKE_CHAT_ROOM = 'MAKE_CHAT_ROOM' as const;
 export const ENTER_GAME_ROOM = 'ENTER_GAME_ROOM' as const;
@@ -188,7 +173,6 @@ export type ModalType =
   | 'SHOW_PROFILE' // 프로필 정보 보기
   | 'ON_SECOND_AUTH' // 2차 인증 켜기
   | 'OFF_SECOND_AUTH' // 2차 인증 끄기
-  | 'EDIT_NICKNAME' // 닉네임 수정
   | 'MAKE_GAME_ROOM' // 게임방 만들기
   | 'MAKE_CHAT_ROOM' // 채팅방 만들기
   | 'ENTER_GAME_ROOM' // 비밀 게임방 입장

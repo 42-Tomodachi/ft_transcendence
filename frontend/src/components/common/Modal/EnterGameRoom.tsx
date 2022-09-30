@@ -19,7 +19,6 @@ const EnterGameRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
       const res = await gameAPI.enterGameRoom(roomId, user.userId, inputPwd, user.jwt);
       // if (res !== -1) { 이제 안쓸거지만 정상작동하는거 눈으로 확인할때까진 주석.
       if (res && res.gameId !== undefined) {
-        console.log('입장할때 게임모드 : ' + res.gameMode);
         setPlayingGameInfo({
           ...playingGameInfo,
           gameRoomId: res.gameId,

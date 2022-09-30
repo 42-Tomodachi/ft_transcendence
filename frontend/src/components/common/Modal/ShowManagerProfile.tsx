@@ -61,19 +61,16 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
         setModal(null);
       }
     }
-    console.log('block');
   };
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
-      console.log('Toggle Mute', res);
       if (res && res.isMuted) {
         setModal(null);
-      } // TODO: 경고 noti, 방 주인한테 뮤트
+      } // TODO: 방 주인한테 뮤트 받은 유저는 뮤트를 받았다고 따로 연락을 받아야함(broad msg or noti)
     }
   };
   const onApplyGame = async () => {
-    console.log('send msg');
     if (target && user) {
       const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
       if (res) {

@@ -62,13 +62,11 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
         setModal(null);
       }
     }
-    console.log('block');
   };
 
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
-      console.log('Toggle Mute', res);
       if (res) {
         setModal(null);
       }
@@ -83,7 +81,6 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
     }
   };
   const onApplyGame = async () => {
-    console.log('send msg');
     if (target && user) {
       const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
       if (res) {

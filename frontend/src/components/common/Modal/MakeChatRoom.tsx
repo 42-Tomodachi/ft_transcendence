@@ -46,7 +46,6 @@ const MakeChatRoom: React.FC = () => {
         setModal(null);
         navigate(`/chatroom/${res.roomId}`);
       }
-      // TODO : 실패시 로직 처리
     }
   };
   return (

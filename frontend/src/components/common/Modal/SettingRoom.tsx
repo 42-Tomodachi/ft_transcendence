@@ -44,7 +44,6 @@ const SettingRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
   };
 
   return (
-    // TODO: 따로 게임방, 채팅방 설정으로 구분?
     <Modal width={570} height={300} title={'방 설정'}>
       <MainBlock>
         <TextGridBlock>

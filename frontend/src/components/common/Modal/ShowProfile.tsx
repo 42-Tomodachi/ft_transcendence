@@ -77,7 +77,7 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
     if (user && opponentData) {
       const res = await gameAPI.enterGameRoom(opponentData.gameId, user.userId, '', user.jwt);
       if (res && res.gameId !== undefined) {
-        console.log('게임모드: ' + res.gameMode);
+        // console.log('게임모드: ' + res.gameMode);
         setPlayingGameInfo({
           ...playingGameInfo,
           gameRoomId: res.gameId,
@@ -101,7 +101,6 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
 
   //junselee: 게임신청 버튼 클릭시
   const onApplyGame = async () => {
-    console.log('send msg');
     if (target && user) {
       const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
       const sat = buttonName();

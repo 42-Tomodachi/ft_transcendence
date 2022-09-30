@@ -275,7 +275,6 @@ const chatsAPI = {
       return false;
     }
   },
-  // GET chats/{roomId}/participants/{myId} - getUserProfileInChatRoom
   // TODO: return interface refactoring
   getUserProfileInChatRoom: async (
     roomId: number,

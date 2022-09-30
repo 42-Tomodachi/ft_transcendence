@@ -51,7 +51,6 @@ const HomePage: React.FC<HomePageProps> = ({ menu }) => {
     }
     if (socket) {
       socket.on('challengeDuelFrom', (userId: number) => {
-        console.log('userId', userId, '대전신청이 옴 로비');
         setModal(FIGHT_REQ_MODAL, userId);
       });
     }
