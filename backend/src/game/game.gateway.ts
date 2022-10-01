@@ -8,6 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { UsersService } from 'src/users/users.service';
 import { GameEnv } from './class/game.class.GameEnv';
 import { GameInfo } from './class/game.class.interface';
 
@@ -65,5 +66,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   broadcastToLobby(ev: string, ...args: any[]): void {
     if (this && this.server) this.server.to('gameLobby').emit(ev, ...args);
+  }
+
+  broadcastToSelectedLobby(
+    targetsId: number,
+    ev: string,
+    ...args: any[]
+  ): void {
+    const targetSocket: Socket = this.gameEnv.getLobbySocketOfUserId(targetsId);
+    targetSocket?.emit(ev, ...args);
   }
 }

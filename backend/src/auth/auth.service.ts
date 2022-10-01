@@ -134,10 +134,7 @@ export class AuthService {
     this.chatGateway.emitFriendList(user.id);
     let userList = await this.chatLobbyGateway.emitUserList();
     userList = userList.filter((user) => user.nickname);
-    this.chatLobbyGateway.emitFriendList(
-      user.id,
-      this.gameGateway.broadcastToLobby,
-    );
+    this.chatLobbyGateway.emitFriendList(user.id);
     this.gameGateway.broadcastToLobby('updateUserList', userList);
   }
 
