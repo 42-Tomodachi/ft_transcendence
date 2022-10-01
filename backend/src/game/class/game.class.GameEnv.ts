@@ -21,7 +21,7 @@ export class GameEnv {
   eventObject: EventEmitter = new EventEmitter();
   socketIdToPlayerMap = new Map<string, Player>();
   playerList: Player[] = [];
-  gameLobbyTable: Set<Socket> = new Set();
+  gameLobbyTable: Map<number, Socket> = new Map();
   gameRoomList: GameAttribute[] = new Array(100);
   ladderQueue: GameQueue = new GameQueue('ladderQueue', this.eventObject);
 
@@ -58,6 +58,20 @@ export class GameEnv {
       if (value.userId === userId) socket = key;
     });
     return socket;
+  }
+
+  getLobbySocketOfUserId(userId: number): Socket {
+    return this.gameLobbyTable.get(userId);
+  }
+
+  getSocketsOfIds(targets: number[]): Socket[] {
+    const result: Socket[] = [];
+
+    for (const finding of targets) {
+      const member = this.gameLobbyTable.get(finding);
+      if (member) result.push(member);
+    }
+    return result;
   }
 
   async assertGetPlayerBySocket(
@@ -149,7 +163,7 @@ export class GameEnv {
   // 소켓 연결 전에, 소켓을 제외한 모든 셋업은 api를 통해 처리되어 있어야 함.
 
   handleConnectionOnLobby(client: Socket, player: Player): void {
-    this.gameLobbyTable.add(client);
+    this.gameLobbyTable.set(player.userId, client);
     client.join('gameLobby');
 
     player.socketLobbySet.add(client);
@@ -159,7 +173,7 @@ export class GameEnv {
 
   handleDisconnectionOnLobby(client: Socket, player: Player): void {
     player.socketLobbySet.delete(client);
-    this.gameLobbyTable.delete(client);
+    this.gameLobbyTable.delete(player.userId);
 
     this.userStats.removeSocket(player.userId, client);
   }
@@ -289,8 +303,7 @@ export class GameEnv {
     gameId: number,
     connectionType: string,
   ): Promise<void> {
-    if (!(await this.userRepo.findOneBy({id: userId})))
-      return ;
+    if (!(await this.userRepo.findOneBy({ id: userId }))) return;
     const player = await this.assertGetPlayerBySocket(client, userId);
     this.socketIdToPlayerMap[client.id] = player;
 
@@ -429,8 +442,7 @@ export class GameEnv {
 
   createGameRoom(player: Player, createGameRoomDto: CreateGameRoomDto): number {
     const game = this.getFreeGameRoom();
-    if (!game)
-      return undefined;
+    if (!game) return undefined;
     game.create(createGameRoomDto, player);
     player.gamePlaying = game;
 
@@ -544,8 +556,7 @@ export class GameEnv {
 
   async waitForPlayerJoins(client: Socket, gameId: number): Promise<void> {
     const player = this.getPlayerBySocket(client);
-    if (!player)
-      return ;
+    if (!player) return;
     const game = this.getGameRoom(gameId);
     const isRightGame = player.gamePlaying === game;
     if (!isRightGame && player.gamesWatching.get(game) !== client) {

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { first } from 'rxjs';
 import { Server, Socket } from 'socket.io';
+import { GameGateway } from 'src/game/game.gateway';
 import { SimpleUserDto } from 'src/users/dto/users.dto';
 import { UsersService } from 'src/users/users.service';
 import { UserStatusContainer } from 'src/userStatus/userStatus.service';
@@ -25,6 +26,7 @@ export class ChatLobbyGateway
     private readonly userService: UsersService,
     @Inject(forwardRef(() => UserStatusContainer))
     private readonly userStats: UserStatusContainer,
+    private readonly gameGateway: GameGateway,
   ) {}
 
   @WebSocketServer() wss: Server;
@@ -183,27 +185,26 @@ export class ChatLobbyGateway
 
   // 친구 목록 emit
   // 로그인, 로그아웃, 닉네임 변경 todo: 게입 방 입퇴장(유저 상태 play)
-  async emitFriendList(
-    myId: number,
-    broadcaster?: (ev: string, ...args: any[]) => void,
-  ): Promise<void> {
+  async emitFriendList(myId: number): Promise<number[]> {
     // 1. 나를 친구추가한 유저 id 가져오기
     const followerIds = await this.userService.getFollowerIds(myId);
 
     followerIds.forEach(async (followerId) => {
       // 2. 1에서 가져온 유저 id에 연결된 소켓 id 가져오기
       const socketIds = this.getConnectedSocketIdsOfUser(followerId.toString());
+      const friendList = await this.userService.getFriendsForEmit(followerId);
 
-      if (socketIds) {
-        // 3. 1에서 가져온 유저 id의 친구 목록 가져와서 emit
-        socketIds.forEach(async (socketId) => {
-          const friendList = await this.userService.getFriendsForEmit(
-            followerId,
-          );
-          this.wss.to(socketId).emit('updateFriendList', friendList);
-          if (broadcaster) broadcaster('updateFriendList', friendList);
-        });
-      }
+      // 3. 1에서 가져온 유저 id의 친구 목록 가져와서 emit
+      socketIds?.forEach(async (socketId) => {
+        this.wss.to(socketId).emit('updateFriendList', friendList);
+      });
+
+      this.gameGateway.broadcastToSelectedLobby(
+        followerId,
+        'updateFriendList',
+        friendList,
+      );
     });
+    return followerIds;
   }
 }

@@ -51,7 +51,6 @@ export class GameService {
     if (gameId === undefined)
       throw new BadRequestException(`최대 방 갯수를 초과하였습니다.`);
 
-
     const gameRoomDto = new SimpleGameRoomDto();
     gameRoomDto.gameMode = createGameRoomDto.gameMode;
     gameRoomDto.ownerId = createGameRoomDto.ownerId;

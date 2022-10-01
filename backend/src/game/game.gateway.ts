@@ -8,6 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { UsersService } from 'src/users/users.service';
 import { GameEnv } from './class/game.class.GameEnv';
 import { GameInfo } from './class/game.class.interface';
 
@@ -44,14 +45,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.gameEnv.onSocketDisconnect(client, connectionType, userId, gameId);
   }
 
-  // @SubscribeMessage('cancelLadderQueue')
-  // async cancleLadderQueue(client: Socket): Promise<void> {
-  //   this.gameEnv.cancelLadderWaiting(client);
-  // }
-
   @SubscribeMessage('onMatchingScreen')
   async onMatchingScreen(client: Socket, gameId: number): Promise<void> {
-    setTimeout(() => {this.gameEnv.waitForPlayerJoins(client, gameId)}, 300);
+    setTimeout(() => {
+      this.gameEnv.waitForPlayerJoins(client, gameId);
+    }, 300);
   }
 
   @SubscribeMessage('calculatedRTData')
@@ -65,7 +63,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   broadcastToLobby(ev: string, ...args: any[]): void {
-    if (this && this.server)
-      this.server.to('gameLobby').emit(ev, ...args);
+    if (this && this.server) this.server.to('gameLobby').emit(ev, ...args);
+  }
+
+  broadcastToSelectedLobby(
+    targetsId: number,
+    ev: string,
+    ...args: any[]
+  ): void {
+    const targetSocket: Socket = this.gameEnv.getLobbySocketOfUserId(targetsId);
+    targetSocket?.emit(ev, ...args);
   }
 }
