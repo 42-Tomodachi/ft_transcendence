@@ -46,7 +46,10 @@ export class IsDuplicateDto {
   isDuplicate: boolean;
 }
 
-export class IsOkDto {
+export class SecondAuthResultDto {
   @ApiProperty({ description: '정상 작동하면 true, 아니면 false' })
   isOk: boolean;
+
+  @ApiProperty({ description: '정상일 때 jwt, 실패일 때 null' })
+  jwt: string;
 }

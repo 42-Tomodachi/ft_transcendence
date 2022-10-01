@@ -11,23 +11,23 @@ import {
   FIGHT_RES_MODAL,
   IUserData,
   IGameRooms,
+  IChallengeResponse,
 } from '../../../utils/interface';
 import { chatsAPI, gameAPI, usersAPI } from '../../../API';
 import { useNavigate } from 'react-router-dom';
 import defaultProfile from '../../../assets/default-image.png';
-
-interface ChallengeResponseDto {
-  available: boolean;
-  status: 'on' | 'off' | 'play';
-}
 
 const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
   const [target, setTarget] = useState<IUserData | null>(null);
   const navigate = useNavigate();
-  const [matchState, setMatchState] = useState<ChallengeResponseDto | null>(null);
+
+  //junselee: 상태가 더블체크가 필요한게, 프로필을 누르는시점과, 함께하기버튼을 누르는순간의 상대방상태가 다를수있어서
+  const [matchState, setMatchState] = useState<IChallengeResponse | null>(null);
   const [opponentData, setOpponentData] = useState<IGameRooms | null>(null);
+  //junselee: 참가하기나 관전하기일때 로직 추가
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo; // roomid기억하자.
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -65,8 +65,6 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
       return '오프 라인';
     else return '게임 신청';
   };
-
-  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   const enterRoom = async () => {
     if (user && opponentData) {

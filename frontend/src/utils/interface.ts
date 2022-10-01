@@ -98,6 +98,11 @@ export interface IUserAvatar {
   UpdateImg: string;
 }
 
+export interface IChallengeResponse {
+  available: boolean;
+  status: 'on' | 'off' | 'play';
+}
+
 export interface IMessage {
   isBroadcast: boolean;
   userId: number;
