@@ -8,7 +8,7 @@ import MessageInput from '../components/Chat/MessageInput';
 import { CHAT, FIGHT_REQ_MODAL, IMessage } from '../utils/interface';
 import { useParams } from 'react-router-dom';
 import { AllContext } from '../store';
-import { chatsAPI } from '../API';
+import { authAPI, chatsAPI } from '../API';
 import backaway from '../assets/backaway.png';
 import { useNavigate } from 'react-router-dom';
 import io, { Socket } from 'socket.io-client';
@@ -74,8 +74,18 @@ const ChatPage: React.FC = () => {
   }, [roomId, user]);
 
   useEffect(() => {
-    if (roomId && user && user.jwt) {
-      const getRoomData = async () => {
+    const checkJWT = async (): Promise<boolean> => {
+      const check = window.localStorage.getItem('jwt');
+      if (check) {
+        const res = await authAPI.checkNormJWT(check);
+        return res ? true : false;
+      }
+      return false;
+    };
+    const getRoomData = async () => {
+      const result = await checkJWT();
+      if (!result) navigate('/'); // logout
+      if (roomId && user && user.jwt) {
         const res = await chatsAPI.getChatRoomStatus(+roomId, user.jwt);
         if (res) {
           setRoomName(res.title);
@@ -85,11 +95,9 @@ const ChatPage: React.FC = () => {
           // TODO: 경고 모달 띄우기
           // navigate('/chat');
         }
-      };
-      getRoomData();
-    } else {
-      navigate('/');
-    }
+      }
+    };
+    getRoomData();
   }, [user, roomId]);
   return (
     <Background>
