@@ -10,7 +10,6 @@ import NicknamePage from './pages/NicknamePage';
 import SecondAuthPage from './pages/SecondAuthPage';
 import ChatPage from './pages/ChatPage';
 
-import ProfilePage from './components/UserProfile';
 import { AllContext } from './store';
 import ModalSet from './components/common/Modal/ModalSet';
 
@@ -58,7 +57,6 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/nickname" element={<NicknamePage />} />
           <Route path="/secondAuth" element={<SecondAuthPage />} />
-          <Route path="/profilePage" element={<ProfilePage />} />
           <Route path="/game" element={<MainPage menu="GAME" />} />
           <Route path="/chat" element={<MainPage menu="CHAT" />} />
           <Route path="/chatroom/:roomId" element={<ChatPage />} />
