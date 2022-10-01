@@ -176,4 +176,23 @@ export const authAPI = {
       return null;
     }
   },
+  // 정상 JWT인지 검수
+  checkNormJWT: async (jwt: string): Promise<string | boolean> => {
+    try {
+      const url = authPath(`/testJWT`);
+      const response = await instance.get(url, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+      return response.data;
+    } catch (e) {
+      if (e instanceof Error) {
+        console.error(e.message);
+      } else {
+        console.error(e);
+      }
+      return false;
+    }
+  },
 };
