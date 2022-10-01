@@ -1,10 +1,5 @@
-import { GameMode, IGameRoomInfo, IGameRooms } from '../utils/interface';
+import { IChallengeResponse, GameMode, IGameRoomInfo, IGameRooms } from '../utils/interface';
 import { instance } from './index';
-
-interface ChallengeResponseDto {
-  available: boolean;
-  status: 'on' | 'off' | 'play';
-}
 
 const gamePath = (path: string): string => {
   return `/games${path}`;
@@ -106,7 +101,7 @@ const gameAPI = {
     userId: number,
     targetId: number,
     jwt: string,
-  ): Promise<ChallengeResponseDto> => {
+  ): Promise<IChallengeResponse> => {
     try {
       const url = gamePath(`/dieDieMatch/${userId}?targetId=${targetId}`);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
