@@ -9,7 +9,7 @@ import axios from 'axios';
 import { User } from 'src/users/entities/users.entity';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../emails/email.service';
-import { IsDuplicateDto, IsSignedUpDto } from './dto/auth.dto';
+import { IsDuplicateDto, IsSignedUpDto, SecondAuthResultDto } from './dto/auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -46,12 +46,15 @@ export class AuthService {
     return this.generateUserJwt(user);
   }
 
-  async generateUserJwt(user: User): Promise<string> {
+  async generateUserJwt(user: User, permit?: string): Promise<string> {
+    if (!permit) permit = 'permitted';
+
     const hashToken = await bcrypt.hash(this.gen6digitCode().toString(), 10);
     const jwt = this.jwtService.sign({
       id: user.id,
       email: user.email,
       accessToken: hashToken,
+      permit,
     });
     this.jwtStrategy.setJwtAccessToken(user.id, hashToken);
 
@@ -151,6 +154,7 @@ export class AuthService {
     }
 
     if (user.isSecondAuthOn === false) jwt = await this.generateUserJwt(user);
+    else jwt = await this.generateUserJwt(user, 'temporary');
 
     return this.userToIsSignedUpDto(user, jwt);
   }
@@ -195,24 +199,31 @@ export class AuthService {
   }
 
   async verifySecondAuth(
-    user: User,
+    userOfJwt: User,
     id: number,
     code: string,
-  ): Promise<boolean> {
-    if (user.id !== id) {
-      throw new BadRequestException('잘못된 유저의 접근입니다.');
-    }
+  ): Promise<SecondAuthResultDto> {
+    // if (userOfJwt.id !== id) {
+    //   throw new BadRequestException('잘못된 유저의 접근입니다.');
+    // }
+    const user = await this.usersService.getUserById(id);
     if (user === null) {
       throw new BadRequestException('존재하지 않는 유저입니다.');
     }
+    const result = new SecondAuthResultDto();
 
     if (await bcrypt.compare(code, user.secondAuthCode)) {
       user.secondAuthCode = '7777777';
       await user.save();
-      return true;
+      result.isOk = true;
     } else {
-      return false;
+      result.isOk = false;
     }
+    if (user.isSecondAuthOn === true && result.isOk === true)
+      result.jwt = await this.generateUserJwt(user);
+    else result.jwt = null;
+
+    return result;
   }
 
   async enrollSecondAuth(user: User, id: number): Promise<void> {
@@ -249,8 +260,8 @@ export class AuthService {
 
   async shootSecondAuth(users: User, id: number): Promise<boolean> {
     const user = await this.usersService.getUserById(id);
-    if (users.id !== user.id)
-      throw new BadRequestException('권한이 없는 유저입니다.');
+    // if (users.id !== user.id)
+    //   throw new BadRequestException('권한이 없는 유저입니다.');
 
     if (user === null) {
       throw new BadRequestException('존재하지 않는 유저입니다.');

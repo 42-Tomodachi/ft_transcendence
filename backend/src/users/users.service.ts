@@ -43,7 +43,7 @@ export class UsersService {
   async getUsers(): Promise<SimpleUserDto[]> {
     let users = await this.userRepo.find();
 
-    users = users.filter(user => user.nickname);
+    users = users.filter((user) => user.nickname);
     return users.map((user) => {
       return {
         userId: user.id,

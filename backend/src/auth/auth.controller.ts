@@ -104,9 +104,7 @@ export class AuthController {
     @Param('userId', ParseIntPipe) id: number,
     @Query('code') code: string,
   ): Promise<SecondAuthResultDto> {
-    const isOk = await this.authService.verifySecondAuth(user, id, code);
-
-    return { isOk, jwt: null };
+    return await this.authService.verifySecondAuth(user, id, code);
   }
 
   @ApiOperation({ summary: '✅ 2차 인증 등록 완료' })
