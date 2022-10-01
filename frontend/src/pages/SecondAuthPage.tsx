@@ -42,6 +42,7 @@ const SecondAuthPage: React.FC = () => {
       const res = await authAPI.checkSecondAuthCode(user.userId, Number(authCode), jwt);
       if (res && res.isOk) {
         setErrMsg('인증에 성공하였습니다.');
+        window.localStorage.setItem('jwt', res.jwt);
         timer = setTimeout(() => {
           setUserStatus(LOGIN);
           clearTimeout(timer);
