@@ -11,6 +11,7 @@ import {
   UseGuards,
   Delete,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User } from './entities/users.entity';
@@ -90,6 +91,7 @@ export class UsersController {
   @Get('/own')
   @UseGuards(AuthGuard())
   async getOwnInfo(@GetJwtUser() user: User): Promise<UserProfileDto> {
+    if (!user.id) throw new BadRequestException('접근 권한이 없습니다.');
     return user.toUserProfileDto();
   }
 

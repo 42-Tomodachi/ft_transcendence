@@ -38,9 +38,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     this.accessTokens.delete(id);
   }
 
-  async validate(payload) {
-    const { id } = payload;
-    const { email, accessToken } = payload;
+  async validate(payload): Promise<User> {
+    const { id, email, accessToken, permit } = payload;
     const user = await this.usersService.getUserByEmail(email);
     if (!user) {
       throw new UnauthorizedException('회원이 아닙니다.');
@@ -49,6 +48,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const token = this.accessTokens;
     if (token.get(id) !== accessToken) {
       throw new UnauthorizedException('잘못된 토큰입니다.');
+    }
+
+    if (permit !== 'permitted') {
+      console.log('JWTValidation: Issuing temporary token.');
+      return new User();
     }
     return user;
   }

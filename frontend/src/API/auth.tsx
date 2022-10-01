@@ -131,7 +131,7 @@ export const authAPI = {
     id: number,
     code: number,
     jwt: string,
-  ): Promise<{ isOk: boolean } | null> => {
+  ): Promise<{ isOk: boolean; jwt: string } | null> => {
     try {
       const url = authPath(`/secondAuthVerify/${id}?code=${code}`);
       const response = await instance.get(url, {
