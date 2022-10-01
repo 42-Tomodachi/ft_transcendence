@@ -10,8 +10,8 @@ const SecondAuthPage: React.FC = () => {
   const [authCode, setAuthcode] = useState<string>('');
   const [errMsg, setErrMsg] = useState<string>('');
   const { setUserStatus } = useContext(AllContext).userStatus;
-  const { user } = useContext(AllContext).userData;
-  const { jwt } = useContext(AllContext).jwtData;
+  const { user, setUser } = useContext(AllContext).userData;
+  const { jwt, setJwt } = useContext(AllContext).jwtData;
   const navigate = useNavigate();
   let timer: NodeJS.Timer;
 
@@ -43,6 +43,8 @@ const SecondAuthPage: React.FC = () => {
       if (res && res.isOk) {
         setErrMsg('인증에 성공하였습니다.');
         window.localStorage.setItem('jwt', res.jwt);
+        setUser(LOGIN, {...user, jwt : res.jwt});
+        setJwt('SET_JWT', res.jwt);
         timer = setTimeout(() => {
           setUserStatus(LOGIN);
           clearTimeout(timer);
