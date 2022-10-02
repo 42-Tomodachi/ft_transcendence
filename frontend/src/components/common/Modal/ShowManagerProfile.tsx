@@ -83,46 +83,6 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
     }
   };
 
-  const onClickFriend = async () => {
-    if (user && user.jwt && target) {
-      if (target.isFriend === false) {
-        await usersAPI.makeFriend(user.userId, target.userId, user.jwt);
-      } else {
-        await usersAPI.deleteFriend(user.userId, target.userId, user.jwt);
-      }
-      setTarget({
-        ...target,
-        isFriend: !target.isFriend,
-      });
-      setModal(null);
-    }
-  };
-
-  const onClickBlock = async () => {
-    if (user && user.jwt && target) {
-      const res = await usersAPI.toggleBlockUser(user.userId, target.userId, user.jwt);
-      setTarget({
-        ...target,
-        isFriend: false,
-        isBlocked: !target.isBlocked,
-      });
-      if (res) {
-        setModal(null);
-      }
-    }
-    console.log('block');
-  };
-
-  const onToggleMute = async () => {
-    if (target && user) {
-      const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
-      console.log('Toggle Mute', res);
-      if (res && res.isMuted) {
-        setModal(null);
-      } // TODO: 경고 noti, 방 주인한테 뮤트
-    }
-  };
-
   const handleEnterRoom = async () => {
     if (user && opponentData) {
       if (!opponentData.isPublic) {
@@ -154,11 +114,50 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   const onSendDm = async () => {
     if (user && target) {
       const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
-
       if (res && res.roomId) {
         setModal(null);
         navigate(`/chatroom/${res.roomId}`);
       }
+    }
+  };
+
+  const onClickFriend = async () => {
+    if (user && user.jwt && target) {
+      if (target.isFriend === false) {
+        await usersAPI.makeFriend(user.userId, target.userId, user.jwt);
+      } else {
+        await usersAPI.deleteFriend(user.userId, target.userId, user.jwt);
+      }
+      setTarget({
+        ...target,
+        isFriend: !target.isFriend,
+      });
+      setModal(null);
+    }
+  };
+
+  const onClickBlock = async () => {
+    if (user && user.jwt && target) {
+      const res = await usersAPI.toggleBlockUser(user.userId, target.userId, user.jwt);
+      setTarget({
+        ...target,
+        isFriend: false,
+        isBlocked: !target.isBlocked,
+      });
+      if (res) {
+        setModal(null);
+      }
+    }
+  };
+
+  // owner, manager
+  const onToggleMute = async () => {
+    if (target && user) {
+      const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
+      console.log('Toggle Mute', res);
+      if (res && res.isMuted) {
+        setModal(null);
+      } // TODO: 경고 noti, 방 주인한테 뮤트
     }
   };
   const handleKickOrBan = async () => {
