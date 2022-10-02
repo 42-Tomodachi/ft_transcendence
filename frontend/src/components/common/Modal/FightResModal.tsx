@@ -59,7 +59,7 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
             ...playingGameInfo,
             gameRoomId: roomId,
             gameMode: 'normal',
-            gameLadder: true,
+            gameLadder: false,
           });
         }
         navigate(`/gameroom/${roomId}`);
