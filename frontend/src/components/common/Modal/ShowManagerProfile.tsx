@@ -211,7 +211,7 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
                 />
                 <Button
                   color="gradient"
-                  text="게임 신청"
+                  text={buttonName()}
                   width={200}
                   height={40}
                   onClick={onApplyGame}
