@@ -46,7 +46,7 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
         multiplex: false,
         query: { userId: user.userId, targetId: targetId, isSender: true, connectionType: 'duel' },
       });
-      socket.on('challengeSeqDone', () => {
+      socket.on('challengeSeqDone', (data: number) => {
         setModal(CANCEL_MATCH_MODAL);
       });
       // TODO: acceptChallenge 사용되는 상황 파악

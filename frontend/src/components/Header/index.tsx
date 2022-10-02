@@ -40,7 +40,6 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
         navigate('/game');
         return;
       case CHAT:
-        console.log('chat');
         setClickedMenu(menu);
         navigate('/chat');
         return;

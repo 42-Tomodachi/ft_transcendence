@@ -120,10 +120,10 @@ export class GameEnv {
   }
 
   getGameOfPlayer(player: Player): GameRoomProfileDto {
-    if (!player.gamePlaying) {
+    if (!player?.gamePlaying) {
       return undefined;
     }
-    return player.gamePlaying.toGameRoomProfileDto();
+    return player?.gamePlaying.toGameRoomProfileDto();
   }
 
   //
@@ -167,6 +167,7 @@ export class GameEnv {
   // 소켓 연결 전에, 소켓을 제외한 모든 셋업은 api를 통해 처리되어 있어야 함.
 
   handleConnectionOnLobby(client: Socket, player: Player): void {
+    if (!client || !player) return;
     this.gameLobbyTable.set(player.userId, client);
     client.join('gameLobby');
 
@@ -176,6 +177,7 @@ export class GameEnv {
   }
 
   handleDisconnectionOnLobby(client: Socket, player: Player): void {
+    if (!client || !player) return;
     player.socketLobbySet.delete(client);
     this.gameLobbyTable.delete(player.userId);
 
@@ -183,6 +185,7 @@ export class GameEnv {
   }
 
   async handleConnectionOnDuel(client: Socket, player: Player): Promise<void> {
+    if (!client || !player) return;
     const opponentId: number = +client.handshake.query['targetId'];
     const isChallenger = client.handshake.query['isSender'];
     if (opponentId == NaN) {
@@ -200,6 +203,7 @@ export class GameEnv {
       }
       client.once('acceptChallenge', async () => {
         const opponent = await this.getPlayerByUserId(opponentId);
+        if (!opponent) return;
         this.makeDuelMatch(player, opponent, 'normal');
         for (const sock of notifying) {
           sock.emit('challengeAccepted', player.userId);
@@ -211,7 +215,8 @@ export class GameEnv {
     // 대전 신청을 받는 쪽이면
     client.once('acceptChallenge', async () => {
       const opponent = await this.getPlayerByUserId(opponentId);
-      opponent.socketQueue.emit('acceptChallenge');
+      if (!opponent) return;
+      opponent.socketQueue?.emit('acceptChallenge');
     });
   }
 
@@ -219,6 +224,7 @@ export class GameEnv {
     client: Socket,
     player: Player,
   ): Promise<void> {
+    if (!client || !player) return;
     const opponentId: number = +client.handshake.query['targetId'];
     const opponent = await this.getPlayerByUserId(opponentId);
     const isChallenger = client.handshake.query['isSender'];
@@ -242,18 +248,21 @@ export class GameEnv {
     client: Socket,
     player: Player,
   ): Promise<void> {
+    if (!client || !player) return;
     player.socketQueue = client;
     const queueLength = this.ladderQueue.enlist(player);
     this.logger.verbose(`enlisted LadderQueue length: ${queueLength}`);
   }
 
   handleDisconnectionOnLadderQueue(client: Socket, player: Player): void {
+    if (!client || !player) return;
     player.socketQueue = null;
     this.eraseFromSocketMap(client);
     this.ladderQueue.remove(player);
   }
 
   handleConnectionOnLadderGame(client: Socket, player: Player): void {
+    if (!client || !player) return;
     const game = player.gamePlaying;
 
     player.setGameSocket(game, client);
@@ -263,6 +272,7 @@ export class GameEnv {
   }
 
   handleDisconnectionOnLadderGame(client: Socket, player: Player): void {
+    if (!client || !player) return;
     this.clearPlayerSocket(client);
 
     this.userStats.removeSocket(client);
@@ -522,8 +532,8 @@ export class GameEnv {
       `Duel match made: ${player1.userId}, ${player2.userId}`,
     );
 
-    player1.socketQueue.emit('matchingGame', game.roomId.toString());
-    player2.socketQueue.emit('matchingGame', game.roomId.toString());
+    player1.socketQueue?.emit('matchingGame', game.roomId.toString());
+    player2.socketQueue?.emit('matchingGame', game.roomId.toString());
 
     this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
 
@@ -549,8 +559,8 @@ export class GameEnv {
       `Ladder match made: ${player1.userId}, ${player2.userId}`,
     );
 
-    player1.socketQueue.emit('matchingGame', game.roomId.toString());
-    player2.socketQueue.emit('matchingGame', game.roomId.toString());
+    player1.socketQueue?.emit('matchingGame', game.roomId.toString());
+    player2.socketQueue?.emit('matchingGame', game.roomId.toString());
 
     return game;
   }

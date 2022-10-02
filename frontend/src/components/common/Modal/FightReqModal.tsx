@@ -75,7 +75,6 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
       socket.on('challengeSeqDone', () => {
         setModal(CANCEL_MATCH_MODAL);
       });
-      // TODO: 거절당한 상대 유저가 누군지를 보여주는 기능 추가 계획
       socket.on('challengeRejected', () => {
         setModal(CANCEL_MATCH_MODAL);
       });
