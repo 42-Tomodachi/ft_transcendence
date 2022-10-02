@@ -566,7 +566,7 @@ export class GameEnv {
       client.send('Error: recieved wrong room number');
       return;
     }
-
+    if (!game.firstPlayer) return;
     const player1asUser: User = await this.userRepo.findOne({
       where: { id: game.firstPlayer.userId },
     });
