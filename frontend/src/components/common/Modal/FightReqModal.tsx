@@ -76,7 +76,7 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
             ...playingGameInfo,
             gameRoomId: roomId,
             gameMode: 'normal',
-            gameLadder: true,
+            gameLadder: false,
           });
         }
         navigate(`/gameroom/${roomId}`);
