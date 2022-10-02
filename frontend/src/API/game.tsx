@@ -99,6 +99,7 @@ const gameAPI = {
       else console.error(e);
       return {
         available: false,
+        blocked: false,
         status: 'off',
       };
     }

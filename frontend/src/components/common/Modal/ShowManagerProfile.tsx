@@ -12,6 +12,7 @@ import {
   IChallengeResponse,
   IGameRooms,
   ENTER_GAME_ROOM,
+  NOTI_OWNER_IN_CHATROOM,
 } from '../../../utils/interface';
 import { useNavigate } from 'react-router-dom';
 import { chatsAPI, gameAPI, usersAPI } from '../../../API';
@@ -20,8 +21,9 @@ import ProfileImage from '../ProfileImage';
 
 const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId, userId }) => {
   const { setModal } = useContext(AllContext).modalData;
-  const [target, setTarget] = useState<IUserData | null>(null);
-  const { user } = useContext(AllContext).userData;
+  const [target, setTarget] = useState<(IUserData & { isMuted: boolean; role: string }) | null>(
+    null,
+  );  const { user } = useContext(AllContext).userData;
   const navigate = useNavigate();
 
   //junselee: 상태가 더블체크가 필요한게, 프로필을 누르는시점과, 함께하기버튼을 누르는순간의 상대방상태가 다를수있어서
@@ -32,10 +34,14 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
-        const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
+        const data = await chatsAPI.getUserProfileInChatRoom(roomId, user.userId, userId, user.jwt);
         const userTest = data?.userId;
         if (userTest) {
           const res = await gameAPI.dieDieMatch(user.userId, userTest, user.jwt);
+          if (!res.available && res.blocked) {
+            setModal(CANCEL_MATCH_MODAL);
+            return;
+          }
           setMatchState(res);
           const res2 = await gameAPI.opponentState(userTest, user.jwt);
           if (res2 && res2.playerCount !== undefined) setOpponentData(res2);
@@ -156,12 +162,16 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
       if (res && res.isMuted) {
         setModal(null);
-      } // TODO: 방 주인한테 뮤트 받은 유저는 뮤트를 받았다고 따로 연락을 받아야함(broad msg or noti)
+      } else if (target.role === 'owner') {
+        // TODO: 경고 noti, 방 주인한테 뮤트
+        setModal(NOTI_OWNER_IN_CHATROOM);
+      }
     }
   };
   const handleKickOrBan = async () => {
     if (target) {
-      setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
+      if (target.role !== 'owner') setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
+      else setModal(NOTI_OWNER_IN_CHATROOM);
     }
   };
 

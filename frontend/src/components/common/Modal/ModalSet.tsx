@@ -20,6 +20,7 @@ import { useLocation } from 'react-router-dom';
 import BanOrKickModal from './BanOrKickModal';
 import BanChatRoomModal from './BanChatRoomModal';
 import CancelMatchModal from './CancelMatchModal';
+import NotiOwnerInChatRoom from './NotiOwnerInChatRoom';
 
 const ModalSet: React.FC = () => {
   const { modal, setModal } = useContext(AllContext).modalData;
@@ -51,6 +52,7 @@ const ModalSet: React.FC = () => {
           BAN_THIS_CHATROOM: <BanChatRoomModal />, // 강퇴당한 방 들어가려할 때
           BAN_OR_KICK_MODAL: <BanOrKickModal roomId={modal.roomId} userId={modal.userId} />,
           CANCEL_MATCH_MODAL: <CancelMatchModal />,
+          NOTI_OWNER_IN_CHATROOM: <NotiOwnerInChatRoom />, // 방주인에게 갑질하려고 할때
         }[modal.modal]}
     </>
   );

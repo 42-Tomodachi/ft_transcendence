@@ -267,6 +267,22 @@ export class UsersService {
     return user.toWinLoseCount();
   }
 
+  async getBlockedUserById(
+    myId: number,
+    testingId: number,
+  ): Promise<BlockedUser> {
+    if (myId === testingId) {
+      return null;
+    }
+
+    const blocked = await this.blockedUserRepo.findOneBy({
+      blockerId: myId,
+      blockedId: testingId,
+    });
+
+    return blocked;
+  }
+
   async blockUserToggle(
     user: User,
     myId: number,
@@ -285,10 +301,7 @@ export class UsersService {
       throw new BadRequestException('자신을 차단할 수 없습니다.');
     }
 
-    const block = await this.blockedUserRepo.findOneBy({
-      blockerId: myId,
-      blockedId: targetId,
-    });
+    const block = await this.getBlockedUserById(myId, targetId);
 
     if (block) {
       await this.blockedUserRepo.delete({ id: block.id });
