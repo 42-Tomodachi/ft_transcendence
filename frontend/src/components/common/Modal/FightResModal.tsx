@@ -79,8 +79,9 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
         setModal(CANCEL_MATCH_MODAL);
       });
     }
+
     return () => {
-      if (socket) socket.disconnect();
+      if (socket && socket.connected) socket.disconnect();
     };
   }, []);
   return (
