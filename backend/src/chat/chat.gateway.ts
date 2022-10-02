@@ -227,10 +227,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // 유저 상태변화 시 참여중인 채팅방에 유저 목록 emit
   async emitChatRoomParticipants(roomId: string): Promise<ChatRoomUserDto[]> {
-    const chatRoomUserDtos = await this.chatService.getRoomParticipants(
-      +roomId,
-    );
-    this.wss.to(roomId).emit('updateChatRoomParticipants', chatRoomUserDtos);
+    let chatRoomUserDtos: ChatRoomUserDto[];
+    try {
+      chatRoomUserDtos = await this.chatService.getRoomParticipants(+roomId);
+      this.wss.to(roomId).emit('updateChatRoomParticipants', chatRoomUserDtos);
+    } catch (error) {
+      console.log(error);
+    }
     return chatRoomUserDtos;
   }
 
