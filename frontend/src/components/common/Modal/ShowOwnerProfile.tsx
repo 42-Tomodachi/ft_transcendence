@@ -50,51 +50,6 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
     getUserInfo();
   }, []);
 
-  const onClickFriend = async () => {
-    if (user && user.jwt && target) {
-      if (target.isFriend === false) {
-        await usersAPI.makeFriend(user.userId, target.userId, user.jwt);
-      } else {
-        await usersAPI.deleteFriend(user.userId, target.userId, user.jwt);
-      }
-      setTarget({
-        ...target,
-        isFriend: !target.isFriend,
-      });
-    }
-  };
-
-  const onClickBlock = async () => {
-    if (user && user.jwt && target) {
-      const res = await usersAPI.toggleBlockUser(user.userId, target.userId, user.jwt);
-      setTarget({
-        ...target,
-        isFriend: false,
-        isBlocked: !target.isBlocked,
-      });
-      if (res) {
-        setModal(null);
-      }
-    }
-  };
-
-  const onToggleMute = async () => {
-    if (target && user) {
-      const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
-      if (res) {
-        setModal(null);
-      }
-    }
-  };
-  const onToggleRole = async () => {
-    if (user && target) {
-      const res = await chatsAPI.changeRoleInChatRoom(roomId, user.userId, target.userId, user.jwt);
-      if (res) {
-        setTarget({ ...target, role: res.role });
-      }
-    }
-  };
-  //junselee: 알맞은 버튼이름!
   const buttonName = () => {
     if (opponentData)
       switch (opponentData.playerCount) {
@@ -155,16 +110,63 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   const onSendDm = async () => {
     if (user && target) {
       const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
-
       if (res && res.roomId) {
         setModal(null);
         navigate(`/chatroom/${res.roomId}`);
       }
     }
   };
+
+  const onClickFriend = async () => {
+    if (user && user.jwt && target) {
+      if (target.isFriend === false) {
+        await usersAPI.makeFriend(user.userId, target.userId, user.jwt);
+      } else {
+        await usersAPI.deleteFriend(user.userId, target.userId, user.jwt);
+      }
+      setTarget({
+        ...target,
+        isFriend: !target.isFriend,
+      });
+    }
+  };
+
+  const onClickBlock = async () => {
+    if (user && user.jwt && target) {
+      const res = await usersAPI.toggleBlockUser(user.userId, target.userId, user.jwt);
+      setTarget({
+        ...target,
+        isFriend: false,
+        isBlocked: !target.isBlocked,
+      });
+      if (res) {
+        setModal(null);
+      }
+    }
+  };
+
+  // owner, manager
+  const onToggleMute = async () => {
+    if (target && user) {
+      const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
+      console.log('Toggle Mute', res);
+      if (res) {
+        setModal(null);
+      }
+    }
+  };
   const handleKickOrBan = async () => {
     if (target) {
       setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
+    }
+  };
+  // just owner
+  const onToggleRole = async () => {
+    if (user && target) {
+      const res = await chatsAPI.changeRoleInChatRoom(roomId, user.userId, target.userId, user.jwt);
+      if (res) {
+        setTarget({ ...target, role: res.role });
+      }
     }
   };
 

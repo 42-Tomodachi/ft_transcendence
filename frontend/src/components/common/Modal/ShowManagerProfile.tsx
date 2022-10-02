@@ -83,6 +83,44 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
     }
   };
 
+  const handleEnterRoom = async () => {
+    if (user && opponentData) {
+      if (!opponentData.isPublic) {
+        setModal(ENTER_GAME_ROOM, user.userId, opponentData.gameId);
+      } else {
+        await enterRoom();
+      }
+    }
+  };
+
+  //junselee: 게임신청 버튼 클릭시
+  const onApplyGame = async () => {
+    console.log('send msg');
+    if (target && user) {
+      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
+      const sat = buttonName();
+      if (sat === '게임 신청' && res.available && res.status === 'on') {
+        setModal(FIGHT_RES_MODAL, target.userId);
+      } else if ((sat === '참가 하기' || sat === '관전 하기') && res.status === 'play') {
+        handleEnterRoom();
+      } else if (sat === '대기열 참가 중' || sat === '오프 라인') {
+        return;
+      } else {
+        setModal(CANCEL_MATCH_MODAL);
+      }
+    }
+  };
+
+  const onSendDm = async () => {
+    if (user && target) {
+      const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
+      if (res && res.roomId) {
+        setModal(null);
+        navigate(`/chatroom/${res.roomId}`);
+      }
+    }
+  };
+
   const onClickFriend = async () => {
     if (user && user.jwt && target) {
       if (target.isFriend === false) {
@@ -112,50 +150,13 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
     }
   };
 
+  // owner, manager
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
       if (res && res.isMuted) {
         setModal(null);
       } // TODO: 방 주인한테 뮤트 받은 유저는 뮤트를 받았다고 따로 연락을 받아야함(broad msg or noti)
-    }
-  };
-
-  const handleEnterRoom = async () => {
-    if (user && opponentData) {
-      if (!opponentData.isPublic) {
-        setModal(ENTER_GAME_ROOM, user.userId, opponentData.gameId);
-      } else {
-        await enterRoom();
-      }
-    }
-  };
-
-  //junselee: 게임신청 버튼 클릭시
-  const onApplyGame = async () => {
-    if (target && user) {
-      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
-      const sat = buttonName();
-      if (sat === '게임 신청' && res.available && res.status === 'on') {
-        setModal(FIGHT_RES_MODAL, target.userId);
-      } else if ((sat === '참가 하기' || sat === '관전 하기') && res.status === 'play') {
-        handleEnterRoom();
-      } else if (sat === '대기열 참가 중' || sat === '오프 라인') {
-        return;
-      } else {
-        setModal(CANCEL_MATCH_MODAL);
-      }
-    }
-  };
-
-  const onSendDm = async () => {
-    if (user && target) {
-      const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
-
-      if (res && res.roomId) {
-        setModal(null);
-        navigate(`/chatroom/${res.roomId}`);
-      }
     }
   };
   const handleKickOrBan = async () => {

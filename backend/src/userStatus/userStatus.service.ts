@@ -55,6 +55,26 @@ class UserStatus {
     return result;
   }
 
+  private _pruneSocketSet(socketSet: Set<Socket>): boolean {
+    let result = false;
+    for (const sock of socketSet) {
+      if (sock.connected === false) {
+        socketSet.delete(sock);
+        result = true;
+      }
+    }
+    return result;
+  }
+  pruneSocket(): boolean {
+    let result = false;
+    result ||= this._pruneSocketSet(this.chatLobbySockets);
+    result ||= this._pruneSocketSet(this.chatSockets);
+    result ||= this._pruneSocketSet(this.gameLobbySockets);
+    result ||= this._pruneSocketSet(this.gamePlayingSockets);
+    result ||= this._pruneSocketSet(this.gameWatchingSockets);
+    return result;
+  }
+
   getSockets(): Socket[] {
     const found: Socket[] = [];
 
@@ -166,11 +186,25 @@ export class UserStatusContainer {
       if (user.status === 'off') continue;
 
       result = user.removeSocket(socket);
+
+      if (user.pruneSocket() === true) {
+        console.log(':::userStatusManager:::');
+        console.log('Dangling Dead Socket has been pruned Automatically.');
+      }
+
       if (user.changeStatus()) {
         await this.authService.emitUpdatedUserList(user.userId);
         callIfStatusChanged;
       }
-      if (result === true) break;
+    }
+    return result;
+  }
+
+  pruneSocket(): boolean {
+    let result = false;
+    for (const user of this.userContainer) {
+      if (user.status === 'off') continue;
+      result ||= user.pruneSocket();
     }
     return result;
   }
