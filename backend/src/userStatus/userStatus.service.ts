@@ -42,12 +42,14 @@ class UserStatus {
     } else console.log('UserStatus: setSocket: wrong socket');
   }
 
-  removeSocket(socket: Socket): void {
-    this.chatLobbySockets.delete(socket);
-    this.chatSockets.delete(socket);
-    this.gameLobbySockets.delete(socket);
-    this.gamePlayingSockets.delete(socket);
-    this.gameWatchingSockets.delete(socket);
+  removeSocket(socket: Socket): boolean {
+    let result = false;
+    result ||= this.chatLobbySockets.delete(socket);
+    result ||= this.chatSockets.delete(socket);
+    result ||= this.gameLobbySockets.delete(socket);
+    result ||= this.gamePlayingSockets.delete(socket);
+    result ||= this.gameWatchingSockets.delete(socket);
+    return result;
   }
 
   getSockets(): Socket[] {
@@ -138,7 +140,7 @@ export class UserStatusContainer {
     return isStatusChanged;
   }
 
-  async removeSocket(
+  async removeSocketOfUser(
     userId: number,
     socket: Socket,
     callIfStatusChanged?: () => void,
@@ -153,21 +155,21 @@ export class UserStatusContainer {
     return isStatusChanged;
   }
 
-  async removeSocketAssert(
+  async removeSocket(
     socket: Socket,
     callIfStatusChanged?: () => void,
   ): Promise<boolean> {
-    let found: boolean;
+    let result: boolean;
     for (const user of this.userContainer) {
-      user.removeSocket(socket);
+      if (user.status === 'off') continue;
 
-      const found = user.changeStatus();
-      if (found) {
+      result = user.removeSocket(socket);
+      if (user.changeStatus()) {
         await this.authService.emitUpdatedUserList(user.userId);
         callIfStatusChanged;
-        break;
       }
+      if (result === true) break;
     }
-    return found;
+    return result;
   }
 }

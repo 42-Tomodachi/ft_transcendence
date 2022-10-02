@@ -175,7 +175,7 @@ export class GameEnv {
     player.socketLobbySet.delete(client);
     this.gameLobbyTable.delete(player.userId);
 
-    this.userStats.removeSocket(player.userId, client);
+    this.userStats.removeSocket(client);
   }
 
   async handleConnectionOnDuel(client: Socket, player: Player): Promise<void> {
@@ -262,7 +262,7 @@ export class GameEnv {
   handleDisconnectionOnLadderGame(client: Socket, player: Player): void {
     this.clearPlayerSocket(client);
 
-    this.userStats.removeSocket(player.userId, client);
+    this.userStats.removeSocket(client);
   }
 
   handleConnectionOnNormalGame(
@@ -294,7 +294,7 @@ export class GameEnv {
   handleDisconnectionOnNormalGame(client: Socket, player: Player): void {
     this.clearPlayerSocket(client);
 
-    this.userStats.removeSocket(player.userId, client);
+    this.userStats.removeSocket(client);
   }
 
   async onFirstSocketHandshake(

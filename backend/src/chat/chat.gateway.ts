@@ -98,7 +98,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userSocket.forEach((socketId, userId) => {
         if (socketId === client.id) {
           userSocket.delete(userId);
-          this.userStats.removeSocket(+userId, client);
+          this.userStats.removeSocket(client);
         }
       });
     });
