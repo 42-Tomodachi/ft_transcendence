@@ -36,6 +36,10 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
         const userTest = data?.userId;
         if (userTest) {
           const res = await gameAPI.dieDieMatch(user.userId, userTest, user.jwt);
+          if (!res.available && res.blocked) {
+            setModal(CANCEL_MATCH_MODAL);
+            return;
+          }
           setMatchState(res);
           const res2 = await gameAPI.opponentState(userTest, user.jwt);
           if (res2 && res2.playerCount !== undefined) setOpponentData(res2);

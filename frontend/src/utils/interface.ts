@@ -121,6 +121,7 @@ export interface IUserAvatar {
 
 export interface IChallengeResponse {
   available: boolean;
+  blocked: boolean; // false 정상, true 차단당함
   status: 'on' | 'off' | 'play';
 }
 
