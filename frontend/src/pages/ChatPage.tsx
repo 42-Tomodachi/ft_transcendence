@@ -76,7 +76,6 @@ const ChatPage: React.FC = () => {
           setRoomName(data);
         });
         socket.on('challengeDuelFrom', (userId: number) => {
-          console.log('userId', userId, '대전신청이 옴');
           setModal(FIGHT_REQ_MODAL, userId);
         });
       }

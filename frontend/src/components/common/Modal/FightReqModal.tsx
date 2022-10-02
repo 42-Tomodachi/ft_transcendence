@@ -25,7 +25,6 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
   const acceptFight = () => {
     if (socket && user) {
       // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
-      console.log('수락했습니다.');
       socket.emit('acceptChallenge');
       // socket.emit('confirmMatch', { targetId: user.userId, userId: matchUserId });
     }
@@ -81,13 +80,10 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
         }
         navigate(`/gameroom/${roomId}`);
       });
-      socket.on('challengeSeqDone', (data: number) => {
-        console.log('challengeSeqDone reqmodal', data);
+      socket.on('challengeSeqDone', () => {
         setModal(CANCEL_MATCH_MODAL);
       });
-      socket.on('challengeRejected', (data: number) => {
-        data;
-        console.log('ch req modal');
+      socket.on('challengeRejected', () => {
         setModal(CANCEL_MATCH_MODAL);
       });
     }

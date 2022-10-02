@@ -22,7 +22,6 @@ const GameRooms: React.FC<GameRoomProps> = ({ item }) => {
       //if (res !== -1) { 자료형 바껴서 이제 예는 안씀.
       if (res && res.gameId !== undefined) {
         // 세팅해줘야 게임플레이방에서 쓸수있음.
-        console.log('게임모드: ' + res.gameMode);
         setPlayingGameInfo({
           ...playingGameInfo,
           gameRoomId: res.gameId,

@@ -50,7 +50,6 @@ const MakeGameRoom: React.FC = () => {
         gameMode,
         user.jwt,
       );
-      console.log('게임모드: ' + gameMode);
       //지호킴님 수정요청222
       if (res && res.gameId !== undefined) {
         setPlayingGameInfo({

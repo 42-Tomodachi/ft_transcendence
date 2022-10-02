@@ -23,7 +23,6 @@ const Game: React.FC<{ socket: Socket }> = ({ socket }) => {
     if (socket) {
       // TODO: 게임 룸 리스트 이벤트 명 확인하기(알려주기)
       socket.on('updateGameRoomList', (data: IGameRooms[]) => {
-        console.log('update gameroom', data);
         setGameList(data); // 전체 게임방
       });
     }

@@ -105,8 +105,6 @@ const gameAPI = {
     try {
       const url = gamePath(`/dieDieMatch/${userId}?targetId=${targetId}`);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
-      console.log(res.data.available);
-      console.log(res.data.status);
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
@@ -123,8 +121,6 @@ const gameAPI = {
     try {
       const url = gamePath(`/${targetId}`);
       const res = await instance.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
-      console.log('지금만든거임 : ');
-      console.dir(res);
       return res.data;
     } catch (e) {
       if (e instanceof Error) console.error(e.message);

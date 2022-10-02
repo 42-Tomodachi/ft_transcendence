@@ -71,7 +71,6 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
     if (user && opponentData) {
       const res = await gameAPI.enterGameRoom(opponentData.gameId, user.userId, '', user.jwt);
       if (res && res.gameId !== undefined) {
-        // console.log('게임모드: ' + res.gameMode);
         setPlayingGameInfo({
           ...playingGameInfo,
           gameRoomId: res.gameId,
@@ -93,7 +92,6 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   };
 
   const onApplyGame = async () => {
-    console.log('send msg');
     if (target && user) {
       const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
       const sat = buttonName();
@@ -150,7 +148,6 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
-      console.log('Toggle Mute', res);
       if (res) {
         setModal(null);
       }
