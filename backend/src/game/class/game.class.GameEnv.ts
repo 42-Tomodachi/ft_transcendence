@@ -15,6 +15,7 @@ import { GameInfo } from './game.class.interface';
 import { UserStatusContainer } from 'src/userStatus/userStatus.service';
 import { GameQueue } from './game.class.GameQueue';
 import { EventEmitter } from 'stream';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class GameEnv {
@@ -28,6 +29,8 @@ export class GameEnv {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @Inject(forwardRef(() => UsersService))
+    private usersService: UsersService,
     @Inject(forwardRef(() => UserStatusContainer))
     private userStats: UserStatusContainer,
   ) {
@@ -424,22 +427,28 @@ export class GameEnv {
   //
   // game managing methods
 
-  async isDuelAvailable(userId: number): Promise<ChallengeResponseDto> {
+  async isDuelAvailable(
+    userId: number,
+    opId: number,
+  ): Promise<ChallengeResponseDto> {
     const player = await this.getPlayerByUserId(userId);
     const result = new ChallengeResponseDto();
 
+    result.available = true;
+    result.blocked = false;
     result.status = this.userStats.getStatus(userId);
+
     if (result.status !== 'on') {
       console.log('isDuelAvailable: user unavailable');
       result.available = false;
-      return result;
-    }
-    if (player.socketQueue !== null) {
+    } else if (player.socketQueue !== null) {
       console.log('isDuelAvailable: target is on queue');
       result.available = false;
-      return result;
     }
-    result.available = true;
+    if (await this.usersService.getBlockedUserById(opId, userId)) {
+      result.available = false;
+      result.blocked = true;
+    }
     return result;
   }
 
