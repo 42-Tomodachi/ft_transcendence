@@ -86,8 +86,9 @@ const ChatPage: React.FC = () => {
         socket.off('reloadChatHistory');
         socket.off('recieveMessage');
         socket.off('updateChatRoomTitle');
+        socket.off('disconnectSocket');
         socket.off('challengeDuelFrom');
-        socket.disconnect();
+        if (socket.connected) socket.disconnect();
       }
     };
   }, [roomId, user]);
