@@ -61,7 +61,7 @@ export class ChatLobbyGateway
 
     this.connectedSocketMap.forEach((set, userId) => {
       set.delete(client.id);
-      this.userStats.removeSocket(+userId, client);
+      this.userStats.removeSocket(client);
     });
   }
 

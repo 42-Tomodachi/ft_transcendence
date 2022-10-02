@@ -9,7 +9,7 @@ import { usersAPI } from '../API/users';
 import DefaultProfile from '../assets/default-image.png';
 import { useNavigate } from 'react-router-dom';
 
-const regex = /^[ㄱ-ㅎ|가-힣|a-z|A-Z|0-9|]{2,8}$/;
+const regex = /^[ㄱ-ㅎ|ㅏ-ㅣ|가-힣|a-z|A-Z|0-9|]{2,8}$/;
 const minNickName = 2;
 const maxNickName = 8;
 

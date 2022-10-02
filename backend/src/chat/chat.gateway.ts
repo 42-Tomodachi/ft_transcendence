@@ -58,7 +58,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.join(roomId);
     if (this.connectedSocketMap.has(roomId)) {
-      this.disconnectUser(+roomId, +userId);
+      const socketId = this.getParticipatingChatSocketId(
+        roomId.toString(),
+        userId.toString(),
+      );
+      this.wss.to(socketId).disconnectSockets();
       this.connectedSocketMap.get(roomId).set(userId, client.id);
     } else {
       const socketUser = new Map<string, string>();
@@ -76,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       userSocket.forEach((socketId, userId) => {
         if (socketId === client.id) {
           userSocket.delete(userId);
-          this.userStats.removeSocket(+userId, client);
+          this.userStats.removeSocket(client);
         }
       });
     });
@@ -152,9 +156,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             +roomId,
             +userIdInRoom,
           );
-          if (chatContentDtos === '참여중인 채팅방이 아닙니다.')
+          if (chatContentDtos === '참여중인 채팅방이 아닙니다.') {
+            console.log('participantingChatRoomIds');
             this.wss.to(socketId).emit('disconnectSocket', chatContentDtos);
-          else this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
+          } else
+            this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
         });
     });
   }
@@ -172,9 +178,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
             +roomId,
             +userIdInRoom,
           );
-          if (chatContentDtos === '참여중인 채팅방이 아닙니다.')
+          if (chatContentDtos === '참여중인 채팅방이 아닙니다.') {
+            console.log(
+              'emitChatHistoryToSocketThatSpecificUserIsParticipating',
+            );
             this.wss.to(socketId).emit('disconnectSocket', chatContentDtos);
-          else this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
+          } else
+            this.wss.to(socketId).emit('reloadChatHistory', chatContentDtos);
         });
     });
   }
@@ -200,10 +210,13 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // 유저 상태변화 시 참여중인 채팅방에 유저 목록 emit
   async emitChatRoomParticipants(roomId: string): Promise<ChatRoomUserDto[]> {
-    const chatRoomUserDtos = await this.chatService.getRoomParticipants(
-      +roomId,
-    );
-    this.wss.to(roomId).emit('updateChatRoomParticipants', chatRoomUserDtos);
+    let chatRoomUserDtos: ChatRoomUserDto[];
+    try {
+      chatRoomUserDtos = await this.chatService.getRoomParticipants(+roomId);
+      this.wss.to(roomId).emit('updateChatRoomParticipants', chatRoomUserDtos);
+    } catch (error) {
+      console.log(error);
+    }
     return chatRoomUserDtos;
   }
 
@@ -235,6 +248,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       roomId.toString(),
       userId.toString(),
     );
+    console.log('disconnectUser');
     this.wss.to(socketId).emit('disconnectSocket', null);
     this.wss.to(socketId).disconnectSockets();
   }
@@ -258,6 +272,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.userId,
     );
     if (chatContentDtos instanceof String) {
+      console.log('in reload history');
       client.emit('disconnectSocket', chatContentDtos);
     } else client.emit('reloadChatHistory', chatContentDtos);
   }
