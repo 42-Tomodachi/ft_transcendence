@@ -26,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({ type }) => {
   const { roomId } = useParams();
   const [, setRoomInfo] = useState<IChatRoomInfo | null>();
   const [isOwner, setIsOwner] = useState<boolean>(false);
-  const [clickedMenu, setClickedMenu] = useState<MenuType | 'HOME'>(HOME);
+  const [clickedMenu, setClickedMenu] = useState<MenuType | 'HOME' | null>();
 
   const onClickMenu = (menu: MenuType | 'HOME') => {
     if (clickedMenu === menu) return;
