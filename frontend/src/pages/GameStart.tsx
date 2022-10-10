@@ -55,7 +55,7 @@ const GameStart: React.FC = () => {
     ctx.arc((ballG[0] / 100) * 1000, (ballG[1] / 100) * 700, 10, 0, 2 * Math.PI);
     ctx.fillStyle = '#FFB562';
     ctx.fill();
-    ctx.font = '32px Roboto';
+    ctx.font = '32px Noto Sans KR';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#3AB0FF';
     ctx.fillText(` ${playingGameInfo?.oneNickname} : ${scoreG[0]}`, 250, 50);
@@ -571,7 +571,6 @@ const Message = styled.p`
   display: flex;
   justify-content: space-around;
   font-style: normal;
-  font-family: 'Rubik One';
   color: #ffffff;
   font-weight: 900;
   font-size: 60px;
