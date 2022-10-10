@@ -315,7 +315,6 @@ const Bar = styled.div`
   height: 26px;
   background: #ff6363;
   border-radius: 13px;
-  /* overflow: hidden; */
 `;
 
 const Win = styled.div`
@@ -341,9 +340,7 @@ const Message = styled.p`
   display: flex;
   justify-content: space-around;
   font-style: normal;
-  font-family: 'Roboto';
   color: #ffd12e;
-  //font-weight: 400;
   font-size: 40px;
   line-height: 64px;
   background-color: none;
@@ -360,7 +357,6 @@ const InfoArea = styled.div`
 
 const Count = styled.p`
   font-style: normal;
-  font-family: 'Roboto';
   color: white;
   display: flex;
   text-align: center;
@@ -379,7 +375,6 @@ const UserInfo = styled.div`
   justify-content: space-around;
   width: 260px;
   height: 360px;
-  //background-color: #f9f2ed;
   background-color: white;
   border-radius: 20px;
 `;
@@ -406,7 +401,6 @@ const GameArea = styled.div`
 
   width: 1000px;
   height: 700px;
-  /* background-color: #f9f2ed; */
   background-color: black;
   border-radius: 20px;
 `;
