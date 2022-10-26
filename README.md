@@ -104,19 +104,57 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 - Backend .env
 
   ```text
+    # Ground Setup
+    BACKSERVER_ADDR=  # IP
+    BACKSERVER_PORT= # ex) 5500
+    FRONTSERVER_PORT= # ex) 3000
 
+    # 42 API Key
+    42API_UID=
+    42API_SECRET=
+
+    # TypeORM configuration
+    ## set values depends on config of Database
+    TYPEORM_TYPE=
+    TYPEORM_HOST=
+    TYPEORM_PORT=
+    TYPEORM_USERNAME=
+    TYPEORM_PASSWORD=
+    TYPEORM_DATABASE=
+
+    # JWT strategy configuration
+    JWT_SECRET=
+    JWT_EXPIRESIN=
+
+    # Email service configuration
+    ## Following values will be used to send verification Emails.
+    ## account used should be configured correctly on Host service (like Naver, Google...).
+    EMAIL_HOST=
+    EMAIL_FROM_USER_NAME=
+    EMAIL_AUTH_EMAIL=
+    EMAIL_AUTH_PASSWORD=
+
+    # Timezone
+    ## This value affects the timestamp of logs from NodeJs.
+    TZ=Asia/Seoul
   ```
 
 - Frontend .env
 
   ```text
-
+    # This value should be IDENTICAL to the corresponding redirection address.
+    REACT_APP_OAUTH_URL=
+    # This value should be Address to Backend Server.
+    REACT_APP_BACK_API=
   ```
 
 - Database .env
 
   ```text
-
+    # For Postgresql env
+    POSTGRES_USER=
+    POSTGRES_PASSWORD=
+    POSTGRES_DB=
   ```
 
 ### Install
@@ -176,7 +214,7 @@ _Below is an example of how you can instruct your audience on installing and set
 ### Resource
 
 - [Figma](https://www.figma.com/file/UjJCRaBS3Kc9o7jiX00Q7g/%ED%8A%B8%EC%84%BC?node-id=0%3A1)
-- [ERDCloud](https://www.erdcloud.com/)
+- [ERDCloud](https://www.erdcloud.com/d/JZBPBnQaPY6zGt4Rr)
 
 ### Convention
 
