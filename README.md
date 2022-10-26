@@ -4,7 +4,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/42-Tomodachi/ft_transcendence">
-    <img src="/Users/mike2ox/Project/ft_transcendence/frontend/src/assets/logo.png" alt="Logo" width="505" height="80">
+    <img src="./frontend/src/assets/logo.png" alt="Logo" width="505" height="80">
   </a>
 
   <h3 align="center">Multiplayer Pong & Chat Web Site</h3>
@@ -68,24 +68,55 @@
 
 pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑퐁 사이트입니다.
 
-### Signup
+### Signup / Login
 
-회원가입은 42 소속일 경우 따로 비밀번호를 입력할 필요없이 가입이 가능
+- 최초 회원가입 단계
 
-### 2Auth
+- 닉네임 / 프로필 등록 단계
 
-예시1
-예시2
+- (2차인증 활성화시) 2차인증 단계
 
-### Chat
+### Lobby
 
-예시1
-예시2
+- 로비 구성
 
-### Game
+- 내 프로필 변경
 
-예시1
-예시2
+- 유저 상태(로그인, 로그아웃, 게임중)
+
+- 게임 초대받기 / 걸기 / 거부하기
+
+- 친구 추가 / 삭제
+
+- 특정 유저 차단하기 / 차단 해제
+
+- 2차 인증 단계
+
+### In Chat
+
+- 일반 채팅 기능
+
+- 권한 부여하기
+
+- 프로필 변경 실시간 확인
+
+- DM 보내기
+
+- 방 뒤로가기
+
+- (관리자) 차단, 강퇴 / 입장금지, 음소거
+
+- (관리자) 방 주인한테 강퇴 / 입장금지
+
+- (방주인) 방 제목 / 접근 방식 변경
+
+### In Game
+
+- 일반 / 장애물 / 스피드 모드
+
+- (로비에서) 레더모드 매칭 되는 부분
+
+- 관전 기능
 
 <p align="right"><a href="#readme-top">back to top</a></p>
 
@@ -157,31 +188,13 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
     POSTGRES_DB=
   ```
 
-### Install
-
----
-
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
-
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Enter your API in `config.js`
-   ```js
-   const API_KEY = "ENTER YOUR API";
-   ```
-
-<p align="right"><a href="#readme-top">back to top</a></p>
-
-<!-- USAGE EXAMPLES -->
-
 ## Constraint
+
+(평가 받기위해 우리가 걸어둔 제약조건(MVP))
+
+### Frontend
+
+### Backend
 
 <p align="right"><a href="#readme-top">back to top</a></p>
 
