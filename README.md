@@ -206,13 +206,29 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 
 ## Getting Started
 
----
-
 ### Prerequisites
 
-1. **본 프로젝트는 42 intra를 이용할 수 있는 42 cadet이어야 정상 이용이 가능하다.**
+1. **본 프로젝트는 42 intra를 이용할 수 있는 42cadet이어야 정상 이용이 가능하다.**
 
 2. 42API로 발급받은 UID, secret key, redirection URL을 사용해 각 컨테이너별 .env에 해당 값들을 작성해줘야 한다.
+
+3. docker, docker-compose가 설치된 환경이어야 한다.
+
+### Installation
+
+1. git clone this projest
+
+```sh
+  git clone https://github.com/42-Tomodachi/ft_transcendence
+```
+
+2. run docker compose at root
+
+```sh
+  cd ft_transcendence && docker-compose up --build
+```
+
+<p align="right"><a href="#readme-top">back to top</a></p>
 
 ## Constraint
 
@@ -272,8 +288,6 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 
 ## Member
 
----
-
 ### Frontend
 
 | [dhyeon]() | [junselee]() | [mosong](https://www.github.com/mike2ox)                               | [sgang]() |
@@ -292,8 +306,6 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 
 ## Resource & Reference
 
----
-
 ### Resource
 
 - [Figma](https://www.figma.com/file/UjJCRaBS3Kc9o7jiX00Q7g/%ED%8A%B8%EC%84%BC?node-id=0%3A1)
@@ -309,8 +321,6 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 <!-- LICENSE -->
 
 ## License
-
----
 
 해당 프로젝트는 [MIT 라이센스](https://github.com/42-Tomodachi/ft_transcendence/blob/main/LICENSE)를 기반으로 두고 있습니다.
 
