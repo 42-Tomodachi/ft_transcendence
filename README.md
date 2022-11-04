@@ -248,13 +248,13 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 
 ### Installation
 
-1. git clone this projest
+1. clone this project at github
 
 ```sh
   git clone https://github.com/42-Tomodachi/ft_transcendence
 ```
 
-2. run docker compose at root
+2. run docker-compose at project root path
 
 ```sh
   cd ft_transcendence && docker-compose up --build
@@ -273,15 +273,24 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 ```text
     1. 최적화를 고려하지않고 구현했기에 불필요한 리렌더링이 많이 발생한다.
     2. Next.js가 아닌 CRA를 사용
-    3. 재사용 가능한 부분이 많지만 고유 컴포넌트로 제작
-    4.
+    3. 재사용 가능한 부분이 많지만 고유 컴포넌트로 제작(특히 모달)
+    4. 배포용으로 도커 파일이 작성되어 있지 않음
+    5. 배포를 할 시 백엔드에 종속되어 있음
+    6. 유저에게 알려줄 목적으로 antd notification을 적용하려 했으나 기존 디자인 변동이 발생해 적용 실패
+    7. 일부 props 타입정의에 interface 미적용
+    8. 2차 활성화 후 리렌더링 될때마다 2차 인증 로그인 페이지로 돌아감
+    8-1. 인증번호를 제대로 기입해도 오작동이 발생할 때가 있음
+    9. 유저리스트 정렬을 한번에 처리 가능(feedback)
+    9-1. 특정 유저(클릭한) 정보를 전역으로 관리
+    10. 모든 페이지에서 소켓을 쓸 것이면 custom hook이나 전역에서 하나의 소켓만 관리하는걸 권장(feedback)
 ```
 
 #### 채팅
 
 ```text
-    1.
-    2.
+    1. 채팅 로그를 소켓으로 한꺼번에 받아서 전체 리렌더링 해주고 있다. (최적화 필요)
+    2. if else 부분이 미흡
+    3. 강퇴당했을 때 유저에게 따로 보여주는 notification이 없음
 ```
 
 #### 게임
@@ -289,6 +298,9 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 ```text
     1. 서버의 통신 부하를 훨씬 줄여줄 여지가 있으나, 적용하지 않음.
     2. 래깅 및 소소한 버그요소가 있는데, 만족스러운 수준까지 개선하지 못함.
+    3. 컴포넌트 내부 코드 길이가 많이 긴 상황
+    4. 유사한 변수간의 의미가 일치하지 않음(ex. player1,2 - leftPlayer, rightPlayer)
+    5. 게임 로직의 특정 상수의 의미파악이 어려움(닌자코드)
 ```
 
 ### Backend
