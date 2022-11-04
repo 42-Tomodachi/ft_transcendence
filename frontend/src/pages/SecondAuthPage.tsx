@@ -32,7 +32,7 @@ const SecondAuthPage: React.FC = () => {
     if (user) {
       sendCode();
     } else {
-      navigate('/'); // logout
+      navigate('/'); 
     }
     return () => clearTimeout(timer);
   }, []);

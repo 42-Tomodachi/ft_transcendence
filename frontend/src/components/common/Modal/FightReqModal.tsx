@@ -19,22 +19,16 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
   const { user } = useContext(AllContext).userData;
   const [matchUser, setMatchUser] = useState<IUserData | null>(null);
   const navigate = useNavigate();
-  // junselee 테스트
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   const acceptFight = () => {
     if (socket && user) {
-      // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
       socket.emit('acceptChallenge');
-      // socket.emit('confirmMatch', { targetId: user.userId, userId: matchUserId });
     }
   };
 
   const cancelFight = () => {
     if (socket && user) {
-      // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
-      // socket.emit('cancelMatch', { targetId: user.userId, userId: matchUserId });
-      // 백엔드에서 socket disconnect로 match cancel 인식
       socket.disconnect();
     }
     setModal(CANCEL_MATCH_MODAL);
@@ -67,7 +61,6 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
         console.log('acceptChallenge', userId);
       });
       socket.on('matchingGame', (roomId: number) => {
-        // junselee 테스트
         if (user) {
           setPlayingGameInfo({
             ...playingGameInfo,

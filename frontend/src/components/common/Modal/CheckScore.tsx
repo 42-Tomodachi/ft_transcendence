@@ -51,7 +51,6 @@ const CheckScore: React.FC<{ userId: number }> = ({ userId }) => {
   );
 };
 
-// Main Block
 const MainBlock = styled.div`
   margin: 0 auto;
   padding: 13px;

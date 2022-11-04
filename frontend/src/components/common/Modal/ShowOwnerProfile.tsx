@@ -211,15 +211,12 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   );
 };
 
-// Main Block
 const MainBlock = styled.div`
   padding: 13px;
   margin-top: 50px;
   width: 100%;
 `;
-//============================================
 
-// Profile Section
 const ProfileBlock = styled.div`
   height: 120px;
   display: flex;
@@ -243,9 +240,7 @@ const UserLevel = styled.span`
   margin-top: 5px;
   margin-left: 25px;
 `;
-//============================================
 
-//Record Section
 const RecordBlock = styled.div`
   display: flex;
   justify-content: space-between;
@@ -274,9 +269,7 @@ const RecordBtn = styled.div`
   }
 `;
 
-//============================================
 
-//OtherBtnSection
 const OtherBtnBlock = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -297,6 +290,5 @@ const BanBtnBlock = styled.div`
     border-radius: 5px;
   }
 `;
-//============================================
 
 export default ShowOwnerProfile;

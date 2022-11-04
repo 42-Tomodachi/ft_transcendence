@@ -22,13 +22,12 @@ const Game: React.FC<{ socket: Socket }> = ({ socket }) => {
   useEffect(() => {
     if (socket) {
       socket.on('updateGameRoomList', (data: IGameRooms[]) => {
-        setGameList(data); // 전체 게임방
+        setGameList(data);
       });
     }
     return () => {
       if (socket) {
         socket.off('updateChatRoomList');
-        // socket.disconnect();
       }
     };
   }, [socket]);
@@ -38,7 +37,7 @@ const Game: React.FC<{ socket: Socket }> = ({ socket }) => {
   };
 
   const getAllGameList = async (jwt: string) => {
-    const res = await gameAPI.getGameRooms(jwt); //
+    const res = await gameAPI.getGameRooms(jwt);
     setGameList(res);
   };
   return (

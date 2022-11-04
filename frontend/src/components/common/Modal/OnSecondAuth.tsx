@@ -57,7 +57,7 @@ const OnSecondAuth: React.FC = () => {
           setActiveEmail(true);
         } else setAuthMsg('코드가 일치하지 않습니다.');
       } else setAuthMsg('코드를 입력해주세요.');
-    } else setAuthMsg('새로고침 후 다시 진행해주세요.'); // user 정보 만료
+    } else setAuthMsg('새로고침 후 다시 진행해주세요.');
   };
 
   const AuthhandleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {

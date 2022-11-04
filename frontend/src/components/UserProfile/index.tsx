@@ -26,7 +26,7 @@ const ProfilePage: React.FC = () => {
           setUser(UPDATE_USER, { ...data, jwt: user.jwt });
         }
       } else {
-        navigate('/'); // logout
+        navigate('/');
       }
     };
     getUserInfo();
@@ -91,7 +91,6 @@ const ProfilePage: React.FC = () => {
   );
 };
 
-// Main Block
 const MainBlock = styled.div`
   background-color: white;
   border-radius: 20px;
@@ -102,16 +101,13 @@ const MainBlock = styled.div`
   font-weight: 400;
 `;
 
-// MainText Section
 const MainText = styled.h3`
   font-size: 20px;
   line-height: 29px;
 
   color: ${props => props.theme.colors.main};
 `;
-//============================================
 
-// Profile Section
 const ProfileBlock = styled.div`
   height: 120px;
   display: flex;
@@ -140,9 +136,7 @@ const UserLevel = styled.span`
   margin-top: 5px;
   margin-left: 10px;
 `;
-//============================================
 
-//RecordText Section
 const RecordText = styled.span`
   display: inline-block;
   font-size: 14px;
@@ -150,9 +144,7 @@ const RecordText = styled.span`
 
   margin-top: 50px;
 `;
-//============================================
 
-//Record Section
 const RecordBlock = styled.div`
   display: flex;
   justify-content: space-between;
@@ -173,9 +165,7 @@ const RecordBtn = styled.div`
     border-radius: 5px;
   }
 `;
-//============================================
 
-//OtherBtnSection
 const OtherBtnBlock = styled.div`
   display: flex;
   margin-top: 10px;
@@ -187,6 +177,5 @@ const OtherBtnBlock = styled.div`
     }
   }
 `;
-//============================================
 
 export default ProfilePage;

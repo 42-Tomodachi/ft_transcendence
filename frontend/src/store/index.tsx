@@ -104,7 +104,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
     gameMode: 'normal',
     gameLadder: false,
     gameState: false,
-  }); /// 여기도 게임모드 테스트 조져 !
+  });
 
   const handleJwt = (type: 'SET_JWT' | 'REMOVE_JWT', jwt?: string) => {
     switch (type) {
@@ -182,7 +182,7 @@ const AllContextApi = ({ children }: AllContextApiProps) => {
         gameMode: type.gameMode,
         gameLadder: type.gameLadder,
         gameState: type.gameState,
-      }); ///// 여기도 테스트!!!!!
+      });
     }
   };
 

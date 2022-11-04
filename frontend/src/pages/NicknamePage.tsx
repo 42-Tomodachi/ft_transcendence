@@ -60,7 +60,6 @@ const NicknamePage: React.FC = () => {
   const onKeyEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const key = e.key || e.keyCode;
     if (key == 'Enter' || key === 13) {
-      // NOTE : 한글 중복 입력 제거
       if (e.nativeEvent.isComposing === false) onCheck();
     }
   };
@@ -106,7 +105,7 @@ const NicknamePage: React.FC = () => {
   const getUserProfile = async (jwt: string) => {
     const res = await usersAPI.getLoginUserProfile(jwt);
     if (res) {
-      setUserProfile({ ...res, jwt: jwt }); // user/own
+      setUserProfile({ ...res, jwt: jwt });
       setUser(UPDATE_USER, userProfile);
     }
   };

@@ -7,18 +7,6 @@ import { AllContext } from '../../store';
 import { chatsAPI, usersAPI } from '../../API';
 import { Socket } from 'socket.io-client';
 
-/*
- ** 제이슨서버에서 유저리스트를 받아와 정렬합니다.
- ** 리스트를 유저네임기준 오름차순으로 정렬 후, 상태 (로그인, 게임중) vs 로그아웃으로 비교하여 정렬합니다.
- ** 서클과 균형을 맞추기 위해서 넣었던 유저네임의 div가 필요없어져서 삭제함 <---- div에 바로 스타일주는거 고치라던 요청사항 수정중 2222
- ** 삼항연산으로 클릭을 확인하고, 또다시 친구관계를 확인하던 복잡한 구조를 개선함 <---- 요청사항 333
- ** useState 두개로 컬러값을 클릭마다 설정해주던거를, 버튼컬러에대한 삼항연산으로 개선했습니다.
- ** 전체유저버튼과 친구버튼의 클릭상태를 체크하는 useState 'click'의 이름을 직관적으로 수정하였습니다. 'allUser'
- ** props는 타입은 오브젝트로 수정.
- ** 타입명시할때 인터페이스사용한 적용 요청사항 111 <-- 인터페이스.tsx에 넣어서 가져다쓰자
- ** 충돌원인 /gamepage에 넣어논 태그삭제  요청사항 222
- */
-// TODO:  userList type별로 출력하는 목록이 다르게 설정
 interface UserListType {
   menuType: ActiveMenuType;
   roomId?: string;
@@ -71,7 +59,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
     if (socket) {
       if (activeMenu === 'ALL') {
         socket.on('updateUserList', (data: IGetUser[]) => {
-          sortedUserList(data); // 전체 유저 목록
+          sortedUserList(data);
         });
       } else if (activeMenu === 'FRIEND') {
         socket.on('updateFriendList', (data: IGetUser[]) => {
@@ -187,10 +175,6 @@ const ButtonBox = styled.div`
   align-items: center;
 `;
 
-/*
- ** 스크롤 스타일과 동작을 지정합니다.
- ** 공간에 커서를 가져다 대면, 스타일된 스크롤이 표시됩니다.
- */
 const UserContainer = styled.div`
   ::-webkit-scrollbar {
     display: none;
@@ -206,7 +190,7 @@ const UserContainer = styled.div`
       border-radius: 10px;
     }
   }
-  // 내눈이 편안하기위한 마진탑 임. 반박시 니말이맞음
+ 
   margin-top: 12px;
   overflow-y: scroll;
   height: calc(100% - 52px);

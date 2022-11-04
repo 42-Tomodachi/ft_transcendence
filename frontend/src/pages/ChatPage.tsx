@@ -12,23 +12,6 @@ import { chatsAPI } from '../API';
 import backaway from '../assets/backaway.png';
 import { useNavigate } from 'react-router-dom';
 import io, { Socket } from 'socket.io-client';
-// import 'antd/dist/antd.min.css';
-// import { notification } from 'antd';
-// import type { NotificationPlacement } from 'antd/es/notification';
-
-// type NotificationType = 'success' | 'info' | 'warning' | 'error';
-// // TODO: 상황별 노티가 나타나도록 분기 타줄 것 + CSS 우선순위로 인해 문제가 발생하는 중
-// const disconnectSocketNoti = (
-//   type: NotificationType,
-//   placement: NotificationPlacement,
-//   msg: string,
-// ) => {
-//   notification[type]({
-//     message: msg,
-//     description: `원인 : ${msg}`,
-//     placement,
-//   });
-// };
 
 let socket: Socket;
 
@@ -69,7 +52,6 @@ const ChatPage: React.FC = () => {
           setMessages(pre => [...pre, data]);
         });
         socket.on('disconnectSocket', () => {
-          // 강퇴, 방폭파, 방 나가기 다 해당 socket event로 받아서 이동이 되기에 notification 지움
           navigate('/');
         });
         socket.on('updateChatRoomTitle', (data: string) => {
@@ -107,7 +89,7 @@ const ChatPage: React.FC = () => {
       };
       getRoomData();
     } else {
-      navigate('/'); //
+      navigate('/');
     }
   }, [user, roomId]);
   return (

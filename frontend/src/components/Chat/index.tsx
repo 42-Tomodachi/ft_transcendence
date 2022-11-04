@@ -21,13 +21,11 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
     if (socket) {
       if (roomType === ALL) {
         socket.on('updateChatRoomList', (data: IChatRooms[]) => {
-          // console.log('update chatroom', data);
-          setChatList(data); // 전체 채팅방
+          setChatList(data);
         });
       } else if (roomType === JOINED) {
         socket.on('updateParticipnatingChatRoomList', (data: IChatRooms[]) => {
-          // console.log('update joined', data);
-          setChatList(data); // 참여중인 채팅방 목록 전채
+          setChatList(data);
         });
       }
     }
@@ -35,7 +33,6 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
       if (socket) {
         socket.off('updateChatRoomList');
         socket.off('updateParticipnatingChatRoomList');
-        // socket.disconnect();
       }
     };
   }, [socket, roomType]);

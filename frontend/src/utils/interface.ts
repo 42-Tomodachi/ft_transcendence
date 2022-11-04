@@ -14,12 +14,6 @@ export interface IUserAuth extends IUser {
   isSecondAuthOn: boolean;
   jwt: string;
 }
-
-// export interface IGetUserProfile extends IUserProfile {
-//   isSecondAuthOn: boolean;
-//   isFriend: boolean;
-//   isBlocked: boolean;
-// }
 export interface IChatRoomInfo {
   roomId: number;
   title: string;
@@ -71,15 +65,14 @@ export interface IUserData extends IUserAuth, IWinLoseCount {
   isBlocked: boolean;
 }
 
-// 여기서 모드를 저장한다면 어떨까. 아 그럼 래더시작할때는 또, 노말로 바꿔줘야되는거 아녀.
 export interface IPlayingGameInfo {
   player: string;
   oneNickname: string;
   twoNickname: string;
-  gameRoomId: number; // user.roomid -> ??.gameRoomId
-  gameMode: string; // test!!
-  gameLadder: boolean; // test!!
-  gameState: boolean; //test!!!!
+  gameRoomId: number;
+  gameMode: string;
+  gameLadder: boolean;
+  gameState: boolean;
 }
 
 export interface IUserWinLoseCount extends IWinLoseCount {
