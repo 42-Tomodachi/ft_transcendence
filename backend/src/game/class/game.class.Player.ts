@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Socket } from 'socket.io';
 import { User } from 'src/users/entities/users.entity';
@@ -5,6 +6,8 @@ import { Repository } from 'typeorm';
 import { GameAttribute } from './game.class.GameAttribute';
 
 export class Player {
+  private logger = new Logger('Player');
+
   socketLobbySet: Set<Socket>;
   socketQueue: Socket;
   socketPlayingGame: Socket;
@@ -48,7 +51,7 @@ export class Player {
 
   setGameSocket(game: GameAttribute, socket: Socket): void {
     if (!game || !socket) {
-      console.log(`setGameSocket: null game or socket`);
+      this.logger.debug(`setGameSocket: null game or socket`);
       return;
     }
 
@@ -104,14 +107,14 @@ export class Player {
   leaveGame(game: GameAttribute): boolean {
     if (this.isLeaving === true) return true;
     if (!game) {
-      console.log('leaveGameRoom: no game');
+      this.logger.verbose('leaveGameRoom: no game');
       return false;
     }
     if (
       game.roomId !== this.gamePlaying?.roomId &&
       !this.gamesWatching.has(game)
     ) {
-      console.log('leaveGameRoom: no target game');
+      this.logger.verbose('leaveGameRoom: no target game');
       return false;
     }
 

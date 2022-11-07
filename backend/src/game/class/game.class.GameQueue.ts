@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { EventEmitter } from 'stream';
 import { clearInterval, setInterval } from 'timers';
 import { Player } from './game.class.Player';
@@ -19,6 +20,8 @@ class QueueInfo {
 }
 
 export class GameQueue {
+  private logger = new Logger('QueueInfo');
+
   name: string;
   queue: QueueInfo[];
   eventObject: EventEmitter;
@@ -64,7 +67,7 @@ export class GameQueue {
       if (this.queue.length < 2) {
         clearInterval(this.matching);
         this.matching = null;
-        console.log('switchMatchMaker: matching off');
+        this.logger.verbose('switchMatchMaker: matching off');
       }
       return;
     }
@@ -73,7 +76,7 @@ export class GameQueue {
         this.pickMatchup();
       }, 100);
     }
-    console.log('switchMatchMaker: matching on');
+    this.logger.verbose('switchMatchMaker: matching on');
   }
 
   compareElements(one: QueueInfo, two: QueueInfo): boolean {
@@ -174,7 +177,7 @@ export class GameQueue {
         players[1],
         'normal',
       );
-      console.log(`ladderMatching: ${players}`);
+      this.logger.verbose(`ladderMatching: ${players}`);
 
       matched = this.matchAlgorithm(players);
     }

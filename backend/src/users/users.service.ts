@@ -5,14 +5,13 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsDuplicateDto, IsSignedUpDto } from 'src/auth/dto/auth.dto';
+import { IsDuplicateDto } from 'src/auth/dto/auth.dto';
 import { ChatGateway } from 'src/chat/chat.gateway';
 import { ChatLobbyGateway } from 'src/chat/chatLobby.gateway';
 import { Repository } from 'typeorm';
 import { BlockResultDto } from './dto/blockedUser.dto';
 import { GameRecordDto } from './dto/users.dto';
 import {
-  UpdateUserDto,
   EmailDto,
   SimpleUserDto,
   UserProfileDto,
@@ -43,13 +42,12 @@ export class UsersService {
   async getUsers(): Promise<SimpleUserDto[]> {
     let users = await this.userRepo.find();
 
-    users = users.filter(user => user.nickname);
+    users = users.filter((user) => user.nickname);
     return users.map((user) => {
       return {
         userId: user.id,
         nickname: user.nickname,
         status: this.userStats.getStatus(user.id),
-        // status: user.userStatus,
       };
     });
   }
@@ -74,7 +72,6 @@ export class UsersService {
         userId: friend.follow.id,
         nickname: friend.follow.nickname,
         status: this.userStats.getStatus(friend.follow.id),
-        // status: friend.follow.userStatus,
       };
     });
   }
@@ -91,7 +88,6 @@ export class UsersService {
         userId: followEntity.follow.id,
         nickname: followEntity.follow.nickname,
         status: this.userStats.getStatus(followEntity.follow.id),
-        // status: followEntity.follow.userStatus,
       };
     });
   }
@@ -144,14 +140,12 @@ export class UsersService {
     user.avatar = `http://${serverAddr}:${serverPort}/image/${fileName}`;
     await user.save();
     this.chatGateway.updateUserInfoToJoinedChatRooms(user, userId);
-    // this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
     return user.avatar;
   }
 
   async createUser(emailDto: EmailDto): Promise<User> {
     const user = new User();
     user.email = emailDto.email;
-    // user.userStatus = 'on';
 
     return await this.userRepo.save(user);
   }
@@ -258,7 +252,6 @@ export class UsersService {
     const updatedUser = await this.userRepo.save(user);
 
     this.chatGateway.updateUserInfoToJoinedChatRooms(user, userId);
-    // this.chatGateway.emitChatHistoryToParticipatingChatRooms(userId);
     this.chatLobbyGateway.emitUserList();
     this.chatLobbyGateway.emitFriendList(userId);
 

@@ -3,6 +3,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios from 'axios';
@@ -39,6 +40,8 @@ export class AuthService {
     private readonly jwtStrategy: JwtStrategy,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
+
+  private logger: Logger = new Logger('AuthService');
 
   async issueJwt(id: number): Promise<string> {
     const user = await this.usersService.getUserById(id);
@@ -113,10 +116,8 @@ export class AuthService {
 
   async emitUpdatedUserList(userId: number, user?: User): Promise<void> {
     if (!user) user = await this.usersService.getUserById(userId);
-    if (!user) return ;
+    if (!user) return;
 
-    console.log('emitUpdatedUserList');
-    console.log('emitUpdatedUserList');
     const participatingChatRooms =
       await this.chatService.getParticipatingChatRooms(user, user.id);
 

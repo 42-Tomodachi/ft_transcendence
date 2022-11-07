@@ -19,11 +19,9 @@ import { LoggerMiddleware } from './logger.middleware';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { AllExceptionsFilter } from './all-exceptions.filter';
 import { TransformInterceptor } from './response.interceptor';
-import { UsersService } from './users/users.service';
 import { ChatModule } from './chat/chat.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { GameModule } from './game/game.module';
-import { ChatGateway } from './chat/chat.gateway';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({

@@ -5,12 +5,10 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { first } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { SimpleUserDto } from 'src/users/dto/users.dto';
 import { UsersService } from 'src/users/users.service';
 import { UserStatusContainer } from 'src/userStatus/userStatus.service';
-import { FindRelationsNotFoundError } from 'typeorm';
 import { ChatService } from './chat.service';
 import { ChatRoomUserDto } from './dto/chatParticipant.dto';
 
@@ -90,17 +88,6 @@ export class ChatLobbyGateway
     }
   }
 
-  // 로비에 연결된 유저의 id 가져오기
-  // getConnectedUserIds(): string[] {
-  //   const connectedUserIds: string[] = [];
-
-  //   this.connectedSocketMap.forEach((socketSet, userId) => {
-  //     connectedUserIds.push(userId);
-  //   });
-
-  //   return connectedUserIds;
-  // }
-
   // 로비에 연결된 특정 유저의 socketId 가져오기
   getConnectedSocketIdsOfUser(userId: string): string[] | undefined {
     const socketIds = this.connectedSocketMap.get(userId);
@@ -118,7 +105,6 @@ export class ChatLobbyGateway
       this.connectedSocketMap.forEach(async (socketSet, userId) => {
         const chatRoomList =
           await this.chatService.getParticipantingChatRoomsForEmit(+userId);
-        console.log('\nchatRoomList ', chatRoomList);
 
         socketSet.forEach((socketId) => {
           this.wss
@@ -149,7 +135,6 @@ export class ChatLobbyGateway
         participantId.toString(),
       );
 
-      console.log('\n participantIds ', participantIds);
       // 4. 해당 유저의 소켓에 채팅방 목록 emit
       if (socketIds) {
         socketIds.forEach(async (socketId) => {
@@ -157,7 +142,6 @@ export class ChatLobbyGateway
             await this.chatService.getParticipantingChatRoomsForEmit(
               participantId,
             );
-          console.log('\n chatRoomList ', chatRoomList);
 
           this.wss
             .to(socketId)

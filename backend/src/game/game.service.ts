@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { User } from 'src/users/entities/users.entity';
@@ -20,6 +20,8 @@ export class GameService {
     private readonly userRepo: Repository<User>,
     private readonly gameEnv: GameEnv,
   ) {}
+
+  private logger = new Logger('GameService');
 
   // HTTP APIs
 
@@ -50,7 +52,6 @@ export class GameService {
     const gameId = this.gameEnv.createGameRoom(player, createGameRoomDto);
     if (gameId === undefined)
       throw new BadRequestException(`최대 방 갯수를 초과하였습니다.`);
-
 
     const gameRoomDto = new SimpleGameRoomDto();
     gameRoomDto.gameMode = createGameRoomDto.gameMode;
@@ -104,10 +105,9 @@ export class GameService {
       throw new BadRequestException('이미 입장 된 방입니다.');
 
     const peopleCount = this.gameEnv.joinPlayerToGame(player, game);
-    console.log(
+    this.logger.verbose(
       `Player ${player.userId} joined room ${game.roomId}, ${peopleCount}`,
     );
-    // 소켓: 로비에 변경사항 반영
 
     const gameRoomDto = new SimpleGameRoomDto();
     gameRoomDto.gameMode = game.gameMode;

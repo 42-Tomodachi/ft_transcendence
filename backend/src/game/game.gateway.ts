@@ -1,4 +1,4 @@
-import { ConsoleLogger, forwardRef, Inject, UseGuards } from '@nestjs/common';
+import { forwardRef, Inject, Logger, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   OnGatewayConnection,
@@ -21,6 +21,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @Inject(forwardRef(() => GameEnv))
     private readonly gameEnv: GameEnv,
   ) {}
+
+  private logger = new Logger('GameGateway');
+
   @WebSocketServer()
   server: Server;
 
@@ -29,9 +32,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId: number = +client.handshake.query['userId'];
     const gameId: number = +client.handshake.query['roomId'];
     if (!userId) {
-      console.log(`connection: New client has no userId`);
+      this.logger.debug('connection attempt without userId');
       client.send('no userId');
-      client.emit('fatalError'); //
     }
     this.gameEnv.onFirstSocketHandshake(client, userId, gameId, connectionType);
   }
@@ -44,14 +46,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.gameEnv.onSocketDisconnect(client, connectionType, userId, gameId);
   }
 
-  // @SubscribeMessage('cancelLadderQueue')
-  // async cancleLadderQueue(client: Socket): Promise<void> {
-  //   this.gameEnv.cancelLadderWaiting(client);
-  // }
-
   @SubscribeMessage('onMatchingScreen')
   async onMatchingScreen(client: Socket, gameId: number): Promise<void> {
-    setTimeout(() => {this.gameEnv.waitForPlayerJoins(client, gameId)}, 300);
+    setTimeout(() => {
+      this.gameEnv.waitForPlayerJoins(client, gameId);
+    }, 300);
   }
 
   @SubscribeMessage('calculatedRTData')
@@ -65,7 +64,6 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   broadcastToLobby(ev: string, ...args: any[]): void {
-    if (this && this.server)
-      this.server.to('gameLobby').emit(ev, ...args);
+    if (this && this.server) this.server.to('gameLobby').emit(ev, ...args);
   }
 }
