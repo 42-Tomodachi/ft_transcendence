@@ -351,9 +351,9 @@ pong 42는 Typescript 기반의 React, Nest를 사용해서 만든 채팅 / 핑�
 
 ### Backend
 
-| [jihokim](https://www.github.com/komskoms) | [kankim](https://github.com/gangukss) | [seungyel](https://github.com/2winyear) |
-| ----------- | ---------- | ------------ |
-| ![jihokim](https://avatars.githubusercontent.com/u/67675848?v=4) | ![kankim](/.github/asset/profile_kankim.jpg) | ![seungyel](https://avatars.githubusercontent.com/u/65284056?v=4) |
+| [jihokim](https://www.github.com/komskoms) | [kankim](https://github.com/gangukss) | [seungyel](https://github.com/2winyear) | []()
+| ----------- | ---------- | ------------ | --------- |
+| ![jihokim](https://avatars.githubusercontent.com/u/67675848?v=4) | ![kankim](/.github/asset/profile_kankim.jpg) | ![seungyel](https://avatars.githubusercontent.com/u/65284056?v=4) | ![](/.github/asset/transparent.png) |
 
 <p align="right"><a href="#readme-top">back to top</a></p>
 
