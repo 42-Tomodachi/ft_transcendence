@@ -17,7 +17,7 @@ import {
   IsSignedUpDto,
   CodeStringDto,
   IsDuplicateDto,
-  IsOkDto,
+  SecondAuthResultDto,
 } from './dto/auth.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { GetJwtUser } from './jwt.strategy';
@@ -79,14 +79,14 @@ export class AuthController {
     @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
     @Body() emailDto: EmailDto,
-  ): Promise<IsOkDto> {
+  ): Promise<SecondAuthResultDto> {
     const isOk = await this.authService.startSecondAuth(
       user,
       id,
       emailDto.email,
     );
 
-    return { isOk };
+    return { isOk, jwt: null };
   }
 
   @ApiOperation({ summary: '2차 인증 번호 검증' })
@@ -97,10 +97,8 @@ export class AuthController {
     @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
     @Query('code') code: string,
-  ): Promise<IsOkDto> {
-    const isOk = await this.authService.verifySecondAuth(user, id, code);
-
-    return { isOk };
+  ): Promise<SecondAuthResultDto> {
+    return await this.authService.verifySecondAuth(user, id, code);
   }
 
   @ApiOperation({ summary: '2차 인증 등록 완료' })
@@ -133,9 +131,13 @@ export class AuthController {
   async shootSecAuth(
     @GetJwtUser() user: User,
     @Param('userId', ParseIntPipe) id: number,
-  ): Promise<IsOkDto> {
-    const isOk = await this.authService.shootSecondAuth(user, id);
+  ): Promise<SecondAuthResultDto> {
+    const result = new SecondAuthResultDto();
+    result.isOk = await this.authService.shootSecondAuth(user, id);
+    if (result.isOk === true)
+      result.jwt = await this.authService.generateUserJwt(user);
+    else result.jwt = null;
 
-    return { isOk };
+    return result;
   }
 }

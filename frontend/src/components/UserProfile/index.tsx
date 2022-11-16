@@ -20,10 +20,14 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const getUserInfo = async () => {
-      if (user && user.jwt) {
-        const data = await usersAPI.getLoginUserProfile(user.jwt);
-        if (data && data.nickname) {
-          setUser(UPDATE_USER, { ...data, jwt: user.jwt });
+      if (user) {
+        if (user.jwt) {
+          const data = await usersAPI.getLoginUserProfile(user.jwt);
+          if (data && data.nickname) {
+            setUser(UPDATE_USER, { ...data, jwt: user.jwt });
+          }
+        } else {
+          navigate('/'); // logout
         }
       } else {
         navigate('/');

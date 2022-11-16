@@ -12,12 +12,14 @@ import {
   ChallengeResponseDto,
 } from './dto/game.dto';
 import { GameEnv } from './class/game.class.GameEnv';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class GameService {
   constructor(
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    private readonly usersService: UsersService,
     private readonly gameEnv: GameEnv,
   ) {}
 
@@ -158,7 +160,7 @@ export class GameService {
     if (userId === targetId)
       throw new BadRequestException('잘못된 요청입니다.');
 
-    return await this.gameEnv.isDuelAvailable(targetId);
+    return await this.gameEnv.isDuelAvailable(userId, targetId);
   }
 
   async saveGameRecord(gameRecordSaveDto: GameResultDto): Promise<void> {

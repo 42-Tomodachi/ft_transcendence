@@ -8,6 +8,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { UsersService } from 'src/users/users.service';
 import { GameEnv } from './class/game.class.GameEnv';
 import { GameInfo } from './class/game.class.interface';
 

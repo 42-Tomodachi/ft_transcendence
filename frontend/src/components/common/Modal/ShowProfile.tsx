@@ -11,6 +11,7 @@ import {
   FIGHT_RES_MODAL,
   IUserData,
   IGameRooms,
+  IChallengeResponse,
 } from '../../../utils/interface';
 import { chatsAPI, gameAPI, usersAPI } from '../../../API';
 import { useNavigate } from 'react-router-dom';
@@ -28,6 +29,8 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
   const navigate = useNavigate();
   const [matchState, setMatchState] = useState<ChallengeResponseDto | null>(null);
   const [opponentData, setOpponentData] = useState<IGameRooms | null>(null);
+  //junselee: 참가하기나 관전하기일때 로직 추가
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo; // roomid기억하자.
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -36,6 +39,10 @@ const ShowProfile: React.FC<{ userId: number }> = ({ userId }) => {
         const userTest = data?.userId;
         if (userTest) {
           const res = await gameAPI.dieDieMatch(user.userId, userTest, user.jwt);
+          if (!res.available && res.blocked) {
+            setModal(CANCEL_MATCH_MODAL);
+            return;
+          }
           setMatchState(res);
           const res2 = await gameAPI.opponentState(userTest, user.jwt);
           if (res2 && res2.playerCount !== undefined) setOpponentData(res2);

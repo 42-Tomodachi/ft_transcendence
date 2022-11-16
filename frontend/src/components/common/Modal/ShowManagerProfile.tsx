@@ -9,6 +9,10 @@ import {
   FIGHT_RES_MODAL,
   IUserData,
   CANCEL_MATCH_MODAL,
+  IChallengeResponse,
+  IGameRooms,
+  ENTER_GAME_ROOM,
+  NOTI_OWNER_IN_CHATROOM,
 } from '../../../utils/interface';
 import { useNavigate } from 'react-router-dom';
 import { chatsAPI, gameAPI, usersAPI } from '../../../API';
@@ -17,14 +21,32 @@ import ProfileImage from '../ProfileImage';
 
 const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId, userId }) => {
   const { setModal } = useContext(AllContext).modalData;
-  const [target, setTarget] = useState<IUserData | null>(null);
+  const [target, setTarget] = useState<(IUserData & { isMuted: boolean; role: string }) | null>(
+    null,
+  );
   const { user } = useContext(AllContext).userData;
   const navigate = useNavigate();
+
+  //junselee: 상태가 더블체크가 필요한게, 프로필을 누르는시점과, 함께하기버튼을 누르는순간의 상대방상태가 다를수있어서
+  const [matchState, setMatchState] = useState<IChallengeResponse | null>(null);
+  const [opponentData, setOpponentData] = useState<IGameRooms | null>(null);
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo; // roomid기억하자.
 
   useEffect(() => {
     const getUserInfo = async () => {
       if (user && user.jwt) {
-        const data = await usersAPI.getUserProfile(user.userId, userId, user.jwt);
+        const data = await chatsAPI.getUserProfileInChatRoom(roomId, user.userId, userId, user.jwt);
+        const userTest = data?.userId;
+        if (userTest) {
+          const res = await gameAPI.dieDieMatch(user.userId, userTest, user.jwt);
+          if (!res.available && res.blocked) {
+            setModal(CANCEL_MATCH_MODAL);
+            return;
+          }
+          setMatchState(res);
+          const res2 = await gameAPI.opponentState(userTest, user.jwt);
+          if (res2 && res2.playerCount !== undefined) setOpponentData(res2);
+        }
         if (data) {
           if (data.avatar) setTarget(data);
           else setTarget({ ...data, avatar: defaultProfile });
@@ -33,6 +55,78 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
     };
     getUserInfo();
   }, []);
+
+  //junselee: 알맞은 버튼이름!
+  const buttonName = () => {
+    if (opponentData)
+      switch (opponentData.playerCount) {
+        case 0:
+          return '게임 신청';
+        case 1:
+          return '참가 하기';
+        default:
+          return '관전 하기';
+      }
+    else if (matchState && matchState.status === 'on' && matchState.available === false)
+      return '대기열 참가 중';
+    else if (matchState && matchState.status === 'off' && matchState.available === false)
+      return '오프 라인';
+    else return '게임 신청';
+  };
+
+  const enterRoom = async () => {
+    if (user && opponentData) {
+      const res = await gameAPI.enterGameRoom(opponentData.gameId, user.userId, '', user.jwt);
+      if (res && res.gameId !== undefined) {
+        // console.log('게임모드: ' + res.gameMode);
+        setPlayingGameInfo({
+          ...playingGameInfo,
+          gameRoomId: res.gameId,
+          gameMode: res.gameMode,
+          gameState: opponentData.isStart,
+        });
+        navigate(`/gameroom/${opponentData.gameId}`);
+      }
+    }
+  };
+
+  const handleEnterRoom = async () => {
+    if (user && opponentData) {
+      if (!opponentData.isPublic) {
+        setModal(ENTER_GAME_ROOM, user.userId, opponentData.gameId);
+      } else {
+        await enterRoom();
+      }
+    }
+  };
+
+  //junselee: 게임신청 버튼 클릭시
+  const onApplyGame = async () => {
+    console.log('send msg');
+    if (target && user) {
+      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
+      const sat = buttonName();
+      if (sat === '게임 신청' && res.available && res.status === 'on') {
+        setModal(FIGHT_RES_MODAL, target.userId);
+      } else if ((sat === '참가 하기' || sat === '관전 하기') && res.status === 'play') {
+        handleEnterRoom();
+      } else if (sat === '대기열 참가 중' || sat === '오프 라인') {
+        return;
+      } else {
+        setModal(CANCEL_MATCH_MODAL);
+      }
+    }
+  };
+
+  const onSendDm = async () => {
+    if (user && target) {
+      const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
+      if (res && res.roomId) {
+        setModal(null);
+        navigate(`/chatroom/${res.roomId}`);
+      }
+    }
+  };
 
   const onClickFriend = async () => {
     if (user && user.jwt && target) {
@@ -62,6 +156,8 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
       }
     }
   };
+
+  // owner, manager
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
@@ -92,7 +188,8 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   };
   const handleKickOrBan = async () => {
     if (target) {
-      setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
+      if (target.role !== 'owner') setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
+      else setModal(NOTI_OWNER_IN_CHATROOM);
     }
   };
 
@@ -142,7 +239,7 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
                 />
                 <Button
                   color="gradient"
-                  text="게임 신청"
+                  text={buttonName()}
                   width={200}
                   height={40}
                   onClick={onApplyGame}

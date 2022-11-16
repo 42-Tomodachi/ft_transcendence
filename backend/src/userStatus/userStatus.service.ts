@@ -45,12 +45,34 @@ class UserStatus {
     } else this.logger.debug('UserStatus: setSocket: wrong socket');
   }
 
-  removeSocket(socket: Socket): void {
-    this.chatLobbySockets.delete(socket);
-    this.chatSockets.delete(socket);
-    this.gameLobbySockets.delete(socket);
-    this.gamePlayingSockets.delete(socket);
-    this.gameWatchingSockets.delete(socket);
+  removeSocket(socket: Socket): boolean {
+    let result = false;
+    result ||= this.chatLobbySockets.delete(socket);
+    result ||= this.chatSockets.delete(socket);
+    result ||= this.gameLobbySockets.delete(socket);
+    result ||= this.gamePlayingSockets.delete(socket);
+    result ||= this.gameWatchingSockets.delete(socket);
+    return result;
+  }
+
+  private _pruneSocketSet(socketSet: Set<Socket>): boolean {
+    let result = false;
+    for (const sock of socketSet) {
+      if (sock.connected === false) {
+        socketSet.delete(sock);
+        result = true;
+      }
+    }
+    return result;
+  }
+  pruneSocket(): boolean {
+    let result = false;
+    result ||= this._pruneSocketSet(this.chatLobbySockets);
+    result ||= this._pruneSocketSet(this.chatSockets);
+    result ||= this._pruneSocketSet(this.gameLobbySockets);
+    result ||= this._pruneSocketSet(this.gamePlayingSockets);
+    result ||= this._pruneSocketSet(this.gameWatchingSockets);
+    return result;
   }
 
   getSockets(): Socket[] {
@@ -140,7 +162,7 @@ export class UserStatusContainer {
     return isStatusChanged;
   }
 
-  async removeSocket(
+  async removeSocketOfUser(
     userId: number,
     socket: Socket,
     callIfStatusChanged?: () => void,
@@ -155,21 +177,35 @@ export class UserStatusContainer {
     return isStatusChanged;
   }
 
-  async removeSocketAssert(
+  async removeSocket(
     socket: Socket,
     callIfStatusChanged?: () => void,
   ): Promise<boolean> {
-    let found: boolean;
+    let result: boolean;
     for (const user of this.userContainer) {
-      user.removeSocket(socket);
+      if (user.status === 'off') continue;
 
-      const found = user.changeStatus();
-      if (found) {
+      result = user.removeSocket(socket);
+
+      if (user.pruneSocket() === true) {
+        console.log(':::userStatusManager:::');
+        console.log('Dangling Dead Socket has been pruned Automatically.');
+      }
+
+      if (user.changeStatus()) {
         await this.authService.emitUpdatedUserList(user.userId);
         callIfStatusChanged;
-        break;
       }
     }
-    return found;
+    return result;
+  }
+
+  pruneSocket(): boolean {
+    let result = false;
+    for (const user of this.userContainer) {
+      if (user.status === 'off') continue;
+      result ||= user.pruneSocket();
+    }
+    return result;
   }
 }

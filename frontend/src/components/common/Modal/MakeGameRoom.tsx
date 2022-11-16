@@ -91,8 +91,6 @@ const MainBlock = styled.div`
   width: 100%;
 `;
 
-
-
 const TextGridBlock = styled.div`
   margin-left: 30px;
   margin-right: 40px;

@@ -66,7 +66,7 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
             ...playingGameInfo,
             gameRoomId: roomId,
             gameMode: 'normal',
-            gameLadder: true,
+            gameLadder: false,
           });
         }
         navigate(`/gameroom/${roomId}`);
@@ -80,7 +80,7 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
       });
     }
     return () => {
-      if (socket) socket.disconnect();
+      if (socket && socket.connected) socket.disconnect();
     };
   }, []);
 

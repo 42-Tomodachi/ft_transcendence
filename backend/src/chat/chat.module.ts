@@ -1,6 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from 'src/auth/auth.module';
+import { GameGateway } from 'src/game/game.gateway';
+import { GameModule } from 'src/game/game.module';
 import { BlockedUser } from 'src/users/entities/blockedUser.entity';
 import { User } from 'src/users/entities/users.entity';
 import { UsersModule } from 'src/users/users.module';
@@ -26,6 +28,7 @@ import { ChatRoom } from './entities/chatRoom.entity';
     forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
     forwardRef(() => UserStatusModule),
+    forwardRef(() => GameModule),
   ],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway, ChatLobbyGateway],
