@@ -57,9 +57,9 @@ const FightReqModal: React.FC<{ matchUserId: number }> = ({ matchUserId }) => {
         },
       });
       // TODO: acceptChallenge 사용되는 상황 파악
-      socket.on('acceptChallenge', (userId: number) => {
-        console.log('acceptChallenge', userId);
-      });
+      // socket.on('acceptChallenge', (userId: number) => {
+      //   console.log('acceptChallenge', userId);
+      // });
       socket.on('matchingGame', (roomId: number) => {
         if (user) {
           setPlayingGameInfo({
