@@ -41,7 +41,7 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
     if (user && user.jwt) {
       const res = await chatsAPI.getJoinedChatRooms(user.userId, user.jwt);
       setChatList(res);
-    } else console.error('not get user');
+    } // TODO : error handling
   };
 
   const getAllChatList = async (jwt: string) => {

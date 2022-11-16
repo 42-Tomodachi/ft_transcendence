@@ -453,7 +453,7 @@ const GameStart: React.FC = () => {
           await settingRealTimeData(data);
         }
       });
-    } else console.error('ERROR: user undefined');
+    } // TODO: error handling(user not found)
   };
 
   const realPaddle = () => {

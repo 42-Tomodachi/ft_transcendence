@@ -99,7 +99,7 @@ const NicknamePage: React.FC = () => {
       const updateUser = await usersAPI.updateUserNickname(userId, nickName, jwt);
       if (updateUser) setUser(LOGIN, { ...updateUser, jwt: jwt });
       setUserStatus(LOGIN);
-    } else console.error('user 정보를 못불러 왔습니다.');
+    } // TODO: error handling(user not found)
   };
 
   const getUserProfile = async (jwt: string) => {

@@ -31,7 +31,7 @@ const ChatPage: React.FC = () => {
         roomId: roomId,
         message: message,
       });
-    } else console.error('user가 없음');
+    } // TODO error handling(not user info)
   };
 
   useEffect(() => {
@@ -81,7 +81,6 @@ const ChatPage: React.FC = () => {
           setRoomName(res.title);
           if (res.isDm) setRoomtype(res.isDm);
         } else {
-          console.log("can't enter chatroom");
           // disconnectSocketNoti('error', 'top', 'X');
           // TODO: 경고 모달 띄우기
           // navigate('/chat');

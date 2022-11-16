@@ -30,7 +30,7 @@ const UserList: React.FC<UserListType> = ({ menuType, roomId, isDm, socket }) =>
         case 'INCHAT':
           return await chatsAPI.getUsersInChatRoom(+(roomId as string), user.jwt);
       }
-    } else console.error('아무것도 없음');
+    } // TODO : error handle
     return [];
   };
 
@@ -190,7 +190,7 @@ const UserContainer = styled.div`
       border-radius: 10px;
     }
   }
- 
+
   margin-top: 12px;
   overflow-y: scroll;
   height: calc(100% - 52px);
