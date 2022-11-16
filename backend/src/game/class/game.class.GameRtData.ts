@@ -9,7 +9,7 @@ export class GameRtData {
   turn: number;
   lostPoint: boolean;
   updateFlag: boolean;
-  player: number; //
+  player: number;
   scoreLeft: number;
   scoreRight: number;
   lastSent: number;
@@ -25,7 +25,7 @@ export class GameRtData {
     this.scoreLeft = 0;
     this.scoreRight = 0;
     this.lastSent = Date.now();
-    this.player = 1; //
+    this.player = 1;
   }
 
   toRtData(): (number | boolean)[] {

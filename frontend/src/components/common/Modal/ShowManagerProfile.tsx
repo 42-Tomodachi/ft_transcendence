@@ -23,7 +23,8 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   const { setModal } = useContext(AllContext).modalData;
   const [target, setTarget] = useState<(IUserData & { isMuted: boolean; role: string }) | null>(
     null,
-  );  const { user } = useContext(AllContext).userData;
+  );
+  const { user } = useContext(AllContext).userData;
   const navigate = useNavigate();
 
   //junselee: 상태가 더블체크가 필요한게, 프로필을 누르는시점과, 함께하기버튼을 누르는순간의 상대방상태가 다를수있어서
@@ -160,12 +161,28 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   const onToggleMute = async () => {
     if (target && user) {
       const res = await chatsAPI.setUpMuteUser(roomId, user.userId, target.userId, user.jwt);
-      console.log('Toggle Mute', res);
       if (res && res.isMuted) {
         setModal(null);
-      } else if (target.role === 'owner') {
-        // TODO: 경고 noti, 방 주인한테 뮤트
-        setModal(NOTI_OWNER_IN_CHATROOM);
+      } // TODO: 방 주인한테 뮤트 받은 유저는 뮤트를 받았다고 따로 연락을 받아야함(broad msg or noti)
+    }
+  };
+  const onApplyGame = async () => {
+    if (target && user) {
+      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
+      if (res) {
+        setModal(FIGHT_RES_MODAL, target.userId);
+      } else {
+        setModal(CANCEL_MATCH_MODAL);
+      }
+    }
+  };
+  const onSendDm = async () => {
+    if (user && target) {
+      const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
+
+      if (res && res.roomId) {
+        setModal(null);
+        navigate(`/chatroom/${res.roomId}`);
       }
     }
   };
@@ -274,15 +291,12 @@ const ShowManagerProfile: React.FC<{ roomId: number; userId: number }> = ({ room
   );
 };
 
-// Main Block
 const MainBlock = styled.div`
   padding: 13px;
   margin-top: 50px;
   width: 100%;
 `;
-//============================================
 
-// Profile Section
 const ProfileBlock = styled.div`
   height: 120px;
   display: flex;
@@ -306,9 +320,7 @@ const UserLevel = styled.span`
   margin-top: 5px;
   margin-left: 25px;
 `;
-//============================================
 
-//Record Section
 const RecordBlock = styled.div`
   display: flex;
   justify-content: space-between;
@@ -336,9 +348,6 @@ const RecordBtn = styled.div`
   }
 `;
 
-//============================================
-
-//OtherBtnSection
 const OtherBtnBlock = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -356,6 +365,5 @@ const BanBtnBlock = styled.div`
     border-radius: 5px;
   }
 `;
-//============================================
 
 export default ShowManagerProfile;

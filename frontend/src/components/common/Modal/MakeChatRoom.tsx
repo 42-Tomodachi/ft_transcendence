@@ -46,7 +46,6 @@ const MakeChatRoom: React.FC = () => {
         setModal(null);
         navigate(`/chatroom/${res.roomId}`);
       }
-      // TODO : 실패시 로직 처리
     }
   };
   return (
@@ -73,15 +72,12 @@ const MakeChatRoom: React.FC = () => {
   );
 };
 
-// Main Block
 const MainBlock = styled.div`
   padding: 13px;
   margin-top: 50px;
   width: 100%;
 `;
-//============================================
 
-//InputSection
 const TextGridBlock = styled.div`
   margin-left: 30px;
   margin-right: 40px;
@@ -121,15 +117,11 @@ const ErrMsg = styled.span`
   margin: 20px 0 10px;
 `;
 
-//============================================
-
-//BtnSection
 const BtnBlock = styled.div`
   margin-top: 20px;
   & button {
     border-radius: 5px;
   }
 `;
-//============================================
 
 export default MakeChatRoom;

@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import {
   ChallengeResponseDto,
@@ -19,6 +19,8 @@ import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class GameEnv {
+  private logger = new Logger('GameEnv');
+
   eventObject: EventEmitter = new EventEmitter();
   socketIdToPlayerMap = new Map<string, Player>();
   playerList: Player[] = [];
@@ -83,7 +85,9 @@ export class GameEnv {
   ): Promise<Player> {
     let player = this.getPlayerBySocket(client);
     if (!player) {
-      console.log(`unregistered userId ${userId}`);
+      this.logger.debug(
+        `assertGetPlayerBySocket: unregistered userId ${userId}`,
+      );
       player = await this.newPlayer(userId, null);
       this.socketIdToPlayerMap.set(client.id, player);
     }
@@ -188,7 +192,7 @@ export class GameEnv {
     const opponentId: number = +client.handshake.query['targetId'];
     const isChallenger = client.handshake.query['isSender'];
     if (opponentId == NaN) {
-      console.log('handleConnectionOnDuel: no opponent');
+      this.logger.debug('handleConnectionOnDuel: called without opponent');
       return;
     }
     player.socketQueue = client;
@@ -205,7 +209,6 @@ export class GameEnv {
         if (!opponent) return;
         this.makeDuelMatch(player, opponent, 'normal');
         for (const sock of notifying) {
-          // 이 이벤트를 받으면 대전 관련 창을 끄세여
           sock.emit('challengeAccepted', player.userId);
         }
       });
@@ -229,7 +232,7 @@ export class GameEnv {
     const opponent = await this.getPlayerByUserId(opponentId);
     const isChallenger = client.handshake.query['isSender'];
     if (!opponent) {
-      console.log('handleDisconnectionOnDuel: no opponent');
+      this.logger.debug('handleDisconnectionOnDuel: called without opponent');
       return;
     }
 
@@ -251,7 +254,7 @@ export class GameEnv {
     if (!client || !player) return;
     player.socketQueue = client;
     const queueLength = this.ladderQueue.enlist(player);
-    console.log(`enlistLadderQueue: length: ${queueLength}`);
+    this.logger.verbose(`enlisted LadderQueue length: ${queueLength}`);
   }
 
   handleDisconnectionOnLadderQueue(client: Socket, player: Player): void {
@@ -284,7 +287,7 @@ export class GameEnv {
     player: Player,
   ): void {
     if (!gameId) {
-      console.log(`connection: New client has no gameId`);
+      this.logger.debug(`haddleConnection: connection attempt without gameId`);
       client.send('no gameId');
       return;
     }
@@ -337,10 +340,10 @@ export class GameEnv {
         break;
       default:
         const message = `ConnectionHandler: ${connectionType} is not a correct type of connection.`;
-        console.log(message);
+        this.logger.debug(message);
         client.send(message);
     }
-    console.log(
+    this.logger.verbose(
       `New client connected: ${client.id.slice(
         0,
         6,
@@ -362,7 +365,9 @@ export class GameEnv {
   ): void {
     const player = this.getPlayerBySocket(client);
     if (!player) {
-      console.log('onSocketDisconnect: Cannot get Player with socket');
+      this.logger.debug(
+        'onSocketDisconnect: Cannot obtain Player by the socket',
+      );
     }
 
     switch (connectionType) {
@@ -383,10 +388,10 @@ export class GameEnv {
         break;
       default:
         const message = `ConnectionHandler: ${connectionType} is not a correct type of connection.`;
-        console.log(message);
+        this.logger.debug(message);
         client.send(message);
     }
-    console.log(
+    this.logger.verbose(
       `Client disconnected: ${client.id.slice(
         0,
         6,
@@ -406,11 +411,6 @@ export class GameEnv {
 
     const game = player.socketsToGameMap.get(client);
     if (game) {
-      // if (game.isPlaying === true) {
-      //   player.unsetGameSocket(client);
-      //   player.socketPlayingGame = undefined;
-      //   return;
-      // }
       if (game.isPlaying === true && player.socketPlayingGame === client) {
         const winner =
           game.firstPlayer === player ? game.secondPlayer : game.firstPlayer;
@@ -434,15 +434,14 @@ export class GameEnv {
     const player = await this.getPlayerByUserId(opId);
     const result = new ChallengeResponseDto();
 
-    result.available = true;
-    result.blocked = false;
-    result.status = this.userStats.getStatus(opId);
-
+    result.status = this.userStats.getStatus(userId);
     if (result.status !== 'on') {
-      console.log('isDuelAvailable: user unavailable');
+      this.logger.verbose('isDuelAvailable: user unavailable');
       result.available = false;
-    } else if (player.socketQueue !== null) {
-      console.log('isDuelAvailable: target is on queue');
+      return result;
+    }
+    if (player.socketQueue !== null) {
+      this.logger.verbose('isDuelAvailable: target is on queue');
       result.available = false;
     }
     if (await this.usersService.getBlockedUserById(opId, userId)) {
@@ -471,7 +470,7 @@ export class GameEnv {
 
   setSocketJoin(client: Socket, game: GameAttribute): void {
     if (!game) {
-      console.log('setSocketJoin: game is undefined.');
+      this.logger.debug('setSocketJoin: game is undefined.');
       return;
     }
     client.join(game.roomId.toString());
@@ -487,7 +486,7 @@ export class GameEnv {
 
   broadcastToLobby(ev: string, ...args: any[]): void {
     if (this.gameLobbyTable.size === 0) {
-      console.log('broadcastToLobby: No game lobby on connected');
+      this.logger.debug('broadcastToLobby: No game lobby on connected');
       return;
     }
     const randomLobby: Socket = this.gameLobbyTable.values().next().value;
@@ -500,10 +499,8 @@ export class GameEnv {
       game.destroy();
     } else {
       game.destroy();
-      // game.initPlayData();
     }
     this.broadcastToLobby('updateGameRoomList', this.getPublicGameList());
-    // clearInterval(this.streaming);
   }
 
   createCustomGame(p1: Player, p2: Player, gameMode: string): GameAttribute {
@@ -511,7 +508,7 @@ export class GameEnv {
 
     const game = this.getFreeGameRoom();
     if (!game) {
-      console.log('makeCustomMatch: Cannot get Empty Room');
+      this.logger.debug('makeCustomMatch: Cannot get Empty Room');
       return undefined;
     }
     const createGameRoomDto = new CreateGameRoomDto();
@@ -539,7 +536,9 @@ export class GameEnv {
     const game = this.createCustomGame(player1, player2, gameMode);
     game.roomTitle = `[ Duel ] ${player1.user.nickname} vs ${player2.user.nickname}`;
 
-    console.log(`Duel match made: ${player1.userId}, ${player2.userId}`);
+    this.logger.verbose(
+      `Duel match made: ${player1.userId}, ${player2.userId}`,
+    );
 
     player1.socketQueue?.emit('matchingGame', game.roomId.toString());
     player2.socketQueue?.emit('matchingGame', game.roomId.toString());
@@ -555,7 +554,7 @@ export class GameEnv {
     gameMode: string,
   ): Promise<GameAttribute> {
     if (!player1 || !player2) {
-      console.log(
+      this.logger.debug(
         `makeLadderMatch: wrong param delivered. ${player1} ${player2}`,
       );
       return undefined;
@@ -564,7 +563,9 @@ export class GameEnv {
     const game = this.createCustomGame(player1, player2, gameMode);
     game.isLadder = true;
 
-    console.log(`Ladder match made: ${player1.userId}, ${player2.userId}`);
+    this.logger.verbose(
+      `Ladder match made: ${player1.userId}, ${player2.userId}`,
+    );
 
     player1.socketQueue?.emit('matchingGame', game.roomId.toString());
     player2.socketQueue?.emit('matchingGame', game.roomId.toString());
@@ -578,7 +579,7 @@ export class GameEnv {
     const game = this.getGameRoom(gameId);
     const isRightGame = player.gamePlaying === game;
     if (!isRightGame && player.gamesWatching.get(game) !== client) {
-      console.log(
+      this.logger.debug(
         `waitForPlayerJoins: ${player.userId} sent wrong roomNo.${gameId}`,
       );
       client.send('Error: recieved wrong room number');
@@ -646,7 +647,7 @@ export class GameEnv {
   }
 
   async endGame(game: GameAttribute): Promise<void> {
-    console.log(`game is finished ${game.roomId}`);
+    this.logger.verbose(`game is finished ${game.roomId}`);
     game.broadcastToRoom('gameFinished');
     await this.writeMatchResult(game);
     this.postGameProcedure(game);
@@ -655,7 +656,7 @@ export class GameEnv {
   async terminateGame(game: GameAttribute, winner: Player): Promise<void> {
     let winSide: number;
 
-    console.log(
+    this.logger.verbose(
       `game ${game.roomId} is terminated, winner is ${winner.userId}`,
     );
     if (winner === game.firstPlayer) {
@@ -691,7 +692,7 @@ export class GameEnv {
     const firstPlayer = await this.getUserByPlayer(p1);
     const secondPlayer = await this.getUserByPlayer(p2);
     if (!firstPlayer || !secondPlayer) {
-      console.log('writeMatchResult: cannot get user from the database');
+      this.logger.debug('writeMatchResult: cannot get user from the database');
       return;
     }
 

@@ -54,19 +54,6 @@ const UserItem: React.FC<UserItemProps> = ({
   );
 };
 
-/*
- * 서클(유저현재상태표시) 프롭스 : 서클 커스텀
- * 유저아이텐에 프롭스는, 유저이름을 감싸는 박스 커스텀
- * #circle 로 아이템박스에 정의하던 속성 합쳤습니다 <-- 다솜님 요청사항
- * 서클 컴포넌트가 유저아이템의 가상요소(pseudo element) before로 합쳐졌습니다.
- */
-
-// props.status === 'play'
-//   ? `background: ${props.theme.colors.red};`
-//   : props.status === 'on'
-//   ? `background: ${props.theme.colors.green};`
-//   : `background: ${props.theme.colors.deepGrey};`}
-//마우스 포인트 버튼되는 형태로. >> 이후 추가할 이벤트를 위해서 임시로.
 const UserItemContainer = styled.li<{ status: string }>`
   ::before {
     content: '';

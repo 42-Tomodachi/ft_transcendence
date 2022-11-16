@@ -14,20 +14,18 @@ const GameRooms: React.FC<GameRoomProps> = ({ item }) => {
   const navigate = useNavigate();
   const { setModal } = useContext(AllContext).modalData;
   const { user } = useContext(AllContext).userData;
-  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo; // roomid기억하자.
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   const enterRoom = async () => {
     if (user) {
       const res = await gameAPI.enterGameRoom(item.gameId, user.userId, '', user.jwt);
-      //if (res !== -1) { 자료형 바껴서 이제 예는 안씀.
       if (res && res.gameId !== undefined) {
-        // 세팅해줘야 게임플레이방에서 쓸수있음.
         setPlayingGameInfo({
           ...playingGameInfo,
           gameRoomId: res.gameId,
           gameMode: res.gameMode,
           gameState: item.isStart,
-        }); // 그럼이제 전역으로 모드를 들고다닐수 있게 된거심.
+        });
         navigate(`/gameroom/${item.gameId}`);
       }
     }
@@ -50,13 +48,7 @@ const GameRooms: React.FC<GameRoomProps> = ({ item }) => {
         <PrivateStat>{item.isPublic ? `공개` : `비공개`}</PrivateStat>
         <CountStat>{item.playerCount + '명'}</CountStat>
         <EnterBtnWrap>
-          <Button
-            width={50}
-            height={30}
-            color="gradient"
-            text="입장"
-            onClick={handleEnterRoom} // TODO: navigate(`game/${roomNumber}`); // game room
-          />
+          <Button width={50} height={30} color="gradient" text="입장" onClick={handleEnterRoom} />
         </EnterBtnWrap>
         <GameStat isGameStart={item.isStart}>{item.isStart ? `게임중` : `대기중`}</GameStat>
       </ListStatus>

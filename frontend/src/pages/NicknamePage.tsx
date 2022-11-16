@@ -20,10 +20,10 @@ const NicknamePage: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const profileIamge = useRef<HTMLInputElement>(null);
   const { setUserStatus } = useContext(AllContext).userStatus;
-  const { user, setUser } = useContext(AllContext).userData; // TODO: 리렌더링 방지용 전역 관리
+  const { user, setUser } = useContext(AllContext).userData;
   const { jwt } = useContext(AllContext).jwtData;
   const [convertImg, setConvertImg] = useState<File | string>('');
-  const [userProfile, setUserProfile] = useState<IUserData>(); // TODO: profile에 맞는 interface 제작
+  const [userProfile, setUserProfile] = useState<IUserData>();
   const navigate = useNavigate();
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +60,6 @@ const NicknamePage: React.FC = () => {
   const onKeyEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const key = e.key || e.keyCode;
     if (key == 'Enter' || key === 13) {
-      // NOTE : 한글 중복 입력 제거
       if (e.nativeEvent.isComposing === false) onCheck();
     }
   };
@@ -100,24 +99,23 @@ const NicknamePage: React.FC = () => {
       const updateUser = await usersAPI.updateUserNickname(userId, nickName, jwt);
       if (updateUser) setUser(LOGIN, { ...updateUser, jwt: jwt });
       setUserStatus(LOGIN);
-    } else console.error('user 정보를 못불러 왔습니다.'); // TODO: null guard
+    } // TODO: error handling(user not found)
   };
 
   const getUserProfile = async (jwt: string) => {
     const res = await usersAPI.getLoginUserProfile(jwt);
     if (res) {
-      setUserProfile({ ...res, jwt: jwt }); // user/own
+      setUserProfile({ ...res, jwt: jwt });
       setUser(UPDATE_USER, userProfile);
     }
   };
 
-  // TODO: 리렌더링 방지용 전역 데이터 갱신 시켜줘야함
   useEffect(() => {
     if (user) {
       getUserProfile(user.jwt);
       setUserStatus(SET_NICKNAME);
     } else {
-      navigate('/'); // logout
+      navigate('/');
     }
   }, []);
 

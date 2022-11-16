@@ -44,7 +44,6 @@ const SettingRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
   };
 
   return (
-    // TODO: 따로 게임방, 채팅방 설정으로 구분?
     <Modal width={570} height={300} title={'방 설정'}>
       <MainBlock>
         <TextGridBlock>
@@ -68,15 +67,12 @@ const SettingRoom: React.FC<{ roomId: number }> = ({ roomId }) => {
   );
 };
 
-// Main Block
 const MainBlock = styled.div`
   padding: 13px;
   margin-top: 50px;
   width: 100%;
 `;
-//============================================
 
-//InputSection
 const TextGridBlock = styled.div`
   margin-left: 30px;
   margin-right: 40px;
@@ -116,15 +112,11 @@ const ErrMsg = styled.span`
   margin: 20px 0 10px;
 `;
 
-//============================================
-
-//BtnSection
 const BtnBlock = styled.div`
   margin-top: 20px;
   & button {
     border-radius: 5px;
   }
 `;
-//============================================
 
 export default SettingRoom;

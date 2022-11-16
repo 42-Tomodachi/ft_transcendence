@@ -108,7 +108,6 @@ export class ChatService {
       chatRoomUserDto.userId = chatParticipant.userId;
       chatRoomUserDto.nickname = chatParticipant.user.nickname;
       chatRoomUserDto.status = this.userStats.getStatus(chatParticipant.userId);
-      // chatRoomUserDto.status = chatParticipant.user.userStatus;
       chatRoomUserDto.role = chatParticipant.role;
 
       return chatRoomUserDto;
@@ -214,7 +213,6 @@ export class ChatService {
     if (callingChatParticipant.role === 'guest') {
       throw new BadRequestException('권한이 없는 사용자입니다.');
     }
-    console.log('\n ### 2');
 
     await this.chatParticipantRepo.remove(targetChatParticipant);
 
@@ -225,7 +223,6 @@ export class ChatService {
       content: `님이 강퇴당했습니다.`,
       isNotice: true,
     });
-    console.log('\n ### 3');
 
     // 채널 유저들에게 강퇴 메세지 전송
     this.chatGateway.sendNoticeMessage(
@@ -234,7 +231,6 @@ export class ChatService {
     );
     this.chatGateway.emitChatRoomParticipants(roomId.toString());
     this.chatGateway.disconnectUser(roomId, targetUserId);
-    console.log('\n ### 4');
   }
 
   async getParticipatingChatRooms(
@@ -712,8 +708,6 @@ export class ChatService {
     chatContents.userId = userId;
     chatContents.content = messageDto.message;
     await this.chatContentsRepo.save(chatContents);
-    //전체에 emit
-    // this.chatGateway.wss.to(roomId.toString()).emit('updateChat', messageDto);
   }
 
   async enterDmRoom(
@@ -1030,11 +1024,6 @@ export class ChatService {
     this.schedulerRegistry.addTimeout(name, timeout);
   }
 
-  // deleteBanTimeout(name: string): void {
-  //   this.schedulerRegistry.deleteTimeout(name);
-  //   this.logger.warn(`Scheduler ${name}(name) deleted!`);
-  // }
-
   async getParticipantingChatRoomsForEmit(
     userId: number,
   ): Promise<ChatRoomDto[]> {
@@ -1059,7 +1048,6 @@ export class ChatService {
     const participantingChatRooms = await query.getMany();
 
     return participantingChatRooms.map((chatRoom) => {
-      console.log('\n chat participants cnt', chatRoom.chatParticipant);
       return chatRoom.toChatRoomDto();
     });
   }
