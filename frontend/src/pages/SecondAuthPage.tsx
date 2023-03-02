@@ -21,7 +21,7 @@ const SecondAuthPage: React.FC = () => {
 
     timer = setTimeout(async () => {
       if (user) {
-        const userId = user.userId;
+        const userId = user.userId; // TODO: user.id user가 null인 경우가 있다고 함
         await authAPI.sendSecondAuthCode(userId, jwt);
         setErrMsg('설정한 메일로 코드가 전송되었습니다.');
       }
@@ -32,7 +32,7 @@ const SecondAuthPage: React.FC = () => {
     if (user) {
       sendCode();
     } else {
-      navigate('/'); 
+      navigate('/'); // logout
     }
     return () => clearTimeout(timer);
   }, []);

@@ -14,7 +14,28 @@ import { UserStatusContainer } from 'src/userStatus/userStatus.service';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import { ChatContentDto } from './dto/chatContents.dto';
+import { AuthService } from 'src/auth/auth.service';
 import { ChatRoomUserDto } from './dto/chatParticipant.dto';
+
+/**
+ * recieveMessage
+ * when send chat to client from server
+ * nickname, msg, avatar, createdTime, isBroadcast, isMyMessage
+ *
+ * sendMessage
+ * when send chat to server from client
+ * userId, roomId, message
+ */
+
+// export class ChatToClientDto {
+//   userId: number;
+//   nickname: string;
+//   avatar: string;
+//   msg: string;
+//   createdTime: Date;
+//   isBroadcast: boolean;
+//   // isMyMessage: boolean; // 소켓에 유저의 정보를 저장할 수 있나? 없다면 isMyMessage를 구분하여 리턴할 수 없음. 클라이언트에서 받은 데이터의 userId와 클라이언트 자신의 userId를 비교해야 할 듯
+// }
 
 class ChatToServerDto {
   userId: number;
@@ -36,6 +57,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private logger: Logger = new Logger('ChatGateway');
 
+  // Map<roomId, Map<userId, socketId>>
   connectedSocketMap = new Map<string, Map<string, string>>();
 
   async handleConnection(client: Socket) {
@@ -86,12 +108,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
   }
 
+  // 채팅방에 처음 들어왔을 때 입장 메세지
   // 채팅방에서 나갔을 때 퇴장 메세지
   sendNoticeMessage(roomId: number, chatContentDto: ChatContentDto): void {
     this.logger.log(`roomId: ${roomId}, emit recieveMessage`);
     this.wss.to(roomId.toString()).emit('recieveMessage', chatContentDto);
   }
 
+  // sendChatHistory(roomId: number, chatContentDtos: ChatContentDto[]): void {
+  //   this.logger.log(`roomId: ${roomId}, emit recieveChatHistory`);
+  //   this.wss.to(roomId.toString()).emit('recieveChatHistory', chatContentDtos);
+  // }
   getParticipatingChatSocketId(roomId: string, userId: string) {
     return this.connectedSocketMap.get(roomId).get(userId);
   }
@@ -229,22 +256,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const socketIds = this.getParticipatingSocketIds(followerId.toString());
       const friendList = await this.userService.getFriendsForEmit(followerId); // 친구 목록 가져오기
 
-<<<<<<< HEAD
-      // follower의 소켓이 있는지 확인하고
-      if (socketIds.length) {
-        // 있으면 해당 소켓에 친구 목록 emit
-        const friendList = await this.userService.getFriendsForEmit(followerId);
-
-        socketIds.forEach((socketId) => {
-          this.wss.to(socketId).emit('updateFriendList', friendList);
-        });
-      }
-=======
       // 있으면 해당 소켓에 친구 목록 emit
       socketIds?.forEach((socketId) => {
         this.wss.to(socketId).emit('updateFriendList', friendList);
       });
->>>>>>> main
     });
   }
 
@@ -264,15 +279,14 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.wss.to(socketId).emit('disconnectSocket', null);
     this.wss.to(socketId).disconnectSockets();
   }
-  // /**
-  //  * 채팅 프로세스
-  //  * 채팅 페이지 진입 시 소켓 연결
-  //  * 클라이언트에서 채팅 보내면 서버에서 받고 db에 저장 후 채팅방 참여자에게 메세지 리턴
-  //  * 클라이언트에서 받은 메세지의 userId가 클라이언트의 userId와 같으면 내가보낸 메세지로 출력
-  //  * 클라이언트에서 받은 메세지의 userId가 클라이언트의 userId와 다르면 다른 사용자가 보낸 메세지로 출력
-  //  * 채팅 페이지 이탈 시 소켓 연결 해제
-  //  */
-
+  /**
+   * 채팅 프로세스
+   * 채팅 페이지 진입 시 소켓 연결
+   * 클라이언트에서 채팅 보내면 서버에서 받고 db에 저장 후 채팅방 참여자에게 메세지 리턴
+   * 클라이언트에서 받은 메세지의 userId가 클라이언트의 userId와 같으면 내가보낸 메세지로 출력
+   * 클라이언트에서 받은 메세지의 userId가 클라이언트의 userId와 다르면 다른 사용자가 보낸 메세지로 출력
+   * 채팅 페이지 이탈 시 소켓 연결 해제
+   */
   // 채팅을 보냈을 때 채팅방 참여자에게 메세지 전달
   @SubscribeMessage('refreshChatRoom')
   async reloadChatHistoryForSpecificUser(
@@ -324,11 +338,44 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       data.userId,
     );
 
+    console.log(this.connectedSocketMap);
     userInSocketRoom.forEach((socketId, userId) => {
       if (!unblockedUserIds.includes(+userId)) {
         return;
       }
       this.wss.to(socketId).emit('recieveMessage', chatContentDto);
     });
+    // const socketsForEmit = this.wss
+    //   .to(data.roomId.toString())
+    //   .emit('recieveMessage', chatContentDto);
   }
+
+  // 클라이언트가 받은 채팅을 검증(차단한 유저인지)하기 위해 사용
+  // 받은 채팅을 보낸 유저가 내가 차단한 유저이면 true리턴 차단하지 않았으면 false 리턴
+  // @SubscribeMessage('isMessageFromBlockedUser')
+  // async isMessageFromBlockedUser(
+  //   @ConnectedSocket() client: Socket,
+  //   @MessageBody() data: { senderId: string; myId: string }, // senderId: 메세지 보낸 유저 id, myId: 메세지 받은 유저 id
+  // ): Promise<void> {
+  //   this.logger.log(`on isMessageFromBlockedUser`);
+
+  //   const res = await this.chatService.isMessageFromBlockedUser(
+  //     +data.myId,
+  //     +data.senderId,
+  //   );
+
+  //   client.emit('isMessageFromBlockedUserResult', res);
+  // }
+
+  // @SubscribeMessage('clientDisconnect')
+  // clientDisconnect(
+  //   @ConnectedSocket() client: Socket,
+  //   @MessageBody() data: { userId: string; roomId: string },
+  // ): void {
+  //   this.logger.log('on clientDisconnect');
+  //   client.disconnect();
+  //   if (this.connectedSocketMap.has(data.roomId)) {
+  //     this.connectedSocketMap.get(data.roomId).delete(client.id);
+  //   }
+  // }
 }

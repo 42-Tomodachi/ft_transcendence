@@ -10,6 +10,7 @@ import GameStart from './GameStart';
 import { useNavigate } from 'react-router-dom';
 import LoadingPage from './LoadingPage';
 
+// 내가 쓸 변수 && 받아올 데이터 담긴변수 정의
 interface GameInfoDto {
   nicknameOne: string;
   avatarOne: string;
@@ -35,7 +36,7 @@ const GamePage: React.FC = () => {
   let socket: Socket;
   const navigate = useNavigate();
   const [gameStart, setGameStart] = useState(false);
-  const { user } = useContext(AllContext).userData;
+  const { user } = useContext(AllContext).userData; // setUser
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
   const [watchState, setWatchState] = useState(playingGameInfo.gameState);
   const [count, setCount] = useState<number>();
@@ -99,6 +100,7 @@ const GamePage: React.FC = () => {
     });
 
     socket.on('message', () => {
+      // setUser(UPDATE_USER, { ...user, socket: socket });
       if (user) user.socket = socket;
     });
   };
@@ -228,6 +230,7 @@ const GamePage: React.FC = () => {
         setCount(data);
         if (data == 0) {
           setGameStart(true);
+          // if (playingGameInfo.player !== 'p1' && playingGameInfo.player !== 'p2')
           setWatchState(false);
         }
 

@@ -24,6 +24,7 @@ const EditMyProfile: React.FC = () => {
   const [convertImg, setConvertImg] = useState<File | string>('');
 
   const onEditNick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //  NOTE : 정규식 적용
     const inputNickValue = e.target.value;
 
     if (!regex.test(inputNickValue)) {
@@ -58,6 +59,7 @@ const EditMyProfile: React.FC = () => {
   const onKeyEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const key = e.key || e.keyCode;
     if (key == 'Enter' || key === 13) {
+      // NOTE : 한글 중복 입력 제거
       if (e.nativeEvent.isComposing === false) onCheck();
     }
   };

@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { AllContext } from '../store';
 import { useNavigate } from 'react-router-dom';
 
+// 코드 가독성을 위해서라도, 고정적인 값들은 상수로 박아놓고 사용중입니다.
 const PLAYERONE = 1; // 플레이어정보.
 const PLAYERTWO = 2; // 플레이어정보.
 const HERTZ = 60; // 초당 장면 드로우 횟수
@@ -16,6 +17,7 @@ const scoreG = [0, 0]; // Realtime socre
 const playing = [true, '']; // 게임상태확인 및 승자기록
 const paadllezz = [40];
 
+// 인터페이스 타입정의
 interface GameInfo {
   ballP_X: number;
   ballP_Y: number;
@@ -36,6 +38,7 @@ const GameStart: React.FC = () => {
   const { playingGameInfo } = useContext(AllContext).playingGameInfo;
   const player = playingGameInfo.player;
   const navigate = useNavigate();
+  // player 1 방향으로 시작되는게 기본이고, 장애물맵 경우, 중앙에 장애물이 위치해서 시작위치가 다름.
   const [gameInfo, setGameInfo] = useState<GameInfo>({
     ballP_X: playingGameInfo.gameMode === 'obstacle' ? 40 : 50,
     ballP_Y: 50,
@@ -50,6 +53,7 @@ const GameStart: React.FC = () => {
     checkPoint: false,
   });
 
+  // 패들 그리기.
   const drawObject = function paddle(ctx: CanvasRenderingContext2D): void {
     ctx.beginPath();
     ctx.arc((ballG[0] / 100) * 1000, (ballG[1] / 100) * 700, 10, 0, 2 * Math.PI);
@@ -75,12 +79,13 @@ const GameStart: React.FC = () => {
     );
     if (playingGameInfo.gameMode === 'obstacle') {
       ctx.fillStyle = '#FFB562';
-      ctx.fillRect(450, 300, 100, 100);
-      ctx.fillRect(700, 500, 100, 100);
-      ctx.fillRect(200, 100, 100, 100);
+      ctx.fillRect(450, 300, 100, 100); // x, y, width, height
+      ctx.fillRect(700, 500, 100, 100); // x, y, width, height
+      ctx.fillRect(200, 100, 100, 100); // x, y, width, height
     }
   };
 
+  // 이전에 그린 장면 리셋
   const clear = function clear(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = '#f9f2ed';
     ctx.clearRect(0, 0, 1000, 700);
@@ -121,6 +126,8 @@ const GameStart: React.FC = () => {
     });
   };
 
+  // info.ballP_X + info.ballVelo_X : info.ballP_Y + info.ballVelo_Y 다음수 예측
+
   const checkObstacle = (info: GameInfo) => {
     if (ballState(info) === 'obstacleHit') {
       if (info.ballP_X >= 20 && info.ballP_X <= 30) return 'obLeft';
@@ -141,6 +148,7 @@ const GameStart: React.FC = () => {
     else return 'test';
   };
 
+  // 여기가 방향이 기준이면 짧아서 좋지만, 전부다 커버할수가 없어진다.
   const resObstacle = (info: GameInfo, id: string, title: string) => {
     const upDown = obstacleUpDwon(info);
     if (title === 'obCenter') {
@@ -176,6 +184,8 @@ const GameStart: React.FC = () => {
     else return obstacleUpDwon(info) !== 'test' ? (info.ballVelo_Y *= -1) : info.ballVelo_Y; //Y는 반사각.
   };
 
+  // 상태와 바꿀 밸로시티값을 확인하고 변경값을 리턴합니다.
+  // 패들의 위치에 따라 반사각이 달라지는 부분이 조금 지저분합니다.
   const changeVelo = function changeVelo(info: GameInfo, type: string, value: string): number {
     const relativeIntersectY =
       type == 'leftHit'
@@ -210,6 +220,7 @@ const GameStart: React.FC = () => {
     }
   };
 
+  // 밸로시티가 바뀌는 조건
   const ballState = (info: GameInfo) => {
     if (info.ballP_X >= 100) return 'leftgoal';
     else if (info.ballP_X <= 0) return 'rightgoal';
@@ -233,6 +244,7 @@ const GameStart: React.FC = () => {
     else return 'rally';
   };
 
+  // 공의 진행이나 리셋값을 반환합니다.
   const ballAction = (info: GameInfo, id: string) => {
     const ballCheck = ballState(info);
     if (playingGameInfo.gameMode === 'obstacle') {
@@ -268,6 +280,7 @@ const GameStart: React.FC = () => {
     else return id === 'X' ? info.ballP_X + info.ballVelo_X : info.ballP_Y + info.ballVelo_Y;
   };
 
+  // 어떤 플레이어가 계산할 차례인지를 반환합니다.
   const getTurn = (info: GameInfo) => {
     switch (ballState(info)) {
       case 'leftgoal':
@@ -316,6 +329,7 @@ const GameStart: React.FC = () => {
     }
   };
 
+  // 상대의 실점을 기록합니다(계산하는 유저입장에서)
   const getCheckPoint = (info: GameInfo) => {
     switch (ballState(info)) {
       case 'leftgoal':
@@ -329,6 +343,7 @@ const GameStart: React.FC = () => {
     }
   };
 
+  // 플레이어의 패들위치를 반환합니다.
   const getPaddlePos = (player: string, info: GameInfo, pos: string) => {
     if (pos === 'left') {
       if (player === 'p1') return paadllezz[0];
@@ -453,7 +468,7 @@ const GameStart: React.FC = () => {
           await settingRealTimeData(data);
         }
       });
-    } // TODO: error handling(user not found)
+    } else console.log('ERROR: user undefined');
   };
 
   const realPaddle = () => {
@@ -540,6 +555,7 @@ const GameStart: React.FC = () => {
     };
   }, [eventCalculate]);
 
+  // 소켓변화를 감지해서, 정리합니다.
   useEffect(() => {
     return () => {
       if (user && user.socket && user.socket.connected) {
@@ -585,6 +601,7 @@ const GameRoomBody = styled.div`
   height: calc(100vh - 160px);
 `;
 
+// 자식이 부모태그를 넘어가지 않도록 하면, 부모가 보더를 가지고 있을때 자식도 같은 효과를 보니까.
 const GameArea = styled.div`
   display: flex;
   flex-direction: column;

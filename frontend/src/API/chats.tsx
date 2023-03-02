@@ -251,7 +251,7 @@ const chatsAPI = {
         `/${roomId}/users/${callingUserId}/muteToggle?targetUserId=${targetUserId}`,
       );
       const res = await instance.put(url, null, { headers: { Authorization: `Bearer ${jwt}` } });
-      return res.data;
+      return res.data; // INFO: isMuted : boolean
     } catch (e) {
       if (e instanceof Error) console.error(e.message);
       else console.error(e);
@@ -275,7 +275,8 @@ const chatsAPI = {
       return false;
     }
   },
-  // GET chats/{roomId}/participants/{myId}?targetId={targetId}
+  // GET chats/{roomId}/participants/{myId} - getUserProfileInChatRoom
+  // TODO: return interface refactoring
   getUserProfileInChatRoom: async (
     roomId: number,
     myId: number,

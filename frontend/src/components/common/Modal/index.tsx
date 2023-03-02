@@ -15,6 +15,7 @@ const Modal: React.FC<ModalProps> = ({ width, height, title, children }) => {
   const backGroundRef = useRef<HTMLDivElement>(null);
 
   const onClickBackground = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // e.preventDefault(); // TODO: 이걸 사용해야하는 모달이 있는가?
     e.stopPropagation();
     if (e.target === backGroundRef.current) {
       setModal(null);

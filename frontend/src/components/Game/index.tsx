@@ -21,13 +21,15 @@ const Game: React.FC<{ socket: Socket }> = ({ socket }) => {
 
   useEffect(() => {
     if (socket) {
+      // TODO: 게임 룸 리스트 이벤트 명 확인하기(알려주기)
       socket.on('updateGameRoomList', (data: IGameRooms[]) => {
-        setGameList(data);
+        setGameList(data); // 전체 게임방
       });
     }
     return () => {
       if (socket) {
         socket.off('updateChatRoomList');
+        // socket.disconnect();
       }
     };
   }, [socket]);
@@ -37,7 +39,7 @@ const Game: React.FC<{ socket: Socket }> = ({ socket }) => {
   };
 
   const getAllGameList = async (jwt: string) => {
-    const res = await gameAPI.getGameRooms(jwt);
+    const res = await gameAPI.getGameRooms(jwt); //
     setGameList(res);
   };
   return (
@@ -58,6 +60,7 @@ const Game: React.FC<{ socket: Socket }> = ({ socket }) => {
           onClick={creatMatch}
         />
       </LadderGame>
+      {/* TODO: 게임방이 하나도 없을 때 하나도 없다는걸 보여주는 info 컴포넌트 필요 */}
       <GameList list={gameList} type={GAME} />
     </>
   );

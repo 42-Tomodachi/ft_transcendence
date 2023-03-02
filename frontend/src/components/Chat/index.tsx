@@ -21,11 +21,11 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
     if (socket) {
       if (roomType === ALL) {
         socket.on('updateChatRoomList', (data: IChatRooms[]) => {
-          setChatList(data);
+          setChatList(data); // 전체 채팅방
         });
       } else if (roomType === JOINED) {
         socket.on('updateParticipnatingChatRoomList', (data: IChatRooms[]) => {
-          setChatList(data);
+          setChatList(data); // 참여중인 채팅방 목록 전채
         });
       }
     }
@@ -33,6 +33,7 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
       if (socket) {
         socket.off('updateChatRoomList');
         socket.off('updateParticipnatingChatRoomList');
+        // socket.disconnect();
       }
     };
   }, [socket, roomType]);
@@ -41,7 +42,7 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
     if (user && user.jwt) {
       const res = await chatsAPI.getJoinedChatRooms(user.userId, user.jwt);
       setChatList(res);
-    } // TODO : error handling
+    } else console.error('not get user');
   };
 
   const getAllChatList = async (jwt: string) => {
@@ -77,6 +78,7 @@ const Chat: React.FC<{ socket: Socket }> = ({ socket }) => {
           onClick={handleRoomType}
         />
       </EnteredRoomBtn>
+      {/* TODO: 채팅방이 하나도 없을 때 하나도 없다는걸 보여주는 info 컴포넌트 필요 */}
       <ChatList list={chatList} type={CHAT} />
     </>
   );

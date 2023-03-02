@@ -28,13 +28,13 @@ import { User } from 'src/users/entities/users.entity';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: 'issue a fresh JWT' })
+  @ApiOperation({ summary: '[test for backend] issue a fresh JWT' })
   @Get('issueJwt/:id')
   async getJwt(@Param('id', ParseIntPipe) id: number): Promise<string> {
     return this.authService.issueJwt(id);
   }
 
-  @ApiOperation({ summary: 'test JWT validity' })
+  @ApiOperation({ summary: '[test for backend] test JWT validity' })
   @ApiBearerAuth('access-token')
   @Get('testJwt')
   @UseGuards(AuthGuard())
@@ -43,14 +43,20 @@ export class AuthController {
   }
 
   @ApiOperation({
-    summary: '유저의 회원가입 여부 확인',
+    summary: 'kankim✅ 유저의 회원가입 여부 확인',
   })
   @Post('isSignedUp')
   async isSignedUp(@Body() codeDto: CodeStringDto): Promise<IsSignedUpDto> {
     return await this.authService.isSignedUp(codeDto.code);
   }
 
-  @ApiOperation({ summary: '닉네임 중복 확인' })
+  // @ApiOperation({ summary: 'kankim✅ 회원가입' })
+  // @Post('signUp')
+  // async signUp(@Body() updateUserdto: UpdateUserDto): Promise<IsSignedUpDto> {
+  //   return await this.authService.signUp(updateUserdto);
+  // }
+
+  @ApiOperation({ summary: 'kankim✅ 닉네임 중복 확인' })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard())
   @Post('isDuplicateNickname')
@@ -71,7 +77,7 @@ export class AuthController {
     await this.authService.logoutStatus(user, userId);
   }
 
-  @ApiOperation({ summary: '2차 인증 등록 시작' })
+  @ApiOperation({ summary: '✅ 2차 인증 등록 시작' })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard())
   @Post('/secondAuth/:userId')
@@ -89,7 +95,7 @@ export class AuthController {
     return { isOk, jwt: null };
   }
 
-  @ApiOperation({ summary: '2차 인증 번호 검증' })
+  @ApiOperation({ summary: '✅ 2차 인증 번호 검증' })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard())
   @Get('/secondAuthVerify/:userId')
@@ -101,7 +107,7 @@ export class AuthController {
     return await this.authService.verifySecondAuth(user, id, code);
   }
 
-  @ApiOperation({ summary: '2차 인증 등록 완료' })
+  @ApiOperation({ summary: '✅ 2차 인증 등록 완료' })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard())
   @Get('/secondAuthEnroll/:userId')
@@ -112,7 +118,7 @@ export class AuthController {
     await this.authService.enrollSecondAuth(user, id);
   }
 
-  @ApiOperation({ summary: '2차 인증 해제' })
+  @ApiOperation({ summary: '✅ 2차 인증 해제' })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard())
   @Delete('/secondAuth/:userId')
@@ -123,7 +129,7 @@ export class AuthController {
     await this.authService.disableSecondAuth(user, id);
   }
 
-  @ApiOperation({ summary: '2차 인증 수행' })
+  @ApiOperation({ summary: '✅ 2차 인증 수행' })
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard())
   @Get('/secondAuth/:userId')

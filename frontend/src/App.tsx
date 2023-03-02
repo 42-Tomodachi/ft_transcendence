@@ -36,6 +36,7 @@ function App() {
             setUserStatus(LOGIN);
           }
         } else {
+          // jwt 유효기간 끝나면 res === null (401)
           setUser(LOGOUT);
           setUserStatus(LOGOUT);
           setJwt('REMOVE_JWT');

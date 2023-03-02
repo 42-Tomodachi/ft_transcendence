@@ -20,10 +20,15 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
   const [targetInfo, setTargetInfo] = useState<IUserData | null>(null);
   const navigate = useNavigate();
 
+  // junselee 테스트
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   const cancelFight = () => {
+    // TODO: setModal로 바뀌니 disconnect로 안바꿔도 될것 같다
     if (socket && user) {
+      // userId : 대전 신청 받은 유저, targetId: 대전 신청한 유저
+      // socket.emit('cancelMatch', { targetId: user.userId, userId: matchUserId });
+      // 백엔드에서 socket disconnect로 match cancel 인식
       socket.disconnect();
     }
     setModal(CANCEL_MATCH_MODAL);
@@ -46,14 +51,17 @@ const FightResModal: React.FC<{ targetId: number }> = ({ targetId }) => {
         multiplex: false,
         query: { userId: user.userId, targetId: targetId, isSender: true, connectionType: 'duel' },
       });
-      socket.on('challengeSeqDone', () => {
+      socket.on('challengeSeqDone', (data: number) => {
         setModal(CANCEL_MATCH_MODAL);
       });
       // TODO: acceptChallenge 사용되는 상황 파악
-      socket.on('acceptChallenge', () => {
+      socket.on('acceptChallenge', (userId: number) => {
+        // navigate(`/gameroom/${roomId}`);
+        // junselee test : 신청측도 서버한테 알려줘야합니다.
         socket.emit('acceptChallenge');
       });
       socket.on('matchingGame', (roomId: number) => {
+        // junselee 테스트
         if (user) {
           setPlayingGameInfo({
             ...playingGameInfo,

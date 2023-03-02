@@ -3,8 +3,8 @@ import styled from '@emotion/styled';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import { AllContext } from '../../store';
-import { io, Socket } from 'socket.io-client';
-import { useNavigate } from 'react-router-dom'; 
+import { io, Socket } from 'socket.io-client'; // 아이오 연결하고.
+import { useNavigate } from 'react-router-dom'; //네비
 
 let socket: Socket;
 
@@ -15,6 +15,7 @@ const LadderModal: React.FC = () => {
   const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
 
   useEffect(() => {
+    // 소켓연결 하고
     socket = io(`${process.env.REACT_APP_BACK_API}/ws-game`, {
       transports: ['websocket'],
       multiplex: false,
@@ -23,6 +24,8 @@ const LadderModal: React.FC = () => {
         connectionType: 'ladderQueue',
       },
     });
+
+    // 매치가 완료됐다고 서버한테 연락받으면
     socket.on('matchingGame', (roomId: number) => {
       setModal(null);
       if (user) {
@@ -34,7 +37,7 @@ const LadderModal: React.FC = () => {
         });
       }
 
-      navigate(`/gameroom/${roomId}`);
+      navigate(`/gameroom/${roomId}`); //GamePage.tsx
     });
     return () => {
       socket.off('matchingGame');

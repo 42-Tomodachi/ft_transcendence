@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameRecord } from 'src/users/entities/gameRecord.entity';
 import { User } from 'src/users/entities/users.entity';
@@ -22,8 +22,6 @@ export class GameService {
     private readonly usersService: UsersService,
     private readonly gameEnv: GameEnv,
   ) {}
-
-  private logger = new Logger('GameService');
 
   // HTTP APIs
 
@@ -107,9 +105,10 @@ export class GameService {
       throw new BadRequestException('이미 입장 된 방입니다.');
 
     const peopleCount = this.gameEnv.joinPlayerToGame(player, game);
-    this.logger.verbose(
+    console.log(
       `Player ${player.userId} joined room ${game.roomId}, ${peopleCount}`,
     );
+    // 소켓: 로비에 변경사항 반영
 
     const gameRoomDto = new SimpleGameRoomDto();
     gameRoomDto.gameMode = game.gameMode;

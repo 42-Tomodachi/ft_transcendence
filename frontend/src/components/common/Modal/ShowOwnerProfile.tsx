@@ -157,34 +157,6 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
       }
     }
   };
-  const onToggleRole = async () => {
-    if (user && target) {
-      const res = await chatsAPI.changeRoleInChatRoom(roomId, user.userId, target.userId, user.jwt);
-      if (res) {
-        setTarget({ ...target, role: res.role });
-      }
-    }
-  };
-  const onApplyGame = async () => {
-    if (target && user) {
-      const res = await gameAPI.dieDieMatch(user.userId, target.userId, user.jwt);
-      if (res) {
-        setModal(FIGHT_RES_MODAL, target.userId);
-      } else {
-        setModal(CANCEL_MATCH_MODAL);
-      }
-    }
-  };
-  const onSendDm = async () => {
-    if (user && target) {
-      const res = await chatsAPI.enterDmRoom(user.userId, target.userId, user.jwt);
-
-      if (res && res.roomId) {
-        setModal(null);
-        navigate(`/chatroom/${res.roomId}`);
-      }
-    }
-  };
   const handleKickOrBan = async () => {
     if (target) {
       setModal(BAN_OR_KICK_MODAL, target.userId, roomId);
@@ -305,12 +277,15 @@ const ShowOwnerProfile: React.FC<{ roomId: number; userId: number }> = ({ roomId
   );
 };
 
+// Main Block
 const MainBlock = styled.div`
   padding: 13px;
   margin-top: 50px;
   width: 100%;
 `;
+//============================================
 
+// Profile Section
 const ProfileBlock = styled.div`
   height: 120px;
   display: flex;
@@ -334,7 +309,9 @@ const UserLevel = styled.span`
   margin-top: 5px;
   margin-left: 25px;
 `;
+//============================================
 
+//Record Section
 const RecordBlock = styled.div`
   display: flex;
   justify-content: space-between;
@@ -363,6 +340,9 @@ const RecordBtn = styled.div`
   }
 `;
 
+//============================================
+
+//OtherBtnSection
 const OtherBtnBlock = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -383,5 +363,6 @@ const BanBtnBlock = styled.div`
     border-radius: 5px;
   }
 `;
+//============================================
 
 export default ShowOwnerProfile;

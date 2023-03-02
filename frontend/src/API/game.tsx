@@ -44,8 +44,20 @@ const gameAPI = {
       return null;
     }
   },
+  // GET /games/{gameId}/users - getMatchingUser(socket io로 제작)
+  // getMatchingUser: async (gameId: number, jwt: string) => {
+  //   try {
+  //     const url = gamePath(`/${gameId}/users`);
+  //     // const res = await instance.
+  //     // return res.data;
+  //   } catch (e) {
+  //     if (e instanceof Error) console.error(e.message);
+  //     else console.error(e);
+  //   }
+  // },
+  // POST /games/{gameId}/users/{userId} - enterGameRoom
 
-  // TODO: make check password type function
+  // 이쪽도 수정이 필요하긴 하겠다.
   enterGameRoom: async (
     gameId: number,
     userId: number,
@@ -56,7 +68,7 @@ const gameAPI = {
       const url = gamePath(`/${gameId}/users/${userId}`);
       const res = await instance.post(
         url,
-        { password: password === '' ? null : password },
+        { password: password === '' ? null : password }, //지호킴님 수정요청111
         { headers: { Authorization: `Bearer ${jwt}` } },
       );
       return res.data;
@@ -105,6 +117,7 @@ const gameAPI = {
     }
   },
 
+  // 상대유저의 세부상태?
   opponentState: async (targetId: number, jwt: string): Promise<IGameRooms | null> => {
     try {
       const url = gamePath(`/${targetId}`);

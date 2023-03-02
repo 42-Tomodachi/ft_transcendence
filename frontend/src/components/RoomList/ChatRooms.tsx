@@ -48,7 +48,13 @@ const ChatRooms: React.FC<ChatRoomProps> = ({ item }) => {
         <PrivateStat>{item.isPublic ? `공개` : `비공개`}</PrivateStat>
         <CountStat>{item.numberOfParticipants + '명'}</CountStat>
         <EnterBtnWrap>
-          <Button width={50} height={30} color="gradient" text="입장" onClick={handleEnterRoom} />
+          <Button
+            width={50}
+            height={30}
+            color="gradient"
+            text="입장"
+            onClick={handleEnterRoom} // TODO: change /chat/{roomNumber}
+          />
         </EnterBtnWrap>
       </ListStatus>
     </ListItem>

@@ -7,6 +7,8 @@ import { AllContext } from '../../../store';
 import { gameAPI } from '../../../API';
 import { GameMode } from '../../../utils/interface';
 import GameModeButton from '../GameModeButton';
+// import { Radio } from 'antd';
+// import type { RadioChangeEvent } from 'antd';
 
 const MakeGameRoom: React.FC = () => {
   const { user } = useContext(AllContext).userData;
@@ -17,7 +19,7 @@ const MakeGameRoom: React.FC = () => {
   const [gameMode, setGameMode] = useState<GameMode>('normal');
   const navigate = useNavigate();
 
-  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo;
+  const { playingGameInfo, setPlayingGameInfo } = useContext(AllContext).playingGameInfo; // roomid기억하자.
   const roomSettingValues = {
     MAXROOMNAMESIZE: 10,
     MAXPASSWORDSIZE: 10,
@@ -39,6 +41,7 @@ const MakeGameRoom: React.FC = () => {
       setErrMsg('방 제목은 최소 한 글자 이상 입력해주세요.');
       return;
     }
+    // 여기서 서버로부터 일반겜방아이디를 받고 이동한다.
     if (user) {
       const res = await gameAPI.makeGameRoom(
         user.userId,
@@ -47,18 +50,24 @@ const MakeGameRoom: React.FC = () => {
         gameMode,
         user.jwt,
       );
+      //지호킴님 수정요청222
       if (res && res.gameId !== undefined) {
         setPlayingGameInfo({
           ...playingGameInfo,
           gameRoomId: res.gameId,
           gameMode: res.gameMode,
-        });
+        }); // 그럼이제 전역으로 모드를 들고다닐수 있게 된거심.
         setModal(null);
         navigate(`/gameroom/${res.gameId}`);
       }
+      // TODO : 실패시 로직 처리
     }
   };
 
+  // const onChange3 = (e: RadioChangeEvent) => {
+  //   console.log('radio3 checked', e.target.value);
+  //   setValues(e.target.value);
+  // };
   return (
     <Modal width={570} height={300} title={'게임방 만들기'}>
       <MainBlock>
@@ -76,6 +85,7 @@ const MakeGameRoom: React.FC = () => {
           <RoomNPwd>비밀번호</RoomNPwd>
           <InputPwd type="password" name="password" onChange={onChangeInput} value={password} />
         </TextGridBlock>
+        {/* TODO: 스피드업, 장애물 생성, 일반모드 radio로 버튼 추가 */}
         <ErrMsg>{errMsg}</ErrMsg>
         <BtnBlock>
           <Button color="gradient" text="만들기" width={200} height={40} onClick={createGame} />
@@ -85,12 +95,15 @@ const MakeGameRoom: React.FC = () => {
   );
 };
 
+// Main Block
 const MainBlock = styled.div`
   padding: 13px;
   margin-top: 23px;
   width: 100%;
 `;
+//============================================
 
+//InputSection
 const TextGridBlock = styled.div`
   margin-left: 30px;
   margin-right: 40px;

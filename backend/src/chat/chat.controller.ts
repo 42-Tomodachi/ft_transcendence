@@ -186,6 +186,7 @@ export class ChatController {
     @Param('userId', ParseIntPipe) userId: number,
     @Query('targetUserId', ParseIntPipe) targetUserId: number,
   ): Promise<void> {
+    console.log('\n ### 1');
     await this.chatService.kickUser(user, roomId, userId, targetUserId);
   }
 
@@ -204,6 +205,9 @@ export class ChatController {
       targetUserId,
     );
   }
+
+  // 인터페이스를 통해 게임 할 수 있도록 초대
+  // 인터페이스를 통해 다른 유저의 프로필 보기
 
   @ApiOperation({ summary: '채팅 등록' })
   @Post(':roomId/users/:userId/messages')

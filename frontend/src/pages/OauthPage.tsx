@@ -30,8 +30,9 @@ const OauthPage: React.FC = () => {
             isFriend: false,
             isBlocked: false,
           });
+          // NOTE: 임시로 LocalStorage에 jwt 저장
           window.localStorage.setItem('jwt', res.jwt);
-          setJwt('SET_JWT', res.jwt);
+          setJwt('SET_JWT', res.jwt); // 전역 jwt에 저장
           if (!res.nickname) {
             setUserStatus(SET_NICKNAME);
           } else if (res.isSecondAuthOn) {
@@ -46,6 +47,7 @@ const OauthPage: React.FC = () => {
         }
       }
     };
+    // NOTE: 한번에 두번 요청되는것을 막기 위해 설정
     const timer = setTimeout(() => {
       getUser();
       clearTimeout(timer);

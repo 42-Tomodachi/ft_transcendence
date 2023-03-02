@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 
@@ -12,9 +12,6 @@ class UserStatus {
     this.gamePlayingSockets = new Set();
     this.gameWatchingSockets = new Set();
   }
-
-  private logger = new Logger('UserStatus');
-
   userId: number;
   status: 'on' | 'off' | 'play';
   chatLobbySockets: Set<Socket>;
@@ -42,7 +39,7 @@ class UserStatus {
     else if (this.isGameConnection(socket)) {
       if (this.isGamePlaying(socket)) this.gamePlayingSockets.add(socket);
       else this.gameWatchingSockets.add(socket);
-    } else this.logger.debug('UserStatus: setSocket: wrong socket');
+    } else console.log('UserStatus: setSocket: wrong socket');
   }
 
   removeSocket(socket: Socket): boolean {
@@ -106,7 +103,7 @@ class UserStatus {
       this.status = 'on';
     else this.status = 'off';
 
-    this.logger.verbose(this);
+    console.log(this);
     return this.status !== lastStatus;
   }
 
@@ -147,6 +144,7 @@ export class UserStatusContainer {
     return this.get(userId).getSockets();
   }
 
+  // return: 유저상태 변경 여부
   async setSocket(
     userId: number,
     socket: Socket,

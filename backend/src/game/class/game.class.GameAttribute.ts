@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import {
   CreateGameRoomDto,
   GameResultDto,
@@ -46,8 +45,6 @@ export class GameAttribute {
     this.rtData = new GameRtData();
     this.timers = new Map();
   }
-
-  private logger = new Logger('GameAttribute');
 
   create(createGameRoomDto: CreateGameRoomDto, player1: Player) {
     this.active = true;
@@ -163,7 +160,7 @@ export class GameAttribute {
 
   broadcastToRoom(event: string, ...data: any[]): void {
     if (!this.firstPlayer) {
-      this.logger.debug('broadcastToRoom: no player in Game');
+      console.log('broadcastToRoom: no player in Game');
       return;
     }
     const socket = this.firstPlayer.socketPlayingGame;
